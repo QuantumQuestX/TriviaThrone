@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buzzer - TriviaThrone</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        #buzzer-container {
+            text-align: center;
+        }
+
+        button {
+            font-size: 2rem;
+            padding: 1rem 2rem;
+            margin: 1rem;
+            border-radius: 8px;
+            border: none;
+            background: #ff5722;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+        }
+
+        #timer {
+            font-size: 2rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="buzzer-container">
+        <h2>Buzz In!</h2>
+        <button id="buzz-button">BUZZ</button>
+        <div id="status">Waiting for game...</div>
+        <div id="timer"></div>
+    </div>
+
+    <script src="js/buzzer.js"></script>
+</body>
+</html>

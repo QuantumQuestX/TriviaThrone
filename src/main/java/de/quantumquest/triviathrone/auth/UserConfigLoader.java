@@ -8,8 +8,11 @@ import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,19 +20,22 @@ import java.util.concurrent.ConcurrentHashMap;
 public class UserConfigLoader {
 
     private final Map<String, UserAccount> users = new ConcurrentHashMap<>();
+    private final Path file;
+    private final Yaml yaml;
 
     public UserConfigLoader(AuthProperties props) {
-        load(props.getUserFile());
-    }
+        this.file = props.getUserFile();
 
-    private void load(Path file) {
         LoaderOptions options = new LoaderOptions();
         options.setAllowDuplicateKeys(false);
         options.setAllowRecursiveKeys(false);
 
-        Constructor ctor = new Constructor(UserFile.class, options);
-        Yaml yaml = new Yaml(ctor);
+        this.yaml = new Yaml(new Constructor(UserFile.class, options));
 
+        load();
+    }
+
+    private void load() {
         try (InputStream in = Files.newInputStream(file)) {
             UserFile data = yaml.load(in);
 
@@ -37,6 +43,7 @@ public class UserConfigLoader {
                 throw new IllegalStateException("Users file is empty or malformed");
             }
 
+            users.clear();
             for (UserAccount user : data.getUsers()) {
                 users.put(user.getUsername(), user);
             }
@@ -47,5 +54,30 @@ public class UserConfigLoader {
 
     public UserAccount findByUsername(String username) {
         return users.get(username);
+    }
+
+    public synchronized void updatePassword(String username, String newHash) {
+        UserAccount user = users.get(username);
+
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        user.setPasswordHash(newHash);
+        persist();
+    }
+
+    private void persist() {
+        UserFile data = new UserFile();
+        data.setUsers(new ArrayList<>(users.values()));
+
+        Path tempFile = file.resolveSibling(file.getFileName() + ".tmp");
+
+        try (Writer out = Files.newBufferedWriter(tempFile)) {
+            yaml.dump(data, out);
+            Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to persist users file", e);
+        }
     }
 }

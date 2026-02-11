@@ -9,7 +9,6 @@ public class TriviaThroneApplication {
 
     static void main(String[] args) {
         SpringApplication.run(TriviaThroneApplication.class, args);
-        System.out.printf("%s = %s", "testPassword#123", new BCryptPasswordEncoder().encode("testPasswort#123"));
     }
 
 }

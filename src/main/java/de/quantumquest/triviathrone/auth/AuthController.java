@@ -5,6 +5,7 @@ import de.quantumquest.triviathrone.dto.LoginRequest;
 import de.quantumquest.triviathrone.dto.TokenResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,14 +19,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public TokenResponse login(LoginRequest request) {
+    public TokenResponse login(@RequestBody LoginRequest request) {
         return new TokenResponse(
                 auth.authenticate(request.username(), request.password())
         );
     }
 
     @PostMapping("/change-password")
-    public void changePassword(ChangePasswordRequest request, Authentication authentication) {
+    public void changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication) {
         auth.changePassword(
                 authentication.getName(),
                 request.oldPassword(),

@@ -1,3 +1,7 @@
 package de.quantumquest.triviathrone.dto;
 
-public record LoginRequest(String username, String password) {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record LoginRequest(
+        @JsonProperty("username") String username,
+        @JsonProperty("password") String password) {}

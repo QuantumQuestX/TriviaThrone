@@ -4,8 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TriviaThrone</title>
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+    <header>
+        <h1>TriviaThrone</h1>
+        <nav>
+            <button id="dashboard-btn">Dashboard</button>
+            <button id="account-btn">Account</button>
+            <button id="logout-btn">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <section id="dashboard-section">
+            <h2>Available Lobbies</h2>
+            <ul id="lobby-list"></ul>
 
+            <h3>Join Lobby</h3>
+            <input type="text" id="join-code" placeholder="Enter lobby code">
+            <button id="join-btn">Join</button>
+
+            <p>Hallo Luca</p>
+
+            <h3>Create Lobby</h3>
+            <input type="text" id="lobby-name" placeholder="Lobby Name">
+            <button id="create-btn">Create</button>
+        </section>
+        <section id="account-section" style="display: none;">
+            <h2>Account Info</h2>
+            <p>Username: <span id="username-display"></span></p>
+            <p>Token expires in: <span id="token-expiry"></span></p>
+            <button id="back-dashboard-btn">Back to Dashboard</button>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ document.getElementById("login-form").addEventListener("submit", async e => {
     const password = document.getElementById("password").value;
 
     try {
-        const res = await fetch("/api/auth/login", {
+        const res = await fetch("/auth/login", {
            method: "POST",
            headers: { "Content-Type": "application/json" },
            body: JSON.stringify({ username, password })
@@ -16,7 +16,7 @@ document.getElementById("login-form").addEventListener("submit", async e => {
 
         const data = await res.json();
         localStorage.setItem("token", data.token);
-        window.location.href = "/buzzer.html";
+        window.location.href = "/index.html";
     } catch (err) {
         document.getElementById("login-error").textContent = err.message;
     }

@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone;
+package de.quantumquest.triviathrone.config;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -27,6 +27,7 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/index.html",
                                 "/buzzer.html",
+                                "/api/**",
                                 "/",
                                 "/css/**",
                                 "/js/**").permitAll()

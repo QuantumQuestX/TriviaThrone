@@ -45,27 +45,69 @@ document.getElementById("logout-btn").addEventListener("click", () => {
 
 const lobbyList = document.getElementById("lobby-list");
 
-function updateLobbyList() {
-    const lobbies = [
-        { name: "LAN Night Quiz", code: 'B456' }
-    ];
+async function updateLobbyList() {
+    try {
+        const res = await fetch("/api/lobbies", {
+            headers: { "Authorization": "Bearer " + token }
+        });
 
-    lobbyList.innerHTML = "";
-    lobbies.forEach(lobby => {
-        const li = document.createElement("li");
-        li.textContent = `${lobby.name} (Code: ${lobby.code})`;
-        lobbyList.appendChild(li);
-    });
+        if (!res.ok) throw new Error("Failed to fetch lobbies");
+
+        const lobbies = await res.json();
+
+        lobbyList.innerHTML = "";
+        lobbies.forEach(lobby => {
+            const li = document.createElement("li");
+            li.textContent = `${lobby.name} (Code: ${lobby.code})`;
+            lobbyList.appendChild(li);
+        });
+    } catch (err) {
+        console.error(err);
+        lobbyList.innerHTML = "<li>Error loading lobbies</li>";
+    }
 }
 
 updateLobbyList();
+setInterval(updateLobbyList, 3000);
 
-document.getElementById("join-btn").addEventListener("click", () => {
+document.getElementById("join-btn").addEventListener("click", async () => {
     const code = document.getElementById("join-code").value;
-    alert("Join lobby " + code + " (implement API call here)");
+    if (!code) return alert("Enter a lobby code");
+
+    try {
+        const res = await fetch(`/api/lobbies/join?code=${encodeURIComponent(code)}`, {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Failed to join lobby");
+
+        const lobby = await res.json();
+        alert(`Joined lobby "${lobby.name}"`);
+        await updateLobbyList();
+    } catch (err) {
+        console.error(err);
+        alert("Error joining lobby: " + err.message);
+    }
 });
 
-document.getElementById("create-btn").addEventListener("click", () => {
+document.getElementById("create-btn").addEventListener("click", async () => {
     const name = document.getElementById("lobby-name").value;
-    alert("Create lobby: " + name + " (implement API call here)");
+    if (!name) return alert("Enter a lobby name");
+
+    try {
+        const res = await fetch(`/api/lobbies/create?name=${encodeURIComponent(name)}`, {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Failed to create lobby");
+
+        const lobby = await res.json();
+        alert(`Create lobby "${lobby.name}" (Code: ${lobby.code})`);
+        await updateLobbyList();
+    } catch (err) {
+        console.error(err);
+        alert("Error creating lobby: " + err.message);
+    }
 });

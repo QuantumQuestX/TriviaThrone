@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone;
+package de.quantumquest.triviathrone.ws;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;

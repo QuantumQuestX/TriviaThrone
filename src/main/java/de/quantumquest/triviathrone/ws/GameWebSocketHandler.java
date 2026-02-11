@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone;
+package de.quantumquest.triviathrone.ws;
 
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;

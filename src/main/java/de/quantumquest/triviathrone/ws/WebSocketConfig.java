@@ -1,6 +1,5 @@
 package de.quantumquest.triviathrone.ws;
 
-import de.quantumquest.triviathrone.GameWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;

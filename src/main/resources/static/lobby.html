@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby - TriviaThrone</title>
+    <link rel="stylesheet" href="css/lobby.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo">TriviaThrone</div>
+        <div class="lobby-info">
+            Lobby Code: <span id="lobby-code">A123</span>
+        </div>
+        <button id="leave-btn" class="danger-btn">Leave Lobby</button>
+    </header>
+
+    <main class="lobby-layout">
+        <section class="players-panel">
+            <h2>Players</h2>
+            <ul id="player-list" class="player-list"></ul>
+
+            <div class="host-controls">
+                <button id="start-game-btn" class="primary-btn">Start Game</button>
+            </div>
+        </section>
+
+        <section class="feed-panel">
+            <h2>Live Activity</h2>
+            <div id="event-feed" class="event-feed"></div>
+        </section>
+
+        <section id="host-panel" class="upload-panel">
+            <h2>Upload Game</h2>
+
+            <div class="upload-box">
+                <input type="file" id="game-file" accept=".game.throne">
+                <label for="game-file">Drop or Select <code>.game.throne</code> file</label>
+            </div>
+
+            <button id="upload-btn" class="primary-btn">Upload</button>
+
+            <div id="upload-status" class="upload-status"></div>
+        </section>
+    </main>
+
+    <script src="js/lobby.js"></script>
+</body>
+</html>

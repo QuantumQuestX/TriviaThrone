@@ -25,6 +25,7 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/auth/login",
                                 "/login.html",
+                                "/lobby.html",
                                 "/index.html",
                                 "/buzzer.html",
                                 "/api/**",

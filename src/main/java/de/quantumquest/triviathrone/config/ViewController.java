@@ -9,4 +9,9 @@ public class ViewController {
     public String root() {
         return "redirect:/index.html";
     }
+
+    @GetMapping("/account")
+    public String account() {
+        return "redirect:/index.html?page=account";
+    }
 }

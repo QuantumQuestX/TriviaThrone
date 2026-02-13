@@ -6,3 +6,4 @@ auth:
   user-file: users.yml
   jwt-secret: "CHANCE_THIS_SECRET_CHANGE_THIS_SECRET"
   token-validity-seconds: 3600
+  initialPassword: testPassword#123

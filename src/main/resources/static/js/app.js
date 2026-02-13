@@ -23,25 +23,32 @@ document.getElementById("token-expiry").textContent = payload?.exp
 const dashboardSection = document.getElementById("dashboard-section");
 const accountSection = document.getElementById("account-section");
 
+function setSectionVisible(section, visible) {
+    section.style.display = visible ? "block" : "none";
+}
+
 document.getElementById("dashboard-btn").addEventListener("click", () => {
-    dashboardSection.style.display = "block";
-    accountSection.style.display = "none";
+    setSectionVisible(dashboardSection, true);
+    setSectionVisible(accountSection, false);
 });
 
 document.getElementById("account-btn").addEventListener("click", () => {
-    dashboardSection.style.display = "none";
-    accountSection.style.display = "block";
-});
-
-document.getElementById("back-dashboard-btn").addEventListener("click", () => {
-    dashboardSection.style.display = "block";
-    accountSection.style.display = "none";
+    setSectionVisible(dashboardSection, false);
+    setSectionVisible(accountSection, true);
 });
 
 document.getElementById("logout-btn").addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.href = "/login.html";
 });
+
+const params = new URLSearchParams(window.location.search);
+const page = params.get("page");
+
+if (page == "account") {
+    setSectionVisible(dashboardSection, false);
+    setSectionVisible(accountSection, true);
+}
 
 let selectedLobby = null;
 let selectedLobbyLi = null;

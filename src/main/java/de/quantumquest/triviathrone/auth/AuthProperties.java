@@ -10,6 +10,7 @@ public class AuthProperties {
     private Path userFile;
     private String jwtSecret;
     private long tokenValiditySeconds;
+    private String initialPassword;
 
     public Path getUserFile() {
         return userFile;
@@ -33,5 +34,13 @@ public class AuthProperties {
 
     public void setTokenValiditySeconds(long tokenValiditySeconds) {
         this.tokenValiditySeconds = tokenValiditySeconds;
+    }
+
+    public String getInitialPassword() {
+        return initialPassword;
+    }
+
+    public void setInitialPassword(String initialPassword) {
+        this.initialPassword = initialPassword;
     }
 }

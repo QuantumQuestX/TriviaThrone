@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UserAccount {
-
     private String username;
+    private String displayName;
     private String passwordHash;
     private Set<String> roles = new HashSet<>();
 
@@ -15,6 +15,14 @@ public class UserAccount {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getPasswordHash() {

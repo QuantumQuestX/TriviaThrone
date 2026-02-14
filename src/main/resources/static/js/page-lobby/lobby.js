@@ -76,8 +76,19 @@ async function initLobby() {
     );
 
     const lobbyData = await getLobbyData(lobbyDetails.lobbyCode);
-    console.log("lobbyData", lobbyData);
     renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
+    removeHostElements(lobbyData.lobbyHost);
+}
+
+function removeHostElements(hostUsername) {
+    const isHost = currentUser === hostUsername;
+    document.querySelectorAll("[data-admin]").forEach(ele => {
+        if (!isHost) {
+            ele.remove();
+        } else {
+            ele.style.display = "";
+        }
+    });
 }
 
 initLobby();

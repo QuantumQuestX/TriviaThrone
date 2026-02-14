@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lobby - TriviaThrone</title>
     <link rel="stylesheet" href="css/lobby.css">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
-    <header class="topbar">
-        <div class="logo">TriviaThrone</div>
-        <div class="lobby-info">
+    <header>
+        <h1>TriviaThrone</h1>
+        <div id="lobby-info">
             Lobby Code: <span id="lobby-code">A123</span>
         </div>
-        <button id="leave-btn" class="danger-btn">Leave Lobby</button>
+        <nav>
+            <p id="username-info">Logged in as: <span id="username-display"></span></p>
+            <button id="leave-btn" class="danger-btn">Leave Lobby</button>
+        </nav>
     </header>
 
     <main class="lobby-layout">
@@ -21,7 +26,8 @@
             <ul id="player-list" class="player-list"></ul>
 
             <div class="host-controls">
-                <button id="start-game-btn" class="primary-btn">Start Game</button>
+                <button id="cancel-game-btn" class="fullwidth-btn danger-btn">Cancel Game</button>
+                <button id="start-game-btn" class="fullwidth-btn primary-btn">Start Game</button>
             </div>
         </section>
 
@@ -38,12 +44,14 @@
                 <label for="game-file">Drop or Select <code>.game.throne</code> file</label>
             </div>
 
-            <button id="upload-btn" class="primary-btn">Upload</button>
+            <button id="upload-btn" class="fullwidth-btn primary-btn">Upload</button>
 
             <div id="upload-status" class="upload-status"></div>
         </section>
     </main>
 
+    <script src="js/root/token.js"></script>
+    <script src="js/root/topbar.js"></script>
     <script src="js/lobby.js"></script>
 </body>
 </html>

@@ -1,0 +1,45 @@
+@import "/css/root.css";
+@import "/css/components/panel.css";
+@import "/css/components/inputs.css";
+@import "/css/components/buttons.css";
+
+:root {
+    --gap: 15px;
+}
+
+.login-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.login-header {
+    flex: 0 0 auto;
+}
+
+.login-page {
+    flex: 1 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#login-inputs {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: var(--gap);
+    user-select: text;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    justify-content: space-between;
+}
+
+#login-error {
+    color: var(--danger);
+    min-height: calc(var(--gap) * 2);
+    margin: 0 auto;
+}

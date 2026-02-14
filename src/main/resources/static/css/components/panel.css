@@ -1,0 +1,15 @@
+.panel {
+    background-color: var(--bg-panel);
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.panel h2, .panel h3 {
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.panel h3 {
+    margin-top: 1rem;
+}

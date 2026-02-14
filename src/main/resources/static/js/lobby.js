@@ -1,55 +1,79 @@
-const token = localStorage.getItem("token");
+initTopbarUserByToken(parseJwt(token));
 
-function parseJwt(token) {
+const lobbyCode = new URLSearchParams(window.location.search).get("code");
+if (!lobbyCode) {
+    console.warn("No lobby code found in Session");
+    window.location.href = "/";
+}
+
+let stompClient, lobbySubscription;
+
+async function validateLobby(code) {
     try {
-        const payload = token.split(".")[1];
-        return JSON.parse(atob(payload));
-    } catch {
-        return null;
+        const res = await fetch(`/api/lobbies?code=${encodeURIComponent(code)}`, {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Validation request failed");
+
+        return await res.json();
+    } catch (err) {
+        console.error("Validation error: ", err);
+        return false;
     }
 }
 
-const currentUser = parseJwt(token)?.sub || null;
+async function initLobby() {
+    const valid = await validateLobby(lobbyCode);
+
+    if (!valid) {
+        console.warn("Lobby does not exist");
+        window.location.href = "/";
+        return;
+    }
+
+    console.log("is valid");
+
+    document.getElementById("lobby-code").textContent = lobbyCode;
+
+    const socket = new SockJS("/ws/lobby");
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect(
+        { "Authorization": "Bearer " + token },
+        () => {
+            console.log("Connected to lobby: ", lobbyCode);
+
+            lobbySubscription = stompClient.subscribe(`/topic/lobby.${lobbyCode}`, (message) => {
+                const data = JSON.parse(message.body);
+                renderPlayers(data.usernames);
+                addFeedMessage("Lobby updated");
+            });
+        }
+    );
+}
+
+initLobby();
 
 const playerList = document.getElementById("player-list");
 const eventFeed = document.getElementById("event-feed");
 
-function addPlayer(username, isHost = false) {
-    const li = document.createElement("li");
-    li.textContent = username;
-    li.classList.add("joined");
+function renderPlayers(players, hostUsername) {
+    playerList.innerHTML = "";
+    players.forEach(username => {
+        const li = document.createElement("li");
+        li.textContent = username;
 
-    if (currentUser !== null && username === currentUser) {
-        li.classList.add("you");
-
-        const youTag = document.createElement("span");
-        youTag.textContent = " (You)";
-        youTag.style.color = "#6c5ce7";
-        youTag.style.fontWeight = "normal";
-        li.appendChild(youTag);
-    }
-
-    if (isHost) {
-        const crown = document.createElement("span");
-        crown.textContent = " 👑";
-        li.appendChild(crown);
-    }
-
-    playerList.appendChild(li);
-    addFeedMessage(username + " joined the lobby");
-}
-
-function removePlayer(username) {
-    const players = playerList.querySelectorAll("li");
-    players.forEach(li => {
-        if (li.textContent.includes(username)) {
-            li.classList.remove("joined");
-            li.classList.add("left");
-            setTimeout(() => li.remove(), 800);
+        if (username === currentUser) li.classList.add("you");
+        if (username === hostUsername) {
+            const crown = document.createElement("span");
+            crown.textContent = " 👑";
+            li.appendChild(crown);
         }
-    });
 
-    addFeedMessage(username + " left the lobby");
+        playerList.appendChild(li);
+    });
 }
 
 function addFeedMessage(text) {
@@ -59,20 +83,22 @@ function addFeedMessage(text) {
     eventFeed.scrollTop = eventFeed.scrollHeight;
 }
 
-addPlayer("HostUser", true);
-addPlayer("Alice");
-addPlayer("Bob");
+document.getElementById("leave-btn").addEventListener("click", () => {
+    stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode } ));
 
-setTimeout(() => removePlayer("Bob"), 5000);
-
-document.getElementById("upload-btn").addEventListener("click", () => {
-    const file = document.getElementById("game-file").files[0];
-    const status = document.getElementById("upload-status");
-
-    if (!file) {
-        status.textContent = "Please select a file.";
-        return;
+    if (lobbySubscription) {
+        lobbySubscription.unsubscribe();
     }
+    
+    stompClient.disconnect(() => {
+        console.log("Disconnected cleanly");
+        window.location.href = "/index.html";
+    });
+});
 
-    status.textContent = "Uploading " + file.name + "...";
+window.addEventListener("beforeunload", () => {
+    if (stompClient && stompClient.connected) {
+        stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode } ));
+        stompClient.disconnect();
+    }
 });

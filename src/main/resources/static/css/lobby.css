@@ -1,35 +1,11 @@
-@import "root.css";
+@import "/css/root.css";
+@import "/css/components/panel.css";
+@import "/css/components/buttons.css";
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-    background: var(--bg);
-    color: var(--text);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 30px;
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
-}
-
-.logo {
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.lobby-info {
+#lobby-info {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 14px;
     color: var(--muted);
 }
@@ -42,10 +18,7 @@ body {
     padding: 20px;
 }
 
-section {
-    background: var(--bg-panel);
-    border-radius: 10px;
-    padding: 20px;
+.lobby-layout .panel {
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -88,10 +61,26 @@ h2 {
     background: linear-gradient(
         90deg,
         rgba(108, 92, 231, 0.25),
-        var(--panel-light)
+        var(--bg-panel-light)
     );
     font-weight: bold;
     box-shadow: 0 0 10px rgba(108, 92, 231, 0.4);
+}
+
+.host-controls {
+    --gap-size: 10px;
+
+    display: flex;
+    flex-direction: column;
+    
+    gap: var(--gap-size);
+    border-top: 2px solid var(--border);
+    border-radius: 2px;
+    padding-top: var(--gap-size);
+}
+
+.fullwidth-btn {
+    width: 100%;
 }
 
 .event-feed {

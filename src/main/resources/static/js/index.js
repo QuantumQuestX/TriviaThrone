@@ -1,24 +1,8 @@
-const token = localStorage.getItem("token");
+console.log(token);
 if (!token) {
     window.location.href = "/login.html";
 }
-
-function parseJwt(token) {
-    try {
-        const payload = token.split(".")[1];
-        return JSON.parse(atob(payload));
-    } catch (e) {
-        return null;
-    }
-}
-
-const payload = parseJwt(token);
-const username = payload?.sub || "Unknown";
-
-document.getElementById("username-display").textContent = username;
-document.getElementById("token-expiry").textContent = payload?.exp
-                        ? new Date(payload.exp * 1000).toLocaleString()
-                        : "Unkown";
+initTopbarUserByToken(parseJwt(token));
 
 const dashboardSection = document.getElementById("dashboard-section");
 const accountSection = document.getElementById("account-section");
@@ -27,6 +11,7 @@ function setSectionVisible(section, visible) {
     section.style.display = visible ? "block" : "none";
 }
 
+// Topbar button
 document.getElementById("dashboard-btn").addEventListener("click", () => {
     setSectionVisible(dashboardSection, true);
     setSectionVisible(accountSection, false);
@@ -37,35 +22,31 @@ document.getElementById("account-btn").addEventListener("click", () => {
     setSectionVisible(accountSection, true);
 });
 
-document.getElementById("logout-btn").addEventListener("click", () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login.html";
-});
-
+// Account page via URL param
 const params = new URLSearchParams(window.location.search);
 const page = params.get("page");
 
-if (page == "account") {
+if (page === "account") {
     setSectionVisible(dashboardSection, false);
     setSectionVisible(accountSection, true);
 }
 
+// Lobby browser
 let selectedLobby = null;
-let selectedLobbyLi = null;
 const lobbyList = document.getElementById("lobby-list");
 
-async function updateLobbyList() {
+async function loadLobbies() {
     try {
         const res = await fetch("/api/lobbies", {
+            method: "GET",
             headers: { "Authorization": "Bearer " + token }
         });
 
         if (!res.ok) throw new Error("Failed to fetch lobbies");
 
         const lobbies = await res.json();
-
         lobbyList.innerHTML = "";
-        selectedLobbyLi = null;
+        selectedLobby = null;
 
         lobbies.forEach(lobby => {
             const li = document.createElement("li");
@@ -74,55 +55,37 @@ async function updateLobbyList() {
 
             if (selectedLobby === lobby.code) {
                 li.classList.add("selected");
-                selectedLobbyLi = li;
             }
 
             li.addEventListener("click", () => {
-                if (selectedLobbyLi) {
-                    selectedLobbyLi.classList.remove("selected");
-                }
-
-                selectedLobby = lobby.code;
-                selectedLobbyLi = li;
-
+                document.querySelectorAll("#lobby-list li").forEach(n => n.classList.remove("selected"));
                 li.classList.add("selected");
+                selectedLobby = lobby.code;
             })
 
             lobbyList.appendChild(li);
         });
-
-        const stillExists = lobbies.some(l => l.code === selectedLobby);
-        if (!stillExists) {
-            selectedLobby = null;
-            selectedLobbyLi = null;
-        }
     } catch (err) {
         console.error(err);
         lobbyList.innerHTML = "<li>Error loading lobbies</li>";
     }
 }
 
-updateLobbyList();
-setInterval(updateLobbyList, 3000);
+// Refresh regulary (3s)
+loadLobbies();
+setInterval(loadLobbies, 3000);
 
 document.getElementById("join-btn").addEventListener("click", async () => {
-    const code = selectedLobby || document.getElementById("join-code").value;
+    const code = document.getElementById("join-code").value;
     if (!code) return alert("Enter a lobby code");
 
-    try {
-        const res = await fetch(`/api/lobbies/join?code=${encodeURIComponent(code)}`, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token }
-        });
+    localStorage.setItem("lobbyCode", code);
+    window.location.href = `/lobby.html`;
+});
 
-        if (!res.ok) throw new Error("Failed to join lobby");
-
-        const lobby = await res.json();
-        window.location.href = `/lobby.html?code=${encodeURI(lobby.code)}`;
-    } catch (err) {
-        console.error(err);
-        alert("Error joining lobby: " + err.message);
-    }
+document.getElementById("logout-btn").addEventListener("click", () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login.html";
 });
 
 document.getElementById("create-btn").addEventListener("click", async () => {
@@ -134,10 +97,10 @@ document.getElementById("create-btn").addEventListener("click", async () => {
             method: "POST",
             headers: { "Authorization": "Bearer " + token }
         });
-
         if (!res.ok) throw new Error("Failed to create lobby");
 
         const lobby = await res.json();
+
         window.location.href = `/lobby.html?code=${encodeURIComponent(lobby.code)}`;
     } catch (err) {
         console.error(err);

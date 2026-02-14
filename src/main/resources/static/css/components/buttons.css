@@ -1,0 +1,33 @@
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.primary-btn {
+    background: var(--accent);
+    padding: 10px;
+    transition: 0.2s ease-in-out;
+}
+
+.primary-btn:hover {
+    background: var(--accent-hover);
+}
+
+.secondary-btn {
+    background: var(--btn);
+    padding: 10px 15px;
+    transition: 0.2s ease-in-out;
+}
+
+.secondary-btn:hover {
+    background: var(--btn-hover)
+}
+
+.danger-btn {
+    background: var(--danger);
+    padding: 8px 12px;
+}

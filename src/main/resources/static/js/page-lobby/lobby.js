@@ -1,10 +1,11 @@
-initTopbarUserByToken(parseJwt(token));
+import { token, currentUser } from "../root/token.js";
 
 const lobbyCode = new URLSearchParams(window.location.search).get("code");
 if (!lobbyCode) {
     console.warn("No lobby code found in Session");
     window.location.href = "/";
 }
+document.getElementById("lobby-code").textContent = lobbyCode;
 
 let stompClient, lobbySubscription;
 
@@ -24,6 +25,22 @@ async function validateLobby(code) {
     }
 }
 
+async function getLobbyData(code) {
+    try {
+        const res = await fetch(`/api/lobbies/info?code=${encodeURIComponent(code)}`, {
+            method: "GET",
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Could not get info");
+
+        return await res.json();
+    } catch (err) {
+        console.error("Could not get info");
+        return null;
+    }
+}
+
 async function initLobby() {
     const valid = await validateLobby(lobbyCode);
 
@@ -33,10 +50,6 @@ async function initLobby() {
         return;
     }
 
-    console.log("is valid");
-
-    document.getElementById("lobby-code").textContent = lobbyCode;
-
     const socket = new SockJS("/ws/lobby");
     stompClient = Stomp.over(socket);
 
@@ -45,6 +58,7 @@ async function initLobby() {
         () => {
             console.log("Connected to lobby: ", lobbyCode);
 
+            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode } ));
             lobbySubscription = stompClient.subscribe(`/topic/lobby.${lobbyCode}`, (message) => {
                 const data = JSON.parse(message.body);
                 renderPlayers(data.usernames);
@@ -52,6 +66,12 @@ async function initLobby() {
             });
         }
     );
+
+    const lobbyData = await getLobbyData(lobbyCode);
+
+    console.log("lobbyData", lobbyData);
+    renderPlayers(lobbyData.usernames, lobbyData.hostUsername);
+    addFeedMessage("You joined lobby");
 }
 
 initLobby();

@@ -1,30 +1,31 @@
 package de.quantumquest.triviathrone.server;
 
-import java.util.ArrayList;
-import java.util.List;
+import de.quantumquest.triviathrone.auth.UserAccount;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Lobby {
     private final String code;
     private final String name;
-    private final List<Player> players = new ArrayList<>();
-    private boolean gameStarted = false;
-    
-    public Lobby(String code, String name) {
+    private final String hostUser;
+    private final Set<String> users = Collections.synchronizedSet(new HashSet<>());
+
+    public Lobby(String code, String name, String hostUser) {
         this.code = code;
         this.name = name;
-    }
-    
-    public void addPlayer(Player player) {
-        if (!players.contains(player))
-            players.add(player);
+        this.hostUser = hostUser;
+        addUser(hostUser);
     }
 
-    public void removePlayer(Player player) {
-        players.remove(player);
+    public void addUser(String username) {
+        users.add(username);
     }
 
-    public List<Player> getPlayers() {
-        return List.copyOf(players);
+    public void removeUser(String username) {
+        users.remove(username);
     }
 
     public String getCode() {
@@ -35,16 +36,11 @@ public class Lobby {
         return name;
     }
 
-    public boolean isGameStarted() {
-        return gameStarted;
+    public String getHostUser() {
+        return hostUser;
     }
 
-    public void startGame() {
-        gameStarted = true;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Lobby[code=%s, name=%s, players=%s, started=%b]", code, name, players, gameStarted);
+    public Set<String> listUsernames() {
+        return Set.copyOf(users);
     }
 }

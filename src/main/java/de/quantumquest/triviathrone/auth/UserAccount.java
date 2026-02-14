@@ -40,4 +40,21 @@ public class UserAccount {
     public void setRoles(Set<String> roles) {
         this.roles = roles;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof UserAccount other)) return false;
+        return username.equals(other.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return username.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("UserAccount[username=%s, displayName=%s, roles=%s]", username, displayName, roles);
+    }
 }

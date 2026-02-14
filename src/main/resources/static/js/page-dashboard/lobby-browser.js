@@ -1,37 +1,5 @@
-console.log(token);
-if (!token) {
-    window.location.href = "/login.html";
-}
-initTopbarUserByToken(parseJwt(token));
+import { token } from "../root/token.js";
 
-const dashboardSection = document.getElementById("dashboard-section");
-const accountSection = document.getElementById("account-section");
-
-function setSectionVisible(section, visible) {
-    section.style.display = visible ? "block" : "none";
-}
-
-// Topbar button
-document.getElementById("dashboard-btn").addEventListener("click", () => {
-    setSectionVisible(dashboardSection, true);
-    setSectionVisible(accountSection, false);
-});
-
-document.getElementById("account-btn").addEventListener("click", () => {
-    setSectionVisible(dashboardSection, false);
-    setSectionVisible(accountSection, true);
-});
-
-// Account page via URL param
-const params = new URLSearchParams(window.location.search);
-const page = params.get("page");
-
-if (page === "account") {
-    setSectionVisible(dashboardSection, false);
-    setSectionVisible(accountSection, true);
-}
-
-// Lobby browser
 let selectedLobby = null;
 const lobbyList = document.getElementById("lobby-list");
 
@@ -50,17 +18,17 @@ async function loadLobbies() {
 
         lobbies.forEach(lobby => {
             const li = document.createElement("li");
-            li.textContent = `${lobby.name} (Code: ${lobby.code})`;
+            li.textContent = `${lobby.name} (Code: ${lobby.lobbyCode})`;
             li.style.cursor = "pointer";
 
-            if (selectedLobby === lobby.code) {
+            if (selectedLobby === lobby.lobbyCode) {
                 li.classList.add("selected");
             }
 
             li.addEventListener("click", () => {
                 document.querySelectorAll("#lobby-list li").forEach(n => n.classList.remove("selected"));
                 li.classList.add("selected");
-                selectedLobby = lobby.code;
+                selectedLobby = lobby.lobbyCode;
             })
 
             lobbyList.appendChild(li);
@@ -71,23 +39,25 @@ async function loadLobbies() {
     }
 }
 
-// Refresh regulary (3s)
 loadLobbies();
 setInterval(loadLobbies, 3000);
 
+// Join lobby
 document.getElementById("join-btn").addEventListener("click", async () => {
     const code = document.getElementById("join-code").value;
     if (!code) return alert("Enter a lobby code");
 
     localStorage.setItem("lobbyCode", code);
-    window.location.href = `/lobby.html`;
+    window.location.href = `/lobby.html?code=${code}`;
 });
 
+// Logout
 document.getElementById("logout-btn").addEventListener("click", () => {
     localStorage.removeItem("token");
     window.location.href = "/login.html";
 });
 
+// Create lobby
 document.getElementById("create-btn").addEventListener("click", async () => {
     const name = document.getElementById("lobby-name").value;
     if (!name) return alert("Enter a lobby name");
@@ -101,7 +71,7 @@ document.getElementById("create-btn").addEventListener("click", async () => {
 
         const lobby = await res.json();
 
-        window.location.href = `/lobby.html?code=${encodeURIComponent(lobby.code)}`;
+        window.location.href = `/lobby.html?code=${encodeURIComponent(lobby.lobbyCode)}`;
     } catch (err) {
         console.error(err);
         alert("Error creating lobby: " + err.message);

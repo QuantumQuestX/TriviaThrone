@@ -22,14 +22,13 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/auth/**",
                                 "/auth/login",
                                 "/login.html",
-                                "/lobby.html",
                                 "/index.html",
-                                "/buzzer.html",
-                                "/api/**",
+                                "/lobby.html",
+                                "/ws/**",
                                 "/",
+                                "/favicon.ico",
                                 "/css/**",
                                 "/js/**").permitAll()
                         .anyRequest().authenticated()

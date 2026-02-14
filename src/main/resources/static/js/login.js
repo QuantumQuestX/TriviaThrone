@@ -16,7 +16,7 @@ document.getElementById("login-form").addEventListener("submit", async e => {
 
         const data = await res.json();
         localStorage.setItem("token", data.token);
-        window.location.href = "/index.html";
+        window.location.href = "/";
     } catch (err) {
         document.getElementById("login-error").textContent = err.message;
     }

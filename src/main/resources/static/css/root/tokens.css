@@ -1,0 +1,19 @@
+:root {
+    --bg: #0f1117;
+    --bg-panel: #1a1d26;
+    --bg-panel-light: #222632;
+
+    --text: #e0e0e0;
+    --muted: #999999;
+
+    --accent: #6c5ce7;
+    --accent-hover: #7d6cf0;
+
+    --danger: #e74c3c;
+    --success: #2ecc71;
+
+    --btn: #3a3a50;
+    --btn-hover: #505070;
+
+    --border: #2b2f3a;
+}

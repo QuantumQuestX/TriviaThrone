@@ -1,0 +1,15 @@
+input {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #444;
+    color: var(--bg);
+    cursor: pointer;
+}
+
+input::placeholder {
+    color: var(--muted);
+}
+
+input::focus {
+    border-color: var(--accent);
+}

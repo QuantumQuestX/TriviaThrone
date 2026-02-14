@@ -4,21 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TriviaThrone</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="/css/index.css">
 </head>
 <body>
     <header>
         <h1>TriviaThrone</h1>
         <nav>
+            <p id="username-info">Logged in as: <span id="username-display"></span></p>
             <button id="dashboard-btn" class="primary-btn">Dashboard</button>
             <button id="account-btn" class="primary-btn">Account</button>
             <button id="logout-btn" class="danger-btn">Logout</button>
         </nav>
     </header>
     <main>
-        <section id="dashboard-section">
+        <section id="dashboard-section" class="panel">
             <h2>Available Lobbies</h2>
-            <ul id="lobby-list"></ul>
+            <ul id="lobby-list">
+                <li>Hallo</li>
+                <li>Hallo</li>
+                <li>Hallo</li>
+                <li>Hallo</li>
+            </ul>
+
+            <div class="separator"></div>
 
             <h3>Join Lobby</h3>
             <input type="text" id="join-code" placeholder="Enter lobby code">
@@ -28,13 +36,42 @@
             <input type="text" id="lobby-name" placeholder="Lobby Name">
             <button id="create-btn" class="secondary-btn">Create</button>
         </section>
-        <section id="account-section" style="display: none;">
-            <h2>Account Info</h2>
-            <p>Username: <span id="username-display"></span></p>
-            <p>Token expires in: <span id="token-expiry"></span></p>
+        <section id="account-section" style="display: none;"  class="panel">
+            <h2>Account Settings</h2>
+
+            <div class="account-info">
+                <p>Username: <span id="username-display"></span></p>
+                <p>Token expires in: <span id="token-expiry"></span></p>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="change-password">
+                <h3>Change Password</h3>
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <input type="password" id="current-password" placeholder="Current Password"/>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" id="new-password" placeholder="New Password"/>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="password" id="confirm-password" placeholder="Confirm New Password"/>
+                    </div>
+
+                    <button type="submit" class="primary-btn">Update Password</button>
+                </form>
+
+                <div id="password-message"></div>
+            </div>
         </section>
     </main>
 
-    <script src="js/app.js"></script>
+    <script src="/js/root/token.js"></script>
+    <script src="/js/root/topbar.js"></script>
+    <script src="/js/account.js"></script>
+    <script src="/js/index.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 package de.quantumquest.triviathrone.ws;
 
-import de.quantumquest.triviathrone.dto.lobby.LobbyMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
 import de.quantumquest.triviathrone.server.LobbyEventService;
 import de.quantumquest.triviathrone.server.LobbyService;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ public class WebSocketLobbyController {
     }
 
     @MessageMapping("/join")
-    public void join(LobbyMessage msg, @AuthenticationPrincipal Principal principal) {
+    public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
         logger.info("OnJoin: {} joined lobby with code {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 
@@ -34,7 +34,7 @@ public class WebSocketLobbyController {
     }
 
     @MessageMapping("/leave")
-    public void leave(LobbyMessage msg, @AuthenticationPrincipal Principal principal) {
+    public void leave(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
         logger.info("OnLeave: {} left lobby with code {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 

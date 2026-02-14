@@ -1,14 +1,12 @@
 import { token, currentUser } from "../root/token.js";
 import { handleDeltaMessage } from "./messages.js";
 
-const lobbyCode = localStorage.getItem("lobbyCode");
-if (!lobbyCode) {
+const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
+const lobbyCode = lobbyDetails.lobbyCode;
+
+if (!lobbyCode || !(await validateLobby(lobbyCode))) {
     console.warn("No lobby code found in Session");
-    window.location.href = "/";
-}
-if (!(await validateLobby(lobbyCode))) {
-    localStorage.removeItem("lobbyCode");
-    console.warn("No valid lobby code found in Session");
+    localStorage.removeItem("lobbyDetails");
     window.location.href = "/";
 }
 document.getElementById("lobby-code").textContent = lobbyCode;
@@ -73,11 +71,11 @@ async function initLobby() {
                     renderPlayers(data.usernames, data.lobbyHost);
                 }
             });
-            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode } ));
+            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
         }
     );
 
-    const lobbyData = await getLobbyData(lobbyCode);
+    const lobbyData = await getLobbyData(lobbyDetails.lobbyCode);
     console.log("lobbyData", lobbyData);
     renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
 }
@@ -115,7 +113,7 @@ export function addFeedMessage(text) {
 }
 
 document.getElementById("leave-btn").addEventListener("click", () => {
-    stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode } ));
+    stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
 
     if (lobbySubscription) {
         lobbySubscription.unsubscribe();
@@ -129,7 +127,7 @@ document.getElementById("leave-btn").addEventListener("click", () => {
 
 window.addEventListener("beforeunload", () => {
     if (stompClient && stompClient.connected) {
-        stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode } ));
+        stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
         stompClient.disconnect();
     }
 });

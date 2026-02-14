@@ -1,8 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
-import de.quantumquest.triviathrone.dto.lobby.LobbyMessage;
-import de.quantumquest.triviathrone.dto.lobby.LobbyDiscoveryMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
 import de.quantumquest.triviathrone.dto.lobby.LobbyInfoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,10 +22,10 @@ public class LobbyController {
     }
 
     @GetMapping
-    public List<LobbyDiscoveryMessage> listLobbies() {
+    public List<LobbyCommonMessage> listLobbies() {
         logger.info("GET: listing lobbies");
         return lobbyService.listLobbies().stream()
-                .map(lobby -> new LobbyDiscoveryMessage(lobby.getLobbyName(), lobby.getLobbyCode()))
+                .map(lobby -> new LobbyCommonMessage(lobby.getLobbyName(), lobby.getLobbyCode()))
                 .toList();
     }
 
@@ -49,11 +48,11 @@ public class LobbyController {
     }
 
     @PostMapping("/create")
-    public LobbyMessage createLobby(@RequestParam String name, @AuthenticationPrincipal UserAccount user) {
+    public LobbyCommonMessage createLobby(@RequestParam String name, @AuthenticationPrincipal UserAccount user) {
         logger.info("POST: creating lobby with name {} by user {}", name, user);
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Lobby name cannot be empty");
         Lobby lobby = lobbyService.createLobby(name, user);
-        return new LobbyMessage(lobby.getLobbyCode());
+        return new LobbyCommonMessage(lobby.getLobbyName(), lobby.getLobbyCode());
     }
 }

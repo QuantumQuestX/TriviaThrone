@@ -25,8 +25,8 @@
             <h2>Players</h2>
             <ul id="player-list" class="player-list"></ul>
 
-            <div class="host-controls">
-                <button id="cancel-game-btn" class="fullwidth-btn danger-btn">Cancel Game</button>
+            <div class="host-controls" data-admin="true" style="display: none;">
+                <button id="cancel-game-btn" data-admin="true" class="fullwidth-btn danger-btn">Cancel Game</button>
                 <button id="start-game-btn" class="fullwidth-btn primary-btn">Start Game</button>
             </div>
         </section>
@@ -36,7 +36,7 @@
             <div id="event-feed" class="event-feed"></div>
         </section>
 
-        <section id="host-panel" class="upload-pane panel">
+        <section id="host-panel" data-admin="true" class="upload-pane panel" style="display: none;">
             <h2>Upload Game</h2>
 
             <div class="upload-box">

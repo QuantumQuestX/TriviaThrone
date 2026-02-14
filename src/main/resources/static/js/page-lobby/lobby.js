@@ -1,4 +1,5 @@
 import { token, currentUser } from "../root/token.js";
+import { handleDeltaMessage } from "./messages.js";
 
 const lobbyCode = localStorage.getItem("lobbyCode");
 if (!lobbyCode) {
@@ -65,26 +66,29 @@ async function initLobby() {
 
             lobbySubscription = stompClient.subscribe(`/topic/lobby.${lobbyCode}`, (message) => {
                 const data = JSON.parse(message.body);
-                renderPlayers(data.usernames, data.hostUsername);
-                addFeedMessage("Lobby updated");
+
+                if (data.action) {
+                    handleDeltaMessage(data);
+                } else {
+                    renderPlayers(data.usernames, data.lobbyHost);
+                }
             });
             stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode } ));
         }
     );
 
     const lobbyData = await getLobbyData(lobbyCode);
-
     console.log("lobbyData", lobbyData);
-    renderPlayers(lobbyData.usernames, lobbyData.hostUsername);
-    addFeedMessage("You joined lobby");
+    renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
 }
 
 initLobby();
 
-const playerList = document.getElementById("player-list");
+export const crownChar = " 👑";
+export const playerList = document.getElementById("player-list");
 const eventFeed = document.getElementById("event-feed");
 
-function renderPlayers(players, hostUsername) {
+export function renderPlayers(players, hostUsername) {
     playerList.innerHTML = "";
     players.forEach(username => {
         const li = document.createElement("li");
@@ -95,7 +99,7 @@ function renderPlayers(players, hostUsername) {
         if (username === currentUser) li.classList.add("you");
         if (username === hostUsername) {
             const crown = document.createElement("span");
-            crown.textContent = " 👑";
+            crown.textContent = crownChar;
             li.appendChild(crown);
         }
 
@@ -103,7 +107,7 @@ function renderPlayers(players, hostUsername) {
     });
 }
 
-function addFeedMessage(text) {
+export function addFeedMessage(text) {
     const div = document.createElement("div");
     div.textContent = text;
     eventFeed.appendChild(div);

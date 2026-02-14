@@ -48,7 +48,7 @@ document.getElementById("join-btn").addEventListener("click", async () => {
     if (!code) return alert("Enter a lobby code");
 
     localStorage.setItem("lobbyCode", code);
-    window.location.href = `/lobby.html?code=${code}`;
+    window.location.href = "/lobby.html";
 });
 
 // Logout
@@ -71,7 +71,8 @@ document.getElementById("create-btn").addEventListener("click", async () => {
 
         const lobby = await res.json();
 
-        window.location.href = `/lobby.html?code=${encodeURIComponent(lobby.lobbyCode)}`;
+        localStorage.setItem("lobbyCode", lobby.lobbyCode);
+        window.location.href = "/lobby.html";
     } catch (err) {
         console.error(err);
         alert("Error creating lobby: " + err.message);

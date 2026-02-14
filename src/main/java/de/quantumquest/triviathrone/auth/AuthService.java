@@ -5,6 +5,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
     private final UserConfigLoader users;
@@ -23,9 +25,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        if (newPassword.length() < 12) {
-            throw new IllegalArgumentException("Password too short");
-        }
+        PasswordUtils.validate(newPassword);
 
         String newHash = encoder.encode(newPassword);
         users.updatePassword(username, newHash);

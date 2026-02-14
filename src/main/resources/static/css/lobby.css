@@ -2,6 +2,11 @@
 @import "/css/components/panel.css";
 @import "/css/components/buttons.css";
 
+.lobby-body {
+    display: flex;
+    flex-direction: column;
+}
+
 #lobby-info {
     position: absolute;
     left: 50%;
@@ -14,6 +19,7 @@
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 1fr;
     gap: 20px;
     padding: 20px;
 }

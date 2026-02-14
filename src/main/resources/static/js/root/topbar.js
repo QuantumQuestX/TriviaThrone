@@ -1,4 +1,10 @@
-function initTopbarUserByToken(parsedToken) {
-    const username = parsedToken?.sub || "Unkown";
-    document.getElementById("username-display").textContent = username;
+import { payload } from "./token.js";
+
+export function initTopbarUserByToken() {
+    const usernameSpan = document.getElementById("username-display");
+    if (!usernameSpan) return;
+    
+    usernameSpan.textContent = payload?.sub || "Unknown";
 }
+
+initTopbarUserByToken();

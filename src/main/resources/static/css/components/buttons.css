@@ -18,7 +18,7 @@
 }
 
 .secondary-btn {
-    background: var(--btn);
+    background: var(--accent);
     padding: 10px 15px;
     transition: 0.2s ease-in-out;
 }

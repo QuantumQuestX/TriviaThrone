@@ -44,7 +44,7 @@ setInterval(loadLobbies, 3000);
 
 // Join lobby
 document.getElementById("join-btn").addEventListener("click", async () => {
-    const code = document.getElementById("join-code").value;
+    const code = selectedLobby || document.getElementById("join-code").value;
     if (!code) return alert("Enter a lobby code");
 
     localStorage.setItem("lobbyCode", code);

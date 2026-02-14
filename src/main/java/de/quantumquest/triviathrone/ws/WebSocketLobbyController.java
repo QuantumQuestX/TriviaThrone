@@ -5,6 +5,8 @@ import de.quantumquest.triviathrone.auth.UserConfigLoader;
 import de.quantumquest.triviathrone.dto.LobbyMessage;
 import de.quantumquest.triviathrone.dto.LobbyInfoMessage;
 import de.quantumquest.triviathrone.server.LobbyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,19 +16,18 @@ import java.security.Principal;
 
 @Controller
 public class WebSocketLobbyController {
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketLobbyController.class);
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserConfigLoader userConfigLoader;
 
-    public WebSocketLobbyController(LobbyService lobbyService, SimpMessagingTemplate simpMessagingTemplate, UserConfigLoader userConfigLoader) {
+    public WebSocketLobbyController(LobbyService lobbyService, SimpMessagingTemplate simpMessagingTemplate) {
         this.lobbyService = lobbyService;
         this.messagingTemplate = simpMessagingTemplate;
-        this.userConfigLoader = userConfigLoader;
     }
 
     @MessageMapping("/join")
     public void join(LobbyMessage msg, @AuthenticationPrincipal Principal principal) {
-        System.out.println("onjoin " + principal.getName());
+        logger.info("OnJoin: {} joined lobby with code {}", principal.getName(), msg.lobbyCode());
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
             lobby.addUser(principal.getName());
 
@@ -42,6 +43,7 @@ public class WebSocketLobbyController {
 
     @MessageMapping("/leave")
     public void leave(LobbyMessage msg, @AuthenticationPrincipal Principal principal) {
+        logger.info("OnLeave: {} left lobby with code {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
@@ -49,6 +51,7 @@ public class WebSocketLobbyController {
 
             if (lobby.listUsernames().isEmpty()) {
                 lobbyService.removeLobby(lobby.getCode());
+                logger.info("OnLeave: lobby with code {} is empty. Deleting...", msg.lobbyCode());
             } else {
                 LobbyInfoMessage update = new LobbyInfoMessage(
                         lobby.getCode(),
@@ -57,7 +60,7 @@ public class WebSocketLobbyController {
                 );
 
                 messagingTemplate.convertAndSend(
-                        "/topic/payload." + lobby.getCode(),
+                        "/topic/lobby." + lobby.getCode(),
                         update
                 );
             }

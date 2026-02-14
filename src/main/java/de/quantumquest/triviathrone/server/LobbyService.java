@@ -1,6 +1,8 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -12,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class LobbyService {
+    private static final Logger logger = LoggerFactory.getLogger(LobbyService.class);
     private final Map<String, Lobby> lobbies = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
 
@@ -21,7 +24,7 @@ public class LobbyService {
             code = generateCode(6);
         } while (lobbies.containsKey(code));
 
-        System.out.printf("[%s] create host = %s", getClass().getSimpleName(), hostAccount.getUsername());
+        logger.info("Creating lobby with code {} by {}", code, hostAccount.getUsername());
         Lobby lobby = new Lobby(code, name, hostAccount.getUsername());
         lobbies.put(code, lobby);
         return lobby;

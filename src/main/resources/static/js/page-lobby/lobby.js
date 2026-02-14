@@ -58,12 +58,12 @@ async function initLobby() {
         () => {
             console.log("Connected to lobby: ", lobbyCode);
 
-            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode } ));
             lobbySubscription = stompClient.subscribe(`/topic/lobby.${lobbyCode}`, (message) => {
                 const data = JSON.parse(message.body);
-                renderPlayers(data.usernames);
+                renderPlayers(data.usernames, data.hostUsername);
                 addFeedMessage("Lobby updated");
             });
+            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode } ));
         }
     );
 
@@ -84,6 +84,8 @@ function renderPlayers(players, hostUsername) {
     players.forEach(username => {
         const li = document.createElement("li");
         li.textContent = username;
+
+        console.log(username, hostUsername, currentUser, username === hostUsername);
 
         if (username === currentUser) li.classList.add("you");
         if (username === hostUsername) {

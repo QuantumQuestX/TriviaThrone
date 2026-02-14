@@ -1,8 +1,13 @@
 import { token, currentUser } from "../root/token.js";
 
-const lobbyCode = new URLSearchParams(window.location.search).get("code");
+const lobbyCode = localStorage.getItem("lobbyCode");
 if (!lobbyCode) {
     console.warn("No lobby code found in Session");
+    window.location.href = "/";
+}
+if (!(await validateLobby(lobbyCode))) {
+    localStorage.removeItem("lobbyCode");
+    console.warn("No valid lobby code found in Session");
     window.location.href = "/";
 }
 document.getElementById("lobby-code").textContent = lobbyCode;

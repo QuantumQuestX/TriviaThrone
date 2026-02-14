@@ -1,6 +1,6 @@
 import { payload } from "./token.js";
 
-export function initTopbarUserByToken() {
+function initTopbarUserByToken() {
     const usernameSpan = document.getElementById("username-display");
     if (!usernameSpan) return;
     

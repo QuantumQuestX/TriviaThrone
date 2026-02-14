@@ -1,9 +1,9 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
-import de.quantumquest.triviathrone.dto.LobbyMessage;
-import de.quantumquest.triviathrone.dto.LobbyDiscoveryMessage;
-import de.quantumquest.triviathrone.dto.LobbyInfoMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyDiscoveryMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyInfoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +26,7 @@ public class LobbyController {
     public List<LobbyDiscoveryMessage> listLobbies() {
         logger.info("GET: listing lobbies");
         return lobbyService.listLobbies().stream()
-                .map(lobby -> new LobbyDiscoveryMessage(lobby.getName(), lobby.getCode()))
+                .map(lobby -> new LobbyDiscoveryMessage(lobby.getLobbyName(), lobby.getLobbyCode()))
                 .toList();
     }
 
@@ -36,7 +36,7 @@ public class LobbyController {
         if (code == null || code.isBlank()) return null;
         Optional<Lobby> optLobby = lobbyService.getLobby(code);
         return optLobby.map(lobby ->
-                            new LobbyInfoMessage(code, lobby.listUsernames(), lobby.getHostUser()))
+                            new LobbyInfoMessage(code, lobby.getHostUsername(), lobby.listUsernames()))
                        .orElse(null);
     }
 
@@ -54,6 +54,6 @@ public class LobbyController {
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Lobby name cannot be empty");
         Lobby lobby = lobbyService.createLobby(name, user);
-        return new LobbyMessage(lobby.getCode());
+        return new LobbyMessage(lobby.getLobbyCode());
     }
 }

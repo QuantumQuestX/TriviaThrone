@@ -1,17 +1,15 @@
 package de.quantumquest.triviathrone.server;
 
-import de.quantumquest.triviathrone.auth.UserAccount;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.TreeSet;
 
 public class Lobby {
     private final String code;
     private final String name;
     private final String hostUser;
-    private final Set<String> users = Collections.synchronizedSet(new HashSet<>());
+    private final Set<String> users = Collections.synchronizedSet(new TreeSet<>());
 
     public Lobby(String code, String name, String hostUser) {
         this.code = code;
@@ -28,15 +26,15 @@ public class Lobby {
         users.remove(username);
     }
 
-    public String getCode() {
+    public String getLobbyCode() {
         return code;
     }
 
-    public String getName() {
+    public String getLobbyName() {
         return name;
     }
 
-    public String getHostUser() {
+    public String getHostUsername() {
         return hostUser;
     }
 

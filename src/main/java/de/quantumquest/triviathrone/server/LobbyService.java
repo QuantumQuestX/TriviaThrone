@@ -15,13 +15,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class LobbyService {
     private static final Logger logger = LoggerFactory.getLogger(LobbyService.class);
+
+    private static final int CODE_LENGTH = 6;
     private final Map<String, Lobby> lobbies = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
 
     public Lobby createLobby(String name, UserAccount hostAccount) {
         String code;
         do {
-            code = generateCode(6);
+            code = generateCode();
         } while (lobbies.containsKey(code));
 
         logger.info("Creating lobby with code {} by {}", code, hostAccount.getUsername());
@@ -46,12 +48,16 @@ public class LobbyService {
         return lobbies.values().stream().filter(lobby -> lobby.listUsernames().contains(username)).findFirst();
     }
     
-    private String generateCode(int length) {
+    private String generateCode() {
         final String codeChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
+        StringBuilder sb = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
             sb.append(codeChars.charAt(random.nextInt(codeChars.length())));
         }
-        return sb.toString();
+        String code = sb.toString();
+        if (lobbies.containsKey(code))
+            return generateCode();
+        else
+            return code;
     }
 }

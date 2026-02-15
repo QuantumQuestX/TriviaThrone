@@ -5,6 +5,7 @@
     border-radius: 6px;
     color: white;
     cursor: pointer;
+    flex: 1;
 }
 
 .primary-btn {
@@ -18,7 +19,7 @@
 }
 
 .secondary-btn {
-    background: var(--accent);
+    background: var(--btn);
     padding: 10px 15px;
     transition: 0.2s ease-in-out;
 }
@@ -30,4 +31,12 @@
 .danger-btn {
     background: var(--danger);
     padding: 8px 12px;
+}
+
+.danger-btn:hover {
+    background: var(--danger-hover);
+}
+
+.danger-btn:active {
+    background: var(--danger-active);
 }

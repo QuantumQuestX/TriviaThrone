@@ -24,19 +24,31 @@ export class Board {
         );
     }
 
-    setCounts(categoryCount, questionCount) {
-        this.categoryCount = categoryCount;
-        this.questionCount = questionCount;
+    setCounts(newCategoryCount, newQuestionCount) {
+        const oldQuestions = this.questions;
+        const oldCategories = this.categories;
 
-        while (this.categories.length < categoryCount) {
-            this.categories.push({ name: `Category ${this.categories.length + 1}` });
+        this.categoryCount = newCategoryCount;
+        this.questionCount = newQuestionCount;
+
+        for (let i = 0; i < newCategoryCount; i++) {
+            if (!this.categories[i])
+                this.categories[i] = { name: `Category ${i + 1}` };
         }
 
-        while (this.categories.length > categoryCount) {
-            this.categories.pop();
-        }
+        const newQuestions = Array.from({ length: newQuestionCount }, (_, r) =>
+            Array.from({ length: newCategoryCount }, (_, c) =>
+                oldQuestions[r]?.[c] || new Question(c, r, (r + 1) * 100)
+            )
+        );
 
-        this.initQuestions();
+        this.questions = newQuestions;
+
+        this.appliedQuestions = new Set(
+            [...this.appliedQuestions].filter(q =>
+                q.rowIdx < this.questionCount && q.categoryIdx < this.categoryCount
+        )
+    );
 
         this.render();
     }
@@ -93,6 +105,9 @@ export class Board {
     }
 
     renderCell(rowIdx, categoryIdx) {
+        const isOutOfBounds = rowIdx >= this.questionCount || categoryIdx >= this.categoryCount;
+        if (isOutOfBounds) return;
+
         const cell = document.createElement('div');
         const question = this.questions[rowIdx][categoryIdx];
 

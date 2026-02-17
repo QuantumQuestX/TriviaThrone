@@ -1,20 +1,39 @@
 :root {
-    --panel-expanded-width: 20vw;
+    --panel-expanded-width: 320px;
     --collapsed-width: 60px;
     --panel-transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+body {
+    overflow-y: hidden;
+}
+
+.editor-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: calc(100vh - var(--top-bar-height));
+}
+
+header {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 main.editor-layout {
     display: flex;
     flex-direction: row;
-    height: calc(100vh - var(--top-bar-height));
+    width: 100%;
+    min-width: calc(var(--panel-expanded-width) * 2 + 900px + 30px);
+    height: 100%;
     padding: 15px;
     gap: 15px;
-    overflow: hidden;
+    overflow-y: hidden;
+    overflow-x: auto;
 }
 
 .panel {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     overflow-y: auto;
     padding-top: 0;
@@ -22,7 +41,7 @@ main.editor-layout {
 
 .side-panel {
     flex: 0 0 var(--panel-expanded-width);
-    max-width: min(30%, 400px);
+    max-width: var(--panel-expanded-width);
     transition: flex-basis var(--panel-transition),
                 padding var(--panel-transition);
     padding: 0;
@@ -146,8 +165,6 @@ main.editor-layout {
     pointer-events: none;
 }
 
-@media (max-width: 1000px) {
-    :root {
-        --panel-expanded-width: 250px;
-    }
+@media (max-width: 1450px) {
+    
 }

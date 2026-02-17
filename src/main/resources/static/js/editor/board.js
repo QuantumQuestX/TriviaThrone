@@ -11,6 +11,9 @@ export class Board {
         
         this.questions = [];
         this.initQuestions();
+
+        this.editingQuestion = null;
+        this.appliedQuestions = new Set();
     }
 
     initQuestions() {
@@ -93,13 +96,34 @@ export class Board {
         const cell = document.createElement('div');
         const question = this.questions[rowIdx][categoryIdx];
 
-        cell.className = `j-cell empty`;
+        cell.className = "j-cell";
         cell.textContent = question.points;
 
+        if (this.editingQuestion === question) {
+            cell.classList.add('editing');
+        } else if (this.appliedQuestions.has(question)) {
+            cell.classList.add('applied');
+        } else {
+            cell.classList.add('empty');
+        }
+
         cell.addEventListener('click', () => {
+            this.editingQuestion = question;
+            this.render();
             this.onCellClickedCallback(question);
         });
 
         this.container.appendChild(cell);
+    }
+
+    applyQuestion(question) {
+        this.appliedQuestions.add(question);
+        this.deselectCell();
+        this.render();
+    }
+
+    deselectCell() {
+        this.editingQuestion = null;
+        this.render();
     }
 }

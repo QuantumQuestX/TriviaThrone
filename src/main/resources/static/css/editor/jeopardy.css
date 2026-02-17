@@ -29,14 +29,27 @@
     font-size: 1.1rem;
     cursor: pointer;
 
-    transition: transform 0.1s ease, background-color 0.2s ease;
+    transition: transform 0.1s ease, background-color 0.2s ease, border 0.2 ease-in-out;
 }
 
 .j-cell:hover {
     transform: translateY(-2px);
+    border: 2px solid var(--accent);
     background-color: var(--bg-panel-light);
 }
 
 .j-cell.empty {
     opacity: 0.6;
+}
+
+.j-cell.editing {
+    border: 2px dashed var(--accent);
+    background-color: var(--bg-panel-light);
+    opacity: 1;
+}
+
+.j-cell.applied {
+    border: 2px solid var(--accent);
+    background-color: var(--bg-panel);
+    opacity: 1;
 }

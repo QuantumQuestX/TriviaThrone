@@ -1,8 +1,10 @@
 const GLOBAL_QUESTION_CHOICES_COUNT = 4;
+const GLOBAL_MEDIA_PLACEHOLDER_VALUE = '';
 
 export class QuestionEditor {
-    constructor(rootElement) {
+    constructor(rootElement, onApplyCallback) {
         this.root = rootElement;
+        this.onApplyCallback = onApplyCallback;
 
         this.categoryInput = rootElement.querySelector('#question-category-input');
         this.promptInput = rootElement.querySelector('#question-prompt-input');
@@ -135,16 +137,48 @@ export class QuestionEditor {
     apply() {
         if (!this.currentQuestion) return;
 
+        const promptValue = this.promptInput.value.trim();
+        if (!promptValue) {
+            alert("Question prompt cannot be empty.");
+            this.promptInput.focus();
+            return;
+        }
+
         this.currentQuestion.setPrompt(this.promptInput.value);
         this.currentQuestion.setPoints(parseInt(this.pointsInput.value, 10));
         this.currentQuestion.setType(this.typeSelect.value);
 
         if (this.typeSelect.value === 'mcq') {
-            this.currentQuestion.setOptions(this.collectChoices());
+            const collectedChoices = this.collectChoices();
+
+            const validChoices = collectedChoices.filter(c => c.text.trim() !== '');
+            if (validChoices.length < 1 || validChoices.length !== collectedChoices.length) {
+                alert("Multiple Choice question cannot have no or empty choices.");
+
+                if (collectedChoices.length > 0)
+                    this.choiceContainer.querySelector('input[type="text"]').focus();
+                else
+                    this.addChoiceBtn.focus();
+
+                return;
+            }
+
+            this.currentQuestion.setOptions(collectedChoices);
         }
 
         if (['image', 'video', 'audio'].includes(this.typeSelect.value)) {
-            this.currentQuestion.setMedia(this.mediaSection.value);
+            const mediaValue = this.mediaSection.value;
+            if (!mediaValue || mediaValue === GLOBAL_MEDIA_PLACEHOLDER_VALUE) {
+                alert("Media Question cannot have no selected media");
+                this.mediaSection.focus();
+                return;
+            }
+            this.currentQuestion.setMedia(mediaValue);
         }
+
+        if (this.onApplyCallback)
+            this.onApplyCallback(this.currentQuestion);
+
+        this.close();
     }
 }

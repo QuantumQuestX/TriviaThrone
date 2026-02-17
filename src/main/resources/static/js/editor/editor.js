@@ -24,7 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const jeopardyCanvas = document.getElementById('jeopardy-canvas');
     const board = new Board(jeopardyCanvas, cellClicked);
-    const questionEditor = new QuestionEditor(document.getElementById("question-editor-panel"));
+    const questionEditor = new QuestionEditor(document.getElementById("question-editor-panel"), (q) => board.applyQuestion(q));
 
     const QUESTION_EDITOR_SIDE_PANEL = 'right-panel';
 
@@ -32,6 +32,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('right-panel-fold-btn').addEventListener('click', () => {
         if (toggleSidePanel(QUESTION_EDITOR_SIDE_PANEL)) {
             questionEditor.close();
+            board.deselectCell();
         }
     });
 
@@ -104,6 +105,8 @@ window.addEventListener('DOMContentLoaded', () => {
     function updateCountLabels() {
         if (currentRoundIdx < 0) return;
         const round = game.rounds[currentRoundIdx];
+        if (!round) return;
+
         questionLabel.textContent = round.questionCount;
         categoryLabel.textContent = round.categoryCount;
         board.setCounts(round.categoryCount, round.questionCount);
@@ -112,6 +115,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     questionInc.addEventListener('click', () => {
         const round = game.rounds[currentRoundIdx];
+        if (!round) return;
+
         if (round.questionCount < maxCountValue) {
             round.questionCount++;
             updateCountLabels();
@@ -119,6 +124,8 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     questionDec.addEventListener('click', () => {
         const round = game.rounds[currentRoundIdx];
+        if (!round) return;
+
         if (round.questionCount > minCountValue) {
             round.questionCount--;
             updateCountLabels();
@@ -127,6 +134,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     categoryInc.addEventListener('click', () => {
         const round = game.rounds[currentRoundIdx];
+        if (!round) return;
+
         if (round.categoryCount < maxCategoryCount) {
             round.categoryCount++;
             updateCountLabels();
@@ -134,6 +143,8 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     categoryDec.addEventListener('click', () => {
         const round = game.rounds[currentRoundIdx];
+        if (!round) return;
+
         if (round.categoryCount > minCategoryCount) {
             round.categoryCount--;
             updateCountLabels();

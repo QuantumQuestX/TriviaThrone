@@ -1,9 +1,14 @@
 import { Round } from "./round.js";
+import { ResourceManager } from "./resource-manager.js";
+import { ResourceHandler } from "./resource-handler.js";
+import { QuestionEditor } from "./question-editor.js";
 
 export class GameController {
     constructor(boardController) {
         this.boardController = boardController;
-        this.game = { rounds: [] };
+        this.ResourceManager = new ResourceManager();
+
+        this.game = { rounds: [], resources: this.ResourceManager };
         this.currentRoundIdx = -1;
 
         // Elements
@@ -39,6 +44,18 @@ export class GameController {
 
         this.refreshRoundSelect();
         this.updateCountLabels();
+
+        this.resourceHandler = new ResourceHandler(this.ResourceManager);
+        this.resourceHandler.init();
+
+        const questionEditorPanel = document.getElementById('question-editor-panel');
+        const questionEditor = new QuestionEditor(
+            questionEditorPanel,
+            (q) => this.boardController.board.applyQuestion(q),
+            this.ResourceManager
+        );
+
+        this.boardController.setQuestionEditor(questionEditor);
     }
 
     refreshRoundSelect()  {

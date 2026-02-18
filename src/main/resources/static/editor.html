@@ -13,9 +13,9 @@
         <h1>TriviaThrone</h1>
         <nav>
             <p id="username-info">Logged in as: <span id="username-display"></span></p>
-            <button id="save-draft-btn" class="secondary-btn">Save</button>
-            <button id="clear-draft-btn" class="secondary-btn">Clear</button>
-            <button id="upload-btn" class="primary-btn">Upload</button>
+            <button id="save-draft-btn" class="primary-btn">Save</button>
+            <!--<button id="clear-draft-btn" class="secondary-btn">Clear</button>-->
+            <!--<button id="upload-btn" class="primary-btn">Upload</button>-->
             <button id="logout-btn" class="danger-btn">Logout</button>
         </nav>
     </header>
@@ -31,9 +31,9 @@
                 </div>
                 <div class="panel-content">
                     <div class="upload-container">
-                        <div class="upload-box">
-                            <input type="file" id="game-file" accept=".game.throne">
-                            <label for="game-file">Drop or Select <code>.game.throne</code> file</label>
+                        <div id="upload-box" class="upload-box">
+                            <input type="file" id="game-file" multiple accept="image/*, video/mp4, audio/mpeg">
+                            <label for="game-file">Drop or Select resource file</label>
                         </div>
                         <div id="upload-status" class="upload-status"></div>
                     </div>

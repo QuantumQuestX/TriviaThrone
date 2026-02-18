@@ -4,6 +4,7 @@
 @import "/css/components/uploads.css";
 @import "/css/components/inputs.css";
 @import "/css/editor/panel.css";
+@import "/css/editor/resources.css";
 @import "/css/editor/jeopardy.css";
 
 .game-settings {

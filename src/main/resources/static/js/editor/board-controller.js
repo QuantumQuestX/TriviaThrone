@@ -6,13 +6,13 @@ export class BoardController {
     constructor(container) {
         this.container = container;
         this.board = new Board(container, this.cellClicked.bind(this));
-        this.questionEditor = new QuestionEditor(
-            document.getElementById("question-editor-panel"),
-            (q) => this.board.applyQuestion(q)
-        );
 
         this.QUESTION_EDITOR_SIDE_PANEL = 'right-panel';
         this.initUI();
+    }
+
+    setQuestionEditor(questionEditor) {
+        this.questionEditor = questionEditor;
     }
 
     initUI() {

@@ -2,9 +2,10 @@ const GLOBAL_QUESTION_CHOICES_COUNT = 4;
 const GLOBAL_MEDIA_PLACEHOLDER_VALUE = '';
 
 export class QuestionEditor {
-    constructor(rootElement, onApplyCallback) {
+    constructor(rootElement, onApplyCallback, resourceManager) {
         this.root = rootElement;
         this.onApplyCallback = onApplyCallback;
+        this.resourceManager = resourceManager;
 
         this.categoryInput = rootElement.querySelector('#question-category-input');
         this.promptInput = rootElement.querySelector('#question-prompt-input');
@@ -86,13 +87,18 @@ export class QuestionEditor {
     updateVisibility() {
         const type = this.typeSelect.value;
 
-        ['image', 'video', 'audio'].includes(type) 
+        const mediaTypes = ['image', 'video', 'audio'];
+        mediaTypes.includes(type) 
                 ? this.mediaSection.classList.remove('is-hidden')
                 : this.mediaSection.classList.add('is-hidden');
 
         type === 'mcq' 
                 ? this.choiceSection.classList.remove('is-hidden')
                 : this.choiceSection.classList.add('is-hidden')
+
+        if (mediaTypes.includes(type)) {
+            this.updateMediaOptions(type);
+        }
     }
 
     renderChoices(options) {
@@ -134,6 +140,29 @@ export class QuestionEditor {
         }));
     }
 
+    updateMediaOptions(type) {
+        const resources = this.resourceManager.getAll();
+        this.mediaSelect.innerHTML = '';
+
+        const placeholder = document.createElement('option');
+        placeholder.value = GLOBAL_MEDIA_PLACEHOLDER_VALUE;
+        placeholder.textContent = '-- Select Resource --';
+        this.mediaSelect.appendChild(placeholder);
+
+        resources
+            .filter(r => r.type === type)
+            .forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.id;
+                option.textContent = `${r.name} (${r.type})`;
+                this.mediaSelect.appendChild(option);
+            });
+
+        if (this.currentQuestion && this.currentQuestion.media && this.currentQuestion.media.type === type) {
+            this.mediaSelect.value = this.currentQuestion.media.id;
+        }
+    }
+
     apply() {
         if (!this.currentQuestion) return;
 
@@ -167,12 +196,14 @@ export class QuestionEditor {
         }
 
         if (['image', 'video', 'audio'].includes(this.typeSelect.value)) {
-            const mediaValue = this.mediaSection.value;
+            const mediaValue = this.mediaSelect.value;
+
             if (!mediaValue || mediaValue === GLOBAL_MEDIA_PLACEHOLDER_VALUE) {
                 alert("Media Question cannot have no selected media");
                 this.mediaSection.focus();
                 return;
             }
+
             this.currentQuestion.setMedia(mediaValue);
         }
 

@@ -15,6 +15,10 @@ export class BoardController {
         this.questionEditor = questionEditor;
     }
 
+    loadRound(round) {
+        this.board.loadRound(round);
+    }
+
     initUI() {
         document.getElementById('left-panel-fold-btn')
             .addEventListener('click', () => this.toggleSidePanel('left-panel'));
@@ -44,9 +48,5 @@ export class BoardController {
     cellClicked(question) {
         this.toggleSidePanel(this.QUESTION_EDITOR_SIDE_PANEL, true);
         this.questionEditor.open(question);
-    }
-
-    setCounts(catCount, questCount) {
-        this.board.setCounts(catCount, questCount);
     }
 }

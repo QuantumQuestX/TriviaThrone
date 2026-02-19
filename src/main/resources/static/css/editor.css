@@ -5,7 +5,7 @@
 @import "/css/components/inputs.css";
 @import "/css/editor/panel.css";
 @import "/css/editor/resources.css";
-@import "/css/editor/jeopardy.css";
+@import "/css/games/jeopardy.css";
 
 .game-settings {
     display: flex;

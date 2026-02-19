@@ -1,5 +1,6 @@
 export class Question {
     constructor(categoryIdx, rowIdx, points=100, type='text', prompt='', media=null, options=null) {
+        this.id = crypto.randomUUID();
         this.categoryIdx = categoryIdx;
         this.rowIdx = rowIdx;
         this.points = points;

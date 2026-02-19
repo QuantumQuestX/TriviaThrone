@@ -5,77 +5,23 @@ export class Board {
         this.container = container;
         this.onCellClickedCallback = onCellClickedCallback;
 
-        this.categoryCount = 1;
-        this.questionCount = 1;
-        this.categories = [{ name: "Category 1" }];
-        
-        this.questions = [];
-        this.initQuestions();
+        this.round = null;
 
         this.editingQuestion = null;
-        this.appliedQuestions = new Set();
+        this.appliedQuestionIds = new Set();
     }
 
-    initQuestions() {
-        this.questions = Array.from({ length: this.questionCount }, (_, r) =>
-            Array.from({ length: this.categoryCount }, (_, c) => 
-                new Question(c, r, (r + 1) * 100)
-            )
-        );
-    }
-
-    setCounts(newCategoryCount, newQuestionCount) {
-        const oldQuestions = this.questions;
-        const oldCategories = this.categories;
-
-        this.categoryCount = newCategoryCount;
-        this.questionCount = newQuestionCount;
-
-        for (let i = 0; i < newCategoryCount; i++) {
-            if (!this.categories[i])
-                this.categories[i] = { name: `Category ${i + 1}` };
-        }
-
-        const newQuestions = Array.from({ length: newQuestionCount }, (_, r) =>
-            Array.from({ length: newCategoryCount }, (_, c) =>
-                oldQuestions[r]?.[c] || new Question(c, r, (r + 1) * 100)
-            )
-        );
-
-        this.questions = newQuestions;
-
-        this.appliedQuestions = new Set(
-            [...this.appliedQuestions].filter(q =>
-                q.rowIdx < this.questionCount && q.categoryIdx < this.categoryCount
-        )
-    );
-
+    loadRound(round) {
+        this.round = round;
+        this.editingQuestion = null;
         this.render();
     }
 
-    renameCategory(index, newName) {
-        if (index >= 0 && index < this.categories.length) {
-            this.categories[index].name = newName;
-            this.render();
-        }
-    }
-
-    setQuestion(rowIdx, categoryIdx, { prompt, type, media, points }) {
-        if (rowIdx > 0 && rowIdx < this.questionCount &&
-            categoryIdx >= 0 && categoryIdx < this.categoryCount
-        ) {
-            const question = this.questions[rowIdx][categoryIdx];
-            if (prompt !== undefined) question.setPrompt(prompt);
-            if (type !== undefined) question.setType(type);
-            if (media !== undefined) question.setMedia(media);
-            if (points !== undefined) question.setPoints(points);
-            this.renderCell(rowIdx, categoryIdx);
-        }
-    }
-
     render() {
-        const catCount = this.categoryCount;
-        const qCount = this.questionCount;
+        if (!this.round) return;
+
+        const catCount = this.round.categoryCount;
+        const qCount = this.round.questionCount;
 
         this.container.innerHTML = '';
         this.container.style.display = 'grid';
@@ -84,13 +30,15 @@ export class Board {
 
         for (let c = 0; c < catCount; c++) {
             const cat = document.createElement('div');
-            cat.className = `j-category`;
-            cat.textContent = this.categories[c]?.name || `Category ${c + 1}`;
+            cat.className = 'j-category';
+            cat.textContent = 
+                this.round.categories[c]?.name || `Category ${c + 1}`;
 
             cat.addEventListener('click', () => {
                 const name = prompt("Enter category name:", cat.textContent);
                 if (name) {
-                    this.renameCategory(c, name);
+                    this.round.categories[c].name = name;
+                    this.render();
                 }
             });
 
@@ -105,18 +53,17 @@ export class Board {
     }
 
     renderCell(rowIdx, categoryIdx) {
-        const isOutOfBounds = rowIdx >= this.questionCount || categoryIdx >= this.categoryCount;
-        if (isOutOfBounds) return;
+        if (!this.round) return;
 
         const cell = document.createElement('div');
-        const question = this.questions[rowIdx][categoryIdx];
+        const question = this.round.questions[rowIdx][categoryIdx];
 
         cell.className = "j-cell";
         cell.textContent = question.points;
 
-        if (this.editingQuestion === question) {
+        if (this.editingQuestion?.id === question.id) {
             cell.classList.add('editing');
-        } else if (this.appliedQuestions.has(question)) {
+        } else if (this.round.appliedQuestionIds.has(question.id)) {
             cell.classList.add('applied');
         } else {
             cell.classList.add('empty');
@@ -132,10 +79,11 @@ export class Board {
     }
 
     applyQuestion(question) {
-        this.appliedQuestions.add(question);
+        this.round.appliedQuestionIds.add(question.id);
         this.deselectCell();
         this.render();
     }
+
 
     deselectCell() {
         this.editingQuestion = null;

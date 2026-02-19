@@ -2,6 +2,7 @@ import { Round } from "./round.js";
 import { ResourceManager } from "./resource-manager.js";
 import { ResourceHandler } from "./resource-handler.js";
 import { QuestionEditor } from "./question-editor.js";
+import { exportGame } from "./builder.js";
 
 export class GameController {
     constructor(boardController) {
@@ -9,6 +10,13 @@ export class GameController {
         this.ResourceManager = new ResourceManager();
 
         this.game = { rounds: [], resources: this.ResourceManager };
+        this.game.meta = {
+            id: crypto.randomUUID(),
+            title: "",
+            description: "",
+            created: new Date().toISOString(),
+            version: "1.0"
+        };
         this.currentRoundIdx = -1;
 
         // Elements
@@ -23,6 +31,11 @@ export class GameController {
         this.categoryDec = document.getElementById('category-count-dec');
         this.questionLabel = document.getElementById('question-count-text');
         this.categoryLabel = document.getElementById('category-count-text');
+
+        this.saveGameButton = document.getElementById('save-draft-btn');
+
+        this.gameTitleInp = document.getElementById('game-title');
+        this.gameDescriptionInp = document.getElementById('game-description');
 
         // Constants
         this.minQuestionCount = 1;
@@ -56,6 +69,8 @@ export class GameController {
         );
 
         this.boardController.setQuestionEditor(questionEditor);
+
+        this.saveGameButton.addEventListener('click', () => this.exportCurrentGame());
     }
 
     refreshRoundSelect()  {
@@ -80,6 +95,7 @@ export class GameController {
         this.currentRoundIdx = this.game.rounds.length - 1;
 
         this.refreshRoundSelect();
+        this.boardController.loadRound(round);
         this.updateCountLabels();
     }
 
@@ -93,20 +109,37 @@ export class GameController {
 
     changeRound(e) {
         this.currentRoundIdx = parseInt(e.target.value, 10);
+        const round = this.game.rounds[this.currentRoundIdx];
+
+        this.boardController.loadRound(round);
         this.updateCountLabels();
     }
 
     modifyQuestionCount(delta) {
         const round = this.game.rounds[this.currentRoundIdx];
         if (!round) return;
-        round.questionCount = Math.min(this.maxQuestionCount, Math.max(this.minQuestionCount, round.questionCount + delta));
+
+        const newCount = Math.min(
+            this.maxQuestionCount,
+            Math.max(this.minQuestionCount, round.questionCount + delta)
+        );
+
+        round.resize(round.categoryCount, newCount);
+        this.boardController.loadRound(round);
         this.updateCountLabels();
     }
 
     modifyCategoryCount(delta) {
         const round = this.game.rounds[this.currentRoundIdx];
         if (!round) return;
-        round.categoryCount = Math.min(this.maxCategoryCount, Math.max(this.minCategoryCount, round.categoryCount + delta));
+
+        const newCount = Math.min(
+            this.maxCategoryCount,
+            Math.max(this.minCategoryCount, round.categoryCount + delta)
+        );
+
+        round.resize(newCount, round.questionCount);
+        this.boardController.loadRound(round);
         this.updateCountLabels();
     }
 
@@ -114,16 +147,18 @@ export class GameController {
         if (this.currentRoundIdx < 0) return;
 
         const round = this.game.rounds[this.currentRoundIdx];
-
-        if (!round) {
-            this.questionLabel.textContent = '0';
-            this.categoryLabel.textContent = '0';
-            this.boardController.setCounts(0, 0);
-            return;
-        }
+        if (!round) return;
 
         this.questionLabel.textContent = round.questionCount;
         this.categoryLabel.textContent = round.categoryCount;
-        this.boardController.setCounts(round.categoryCount, round.questionCount);
+    }
+
+    exportCurrentGame() {
+        this.game.meta.title = this.gameTitleInp.value;
+        this.game.meta.description = this.gameDescriptionInp.value;
+
+        exportGame(this.game).catch(err => {
+            alert("Failed to export game:\n" + err);
+        });
     }
 }

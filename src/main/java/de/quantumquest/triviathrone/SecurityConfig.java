@@ -26,6 +26,7 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/index.html",
                                 "/lobby.html",
+                                "/editor.html",
                                 "/ws/**",
                                 "/",
                                 "/favicon.ico",

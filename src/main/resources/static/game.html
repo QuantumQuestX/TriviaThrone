@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{0} - TriviaThrone</title>
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+    <header class="login-header">
+        <h1>TriviaThrone</h1>
+        <div id="lobby-info">
+            Lobby Code: <span id="lobby-code">A123</span>
+        </div>
+        <nav>
+            <p id="username-info">Logged in as: <span id="username-display"></span></p>
+            <button id="leave-btn" class="danger-btn">Leave Lobby</button>
+        </nav>
+    </header>
+
+    <main>
+        <aside class="buzzer-panel panel">
+            <h2>Players</h2>
+            <div class="players">
+                <div class="player" data-player-id="tij">
+                    <span class="player-name">Alice</span>
+                    <span class="buzz-status">X</span>
+                    <span class="buzz-btn">Buzz</span>
+                </div>
+                <div class="player" data-player-username="bob">
+                    <span class="player-name">Bob</span>
+                    <span class="buzz-status">X</span>
+                    <span class="buzz-btn">Buzz</span>
+                </div>
+            </div>
+            <button id="reset-buzzers" class="danger-btn">Reset Buzzers</button>
+        </aside>
+
+        <section class="board-panel panel">
+            <div id="jeopardy-board">
+            </div>
+
+            <div class="question-view is-hidden">
+                <div class="question-prompt">Who is the first president?</div>
+                <div class="question-media"></div>
+                <div class="question-options">
+                    <button class="option-btn">GW</button>
+                    <button class="option-btn">JA</button>
+                    <button class="option-btn">TJ</button>
+                    <button class="option-btn">JM</button>
+                </div>
+                <button id="close-question" data-admin class="danger-btn">Back to Board</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/games/jeopardy"></script>
+</body>
+</html>

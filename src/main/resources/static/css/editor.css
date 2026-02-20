@@ -1,0 +1,240 @@
+@import "/css/root.css";
+@import "/css/components/panel.css";
+@import "/css/components/buttons.css";
+@import "/css/components/uploads.css";
+@import "/css/components/inputs.css";
+@import "/css/editor/panel.css";
+@import "/css/editor/resources.css";
+@import "/css/games/jeopardy.css";
+
+.game-settings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.settings-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    width: 100%;
+    background: var(--bg-panel-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.game-board {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    width: 100%;
+    background: var(--bg-panel-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+}
+
+label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+input,
+.setting-item textarea {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    color: var(--text);
+    min-height: 42px;
+    font-size: 0.95rem;
+    transition: border 0.2s ease;
+}
+
+input:focus,
+.setting-item textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.setting-item textarea {
+    resize: vertical;
+    max-height: max(80px, 10vh);
+}
+
+.settings-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+    width: 100%;
+}
+
+.settings-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-rounds {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.round-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.round-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.round-input-group input {
+    max-width: 150px;
+}
+
+.counter-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.counter-row .setting-item {
+    flex: 1;
+}
+
+.horizontal-item-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.count-text {
+    text-align: center;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    background: var(--btn);
+    padding: 10px 15px;
+    height: fit-content;
+}
+
+.mono {
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.question-editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+}
+
+.question-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.question-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#question-choice-settings,
+#question-media-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+#question-choice-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 275px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.question-choice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-panel-light);
+    width: 100%;
+    align-items: stretch;
+}
+
+.question-choice input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    color: var(--text);
+}
+
+.question-choice input[type="text"]:hover {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.question-choice input[type="text"]:focus {
+    outline: none;
+    border: 1px dashed var(--accent);
+}
+
+.question-choice input[type="checkbox"] {
+    flex: 0 0 auto;             /* never stretch */
+    accent-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.question-choice .danger-btn {
+    min-width: 32px;
+    padding: 0;
+    border-radius: 6px;
+}
+
+#question-editor-apply-btn {
+    margin-top: 1rem;
+    max-height: 40px;
+}
+
+#question-category-input {
+    user-select: none;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.is-hidden {
+    display: none !important;
+}

@@ -10,10 +10,14 @@
     --accent-hover: #7d6cf0;
 
     --danger: #e74c3c;
+    --danger-hover: #ff6e5e;
+    --danger-active: #b13a2d;
     --success: #2ecc71;
 
     --btn: #3a3a50;
     --btn-hover: #505070;
 
     --border: #2b2f3a;
+
+    --top-bar-height: 80px;
 }

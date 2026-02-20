@@ -11,5 +11,10 @@ input::placeholder {
 }
 
 input::focus {
+    outline: none;
     border-color: var(--accent);
+}
+
+input:disabled {
+    cursor: not-allowed;
 }

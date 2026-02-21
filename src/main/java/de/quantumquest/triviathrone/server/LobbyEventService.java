@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.dto.lobby.LobbyDeltaMessage;
+import de.quantumquest.triviathrone.dto.lobby.LobbyHostUploadMessage;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,13 @@ public class LobbyEventService {
         messagingTemplate.convertAndSend(
                 "/topic/lobby." + lobbyCode,
                 new LobbyDeltaMessage(lobbyCode, lobbyHost, username, LobbyDeltaMessage.Action.LEAVE)
+        );
+    }
+
+    public void hostUploadedGame(String lobbyCode, String hostName, String gameName) {
+        messagingTemplate.convertAndSend(
+                "/topic/lobby." + lobbyCode,
+                new LobbyHostUploadMessage(lobbyCode, hostName, gameName)
         );
     }
 }

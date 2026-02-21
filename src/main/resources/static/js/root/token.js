@@ -1,7 +1,7 @@
-const DEBUG_UI = false;
+const DEBUG_UI = true;
 export const token = localStorage.getItem("token");
 
-if (!token) {
+if (!DEBUG_UI && !token) {
     doRandomStuff();
 }
 

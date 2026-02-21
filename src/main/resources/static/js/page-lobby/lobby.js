@@ -1,5 +1,5 @@
 import { token, currentUser } from "../root/token.js";
-import { handleDeltaMessage } from "./messages.js";
+import { handleDeltaMessage, handleHostUploadedGameMessage } from "./messages.js";
 
 const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
 const lobbyCode = lobbyDetails.lobbyCode;
@@ -15,8 +15,8 @@ let stompClient, lobbySubscription;
 
 async function validateLobby(code) {
     try {
-        const res = await fetch(`/api/lobbies?code=${encodeURIComponent(code)}`, {
-            method: "POST",
+        const res = await fetch(`/api/lobbies/exists?code=${encodeURIComponent(code)}`, {
+            method: "GET",
             headers: { "Authorization": "Bearer " + token }
         });
 
@@ -67,6 +67,8 @@ async function initLobby() {
 
                 if (data.action) {
                     handleDeltaMessage(data);
+                } else if (data.fileName) {
+                    handleHostUploadedGameMessage(data);
                 } else {
                     renderPlayers(data.usernames, data.lobbyHost);
                 }
@@ -141,4 +143,55 @@ window.addEventListener("beforeunload", () => {
         stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
         stompClient.disconnect();
     }
+});
+
+const uploadBtn = document.getElementById("upload-btn");
+const fileInput = document.getElementById("game-file");
+const uploadStatus = document.getElementById("upload-status");
+
+uploadBtn.addEventListener('click', async () => {
+    uploadBtn.disabled = true;
+
+    const file = fileInput.files[0];
+
+    if (!file) {
+        uploadStatus.textContent = "Please select a .game.throne file";
+        uploadBtn.disabled = false;
+        return;
+    }
+
+    if (!file.name.endsWith(".game.throne")) {
+        uploadStatus.textContent = "Invalid file type.";
+        uploadBtn.disabled = false;
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("lobbyCode", lobbyCode);
+
+    uploadStatus.textContent = 'Uploading...';
+
+    try {
+        const res = await fetch('/api/game/upload', {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token },
+            body: formData
+        });
+
+        const text = await res.text();
+
+        if (!res.ok) {
+            uploadStatus.textContent = 'Upload failed: ' + text;
+            uploadBtn.disabled = false;
+            return;
+        }
+
+        uploadStatus.textContent = "Upload successful.";
+    } catch (err) {
+        console.error(err);
+        uploadStatus.textContent = 'Upload error.';
+    }
+
+    uploadBtn.disabled = false;
 });

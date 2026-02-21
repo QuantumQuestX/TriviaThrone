@@ -104,6 +104,14 @@ h2 {
     border-bottom: 1px solid var(--border);
 }
 
+#host-panel {
+    height: fit-content;
+}
+
+.upload-box:valid {
+    border-color: var(--success);
+}
+
 @media (max-width: 1000px) {
     .lobby-layout {
         grid-template-columns: 1fr;

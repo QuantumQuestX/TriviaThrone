@@ -39,7 +39,7 @@ public class LobbyController {
                        .orElse(null);
     }
 
-    @PostMapping
+    @GetMapping("/exists")
     public boolean isLobbyValid(@RequestParam String code) {
         logger.info("POST: checking lobby with code {} exists", code);
         if (code == null || code.isBlank())

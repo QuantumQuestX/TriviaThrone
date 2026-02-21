@@ -1,8 +1,8 @@
 import { currentUser } from "../root/token.js";
 import { playerList, crownChar, addFeedMessage } from "./lobby.js";
 
-export function handleDeltaMessage(delta) {
-    const { lobbyHost, username, action } = delta;
+export function handleDeltaMessage(deltaMsg) {
+    const { lobbyHost, username, action } = deltaMsg;
 
     if (!lobbyHost || !username || !action) return;
 
@@ -38,5 +38,17 @@ export function handleDeltaMessage(delta) {
             else
                 addFeedMessage(`${username} left the lobby`);
         }
+    }
+}
+
+export function handleHostUploadedGameMessage(uploadMsg) {
+    const { lobbyCode, hostName, fileName } = uploadMsg;
+
+    if (!lobbyCode || !hostName || !fileName) return;
+
+    if (hostName === currentUser) {
+        addFeedMessage("You uploaded a game.");
+    } else {
+        addFeedMessage("Host " + hostName + " uploaded game \"" + fileName + "\".");
     }
 }

@@ -81,6 +81,22 @@ function buildManifestXml(game) {
         roundEl.setAttribute("name", round.name);
         roundEl.setAttribute("questionCount", round.questionCount);
         roundEl.setAttribute("categoryCount", round.categoryCount);
+        
+        const categoryEl = doc.createElement("categories");
+        if (round.categories) {
+            round.categories.forEach((category, i) => {
+                if (!category) return;
+
+                const cEl = doc.createElement("category");
+                cEl.setAttribute("row", i);
+
+                cEl.textContent = category.name;
+
+                categoryEl.appendChild(cEl);
+            });
+        }
+
+        roundEl.appendChild(categoryEl);
 
         const questionsEl = doc.createElement("questions");
 
@@ -88,6 +104,7 @@ function buildManifestXml(game) {
             round.questions.forEach((row, rowIdx) => {
                 row.forEach((question, colIdx) => {
                     if (!question) return;
+
 
                     const hasContent = (question.prompt && question.prompt.trim() !== '') ||
                                        (question.options && question.options.length > 0) ||

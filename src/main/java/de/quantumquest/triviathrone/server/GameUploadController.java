@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -38,9 +39,10 @@ public class GameUploadController {
     }
 
     private void clear() {
-        for (File f : Objects.requireNonNull(new File(storageDir.toUri()).listFiles())) {
-            if (!f.delete())
-                logger.error("Error when trying to remove {}.", f.getName());
+        try {
+            FileUtils.deleteDirectory(storageDir.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

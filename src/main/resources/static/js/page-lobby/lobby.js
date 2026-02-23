@@ -1,5 +1,6 @@
 import { token, currentUser } from "../root/token.js";
 import { handleDeltaMessage, handleHostUploadedGameMessage } from "./messages.js";
+import * as socket from "../socket.js";
 
 const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
 const lobbyCode = lobbyDetails.lobbyCode;
@@ -54,30 +55,17 @@ async function initLobby() {
         return;
     }
 
-    const socket = new SockJS("/ws/lobby");
-    stompClient = Stomp.over(socket);
+    await socket.connectSocket("/ws/lobby");
 
-    stompClient.connect(
-        { "Authorization": "Bearer " + token },
-        () => {
-            console.log("Connected to lobby: ", lobbyCode);
+    socket.subscribe(`/topic/lobby.${lobbyCode}`, (data) => {
+        if (data.action) handleDeltaMessage(data);
+        else if (data.fileName) handleHostUploadedGameMessage(data);
+        else renderPlayers(data.usernames, data.lobbyHost);
+    });
 
-            lobbySubscription = stompClient.subscribe(`/topic/lobby.${lobbyCode}`, (message) => {
-                const data = JSON.parse(message.body);
+    socket.send("/app/join", { lobbyCode: lobbyCode });
 
-                if (data.action) {
-                    handleDeltaMessage(data);
-                } else if (data.fileName) {
-                    handleHostUploadedGameMessage(data);
-                } else {
-                    renderPlayers(data.usernames, data.lobbyHost);
-                }
-            });
-            stompClient.send("/app/join", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
-        }
-    );
-
-    const lobbyData = await getLobbyData(lobbyDetails.lobbyCode);
+    const lobbyData = await getLobbyData(lobbyCode);
     renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
     removeHostElements(lobbyData.lobbyHost);
 }

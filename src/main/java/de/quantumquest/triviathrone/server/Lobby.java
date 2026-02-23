@@ -1,7 +1,9 @@
 package de.quantumquest.triviathrone.server;
 
+import de.quantumquest.triviathrone.game.GameDefinition;
+import de.quantumquest.triviathrone.game.GameSession;
+
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -10,6 +12,9 @@ public class Lobby {
     private final String name;
     private final String hostUser;
     private final Set<String> users = Collections.synchronizedSet(new TreeSet<>());
+
+    private volatile GameDefinition gameDefinition;
+    private volatile GameSession gameSession;
 
     public Lobby(String code, String name, String hostUser) {
         this.code = code;
@@ -40,5 +45,41 @@ public class Lobby {
 
     public Set<String> listUsernames() {
         return Set.copyOf(users);
+    }
+
+    public synchronized void loadGame(GameDefinition definition) {
+        if (definition == null)
+            throw new IllegalArgumentException("GameDefinition cannot be null");
+
+        this.gameDefinition = definition;
+        this.gameSession = null;
+    }
+
+    public synchronized void startGame() {
+        if (gameDefinition == null) {
+            throw new IllegalStateException("No game loaded.");
+        }
+
+        if (gameSession != null) {
+            throw new IllegalStateException("Game already started");
+        }
+
+        this.gameSession = new GameSession(this, gameDefinition);
+    }
+
+    public synchronized void endGame() {
+        this.gameSession = null;
+    }
+
+    public boolean hasActiveGame() {
+        return gameSession != null;
+    }
+
+    public GameDefinition getGameDefinition() {
+        return gameDefinition;
+    }
+
+    public GameSession getGameSession() {
+        return gameSession;
     }
 }

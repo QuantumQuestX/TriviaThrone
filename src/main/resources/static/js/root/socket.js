@@ -1,9 +1,7 @@
-import { token } from "./root/token.js"
-
 let stompClient = null;
 const subscriptions = new Map();
 
-export async function connectSocket(endpoint = '/ws/lobby') {
+export async function connectSocket(endpoint = '/ws/lobby', token = null) {
     return new Promise((resolve, reject) => {
         if (stompClient && stompClient.connected) {
             resolve(stompClient);

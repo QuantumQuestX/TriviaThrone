@@ -18,42 +18,33 @@
         </nav>
     </header>
 
-    <main>
-        <aside class="buzzer-panel panel">
-            <h2>Players</h2>
-            <div class="players">
-                <div class="player" data-player-id="tij">
-                    <span class="player-name">Alice</span>
-                    <span class="buzz-status">X</span>
-                    <span class="buzz-btn">Buzz</span>
-                </div>
-                <div class="player" data-player-username="bob">
-                    <span class="player-name">Bob</span>
-                    <span class="buzz-status">X</span>
-                    <span class="buzz-btn">Buzz</span>
-                </div>
-            </div>
-            <button id="reset-buzzers" class="danger-btn">Reset Buzzers</button>
-        </aside>
-
-        <section class="board-panel panel">
+    <main data-game="jeopardy">
+        <section id="question-panel" class="panel">
             <div id="jeopardy-board">
+                <h2 id="jeopardy-round-title">&lt;round-title&gt;</h2>
+                <div id="jeopardy-canvas">
+                    
+                </div>
+            </div>
+            <div id="question-display" style="display: none;">
+
+            </div>
+        </section>
+
+        <section id="player-buzzer-panel" class="panel">
+            <div id="players-left" class="players players-left">
             </div>
 
-            <div class="question-view is-hidden">
-                <div class="question-prompt">Who is the first president?</div>
-                <div class="question-media"></div>
-                <div class="question-options">
-                    <button class="option-btn">GW</button>
-                    <button class="option-btn">JA</button>
-                    <button class="option-btn">TJ</button>
-                    <button class="option-btn">JM</button>
-                </div>
-                <button id="close-question" data-admin class="danger-btn">Back to Board</button>
+            <div id="main-buzzer-container">
+                <button id="main-buzzer" class="buzzer" disabled>BUZZ</button>
+                <span id="main-score">0</span>
+            </div>
+
+            <div id="players-right" class="players players-right">
             </div>
         </section>
     </main>
 
-    <script src="js/games/jeopardy"></script>
+    <script type="module" src="/js/page-game/game.js"></script>
 </body>
 </html>

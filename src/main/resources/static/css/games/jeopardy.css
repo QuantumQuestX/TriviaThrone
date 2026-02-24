@@ -2,6 +2,7 @@
     display: grid;
     gap: 8px;
     width: 100%;
+    height: 100%;
 }
 
 .j-category {
@@ -13,17 +14,21 @@
     border-radius: 6px;
     cursor: pointer;
     user-select: none;
+
+    display: flex;
+    place-content: center;
+    align-items: center;
 }
 
 .j-cell {
     background: var(--bg-panel);
     border: 1px solid var(--border);
     border-radius: 6px;
-    height: 50px;
+    height: 100%;
 
     display: flex;
+    place-content: center;
     align-items: center;
-    justify-content: center;
 
     font-weight: 700;
     font-size: 1.1rem;

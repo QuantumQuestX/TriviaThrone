@@ -1,6 +1,10 @@
 users.yml
 upload/
 
+image.jpeg
+video.mp4
+audio.mp3
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

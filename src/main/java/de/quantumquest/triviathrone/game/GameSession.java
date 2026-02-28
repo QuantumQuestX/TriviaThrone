@@ -1,5 +1,9 @@
 package de.quantumquest.triviathrone.game;
 
+import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
+import de.quantumquest.triviathrone.dto.game.GameStateMessage;
+import de.quantumquest.triviathrone.game.definition.Category;
+import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
 import de.quantumquest.triviathrone.server.Lobby;
 
@@ -13,12 +17,13 @@ import java.util.concurrent.TimeUnit;
 public class GameSession {
 
     public enum State {
-        IDLE,
-        QUESTION_SELECTED,
-        BUZZ_OPEN,
-        BUZZ_COLLECTING,
-        BUZZ_LOCKED,
-        ANSWER_REVEAL
+        IDLE,               // waiting for host to select question
+        QUESTION_SELECTED,  // question selected, not visible to clients yet
+        QUESTION_OPEN,      // clients see question, waiting for buzzer
+        BUZZ_OPEN,          // clients can buzz in
+        BUZZ_COLLECTING,    // collect all buzzes
+        BUZZ_LOCKED,        // first buzz locked
+        ANSWER_REVEAL       // showing correct answer and updating scores
     }
 
     private static final long BUZZ_THRESHOLD_MS = 120;
@@ -131,7 +136,7 @@ public class GameSession {
     public synchronized void markIncorrect() {
         if (buzzWinner == null) return;
 
-        scores.computeIfPresent(buzzWinner, (_, score) -> score - (currentQuestionIdx / 2));
+        scores.computeIfPresent(buzzWinner, (_, score) -> score - (currentQuestionPoints / 2));
         currentState = State.ANSWER_REVEAL;
     }
 
@@ -139,6 +144,30 @@ public class GameSession {
         buzzWinner = null;
         buzzTimes.clear();
         currentState = State.IDLE;
+    }
+
+    private GameQuestionMessage createGameQuestionMessage(Category c, QuestionDefinition q) {
+        String mediaUrl = q.mediaPath();
+        MediaType mediaType = MediaType.UNDEFINED;
+
+        if (mediaUrl != null && !mediaUrl.isBlank()) {
+            if (mediaUrl.endsWith(".mp4")) {
+                mediaType = MediaType.VIDEO;
+            } else if (mediaUrl.endsWith(".mp3") || mediaUrl.endsWith(".wav")) {
+                mediaType = MediaType.AUDIO;
+            } else {
+                mediaType = MediaType.IMAGE;
+            }
+        }
+
+        return new GameQuestionMessage(
+                c.name(),
+                q.prompt(),
+                null,
+                mediaType,
+                mediaUrl,
+                q.points()
+        );
     }
 
     public State getCurrentState() {

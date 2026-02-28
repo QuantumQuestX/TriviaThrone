@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone.dto;
+package de.quantumquest.triviathrone.dto.game;
 
 import de.quantumquest.triviathrone.game.GameSession;
 

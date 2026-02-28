@@ -1,11 +1,20 @@
-import * as socket from "./game-socket.js";
+import * as gameSocket from "./game-socket.js";
 import { PlayerView } from "./jeopardy/player-view.js";
 import { currentUser } from "../root/token.js";
+import { QuestionManager } from "./jeopardy/question-manager.js";
 
 const titleContent = document.getElementsByTagName("title")[0].textContent || '{0} - Trivia Throne';
 document.getElementsByTagName("title")[0].textContent = titleContent.replace("{0}", new URLSearchParams(window.location.search).get("mode"));
 
+const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
+const lobbyCode = lobbyDetails.lobbyCode;
+
+gameSocket.subscribeToGame(lobbyCode, (state) => {
+    applyGameState(state);
+});
+
 const playerViews = new Map();
+const questionManager = new QuestionManager();
 
 function layoutPlayers(players, currentUser) {
     const left = document.getElementById("players-left");
@@ -42,24 +51,34 @@ function configureMainBuzzer(currentUser) {
     
     mainBuzzer.addEventListener("click", () => {
         console.log(`${currentUser} buzzed in!`);
-        socket.sendBuzz(currentUser);
+        gameSocket.sendBuzz(currentUser);
+
+        mainBuzzer.disabled = true;
     });
 }
 
 function applyGameState(state) {
+    if (state.question) {
+        document.getElementById("jeopardy-board").classList.add("hidden");
+        document.getElementById("question-display").classList.remove("hidden");
+
+        questionManager.showQuestion(state.question);
+    } else {
+        document.getElementById("question-display").classList.add("hidden");
+        document.getElementById("jeopardy-board").classList.remove("hidden");
+    }
+
+    if (state.revealCorrectIndex !== undefined && state.revealCorrectIndex !== null) {
+        questionManager.revealCorrectAnswer(state.revealCorrectIndex);
+    }
+
     for (const [name, score] of Object.entries(state.scores)) {
         const view = playerViews.get(name);
-        if (view) {
-            view.updateScore(score);
-        }
+        if (view) view.updateScore(score);
     }
 
-    for (const view of playerViews.values()) {
-        view.setBuzzEnabled(view.name === state.buzzWinner);
-    }
-
-    const buzzOpen = state.state === socket.Actions.OPEN_BUZZ;
-    const selfView = playerViews.get(currentUser2);
+    const buzzOpen = state.state === gameSocket.Actions.OPEN_BUZZ;
+    const selfView = playerViews.get(currentUser);
     if (selfView) {
         selfView.setBuzzEnabled(buzzOpen);
     }
@@ -99,6 +118,8 @@ generateJeopardyBoard([
     ["Hallo", "Welt", "Foo", "Bar", "Sayo"],
     [100, 200, 300, 400, 500],
     [100, 200, 300, 200, 500],
+    [100, 200, 300, 400, 500],
+    [100, 200, 300, 400, 500],
     [100, 200, 300, 400, 500],
     [100, 200, 300, 400, 500]
 ]);

@@ -1,3 +1,7 @@
 @import "/css/root/tokens.css";
 @import "/css/root/base.css";
 @import "/css/root/topbar.css";
+
+.hidden {
+    display: none !important;
+}

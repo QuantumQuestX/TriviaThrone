@@ -1,6 +1,6 @@
 package de.quantumquest.triviathrone.game;
 
-import de.quantumquest.triviathrone.dto.GameActionMessage;
+import de.quantumquest.triviathrone.dto.game.GameActionMessage;
 import de.quantumquest.triviathrone.server.LobbyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

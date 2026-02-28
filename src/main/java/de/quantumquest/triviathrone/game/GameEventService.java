@@ -1,6 +1,6 @@
 package de.quantumquest.triviathrone.game;
 
-import de.quantumquest.triviathrone.dto.GameStateMessage;
+import de.quantumquest.triviathrone.dto.game.GameStateMessage;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +22,7 @@ public class GameEventService {
                 session.getScores(),
                 session.getCurrentRoundIdx(),
                 session.getCurrentQuestionIdx(),
-                session.getCurrentRoundIdx()
+                session.getCurrentCategoryIdx()
         );
 
         messagingTemplate.convertAndSend(

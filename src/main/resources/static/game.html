@@ -20,15 +20,55 @@
 
     <main data-game="jeopardy">
         <section id="question-panel" class="panel">
-            <div id="jeopardy-board">
+            <div id="jeopardy-board" class="hidden">
                 <h2 id="jeopardy-round-title">&lt;round-title&gt;</h2>
                 <div id="jeopardy-canvas">
-                    
+
                 </div>
             </div>
-            <div id="question-display" style="display: none;">
+            <div id="question-display" class="question-view">
+                <div class="question-header">
+                    <span id="question-category">Category Name</span>
+                    <span id="question-points">100</span>
+                </div>
 
+                <div class="question-body">
+                    <div id="question-text" class="question-text">
+                        Here goes the question prompt...
+                    </div>
+
+                    <div id="question-media" class="question-media">
+                        <video id="q-media-video" class="hidden" src="video.mp4"></video>
+                        <audio id="q-media-audio" src="audio.mp3">&#x1f50a;</audio>
+                        <img id="q-media-image" class="hidden" src="image.jpeg" alt="Question Media">
+                    </div>
+
+                    <div id="question-choices" class="question-choices hidden">
+                        <div class="question-choice closed">Choice 1</div>
+                        <div class="question-choice closed">Choice 2</div>
+                        <div class="question-choice closed">Choice 3</div>
+                        <div class="question-choice closed">Choice 4</div>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <section id="host-panel" class="panel" data-admin>
+            <div class="host-panel">
+                <h4>Buzzer</h4>
+                <div class="host-panel-container">
+                    <button id="host-buzzer-enable" class="primary-btn" disabled>Open</button>
+                    <button id="host-buzzer-disable" class="primary-btn" disabled>Close</button>
+                </div>
+            </div>
+            <div class="host-panel">
+                <h4>Question</h4>
+                <div class="host-panel-container">
+                    <button id="host-show-question" class="primary-btn" disabled>Correct</button>
+                    <button id="host-hide-question" class="primary-btn" disabled>Incorrect</button>
+                </div>
+            </div>
+            <button id="host-next-question" class="primary-btn" disabled>Next Question</button>
         </section>
 
         <section id="player-buzzer-panel" class="panel">

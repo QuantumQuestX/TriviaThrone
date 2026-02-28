@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone.dto;
+package de.quantumquest.triviathrone.dto.game;
 
 public record GameActionMessage(String lobbyCode, ActionType action,
                                 Integer roundIdx, Integer categoryIdx, Integer questionIdx) {

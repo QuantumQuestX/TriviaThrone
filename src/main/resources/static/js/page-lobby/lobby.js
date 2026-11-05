@@ -1,24 +1,28 @@
-import { token, currentUser } from "../root/token.js";
-import { handleDeltaMessage, handleHostUploadedGameMessage } from "./messages.js";
-import * as socket from "../socket.js";
+import {token, currentUser} from "../root/token.js";
+import {handleDeltaMessage, handleHostUploadedGameMessage} from "./messages.js";
+import * as socket from "../root/socket.js";
 
 const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
 const lobbyCode = lobbyDetails.lobbyCode;
 
-if (!lobbyCode || !(await validateLobby(lobbyCode))) {
+if (!lobbyCode) {
     console.warn("No lobby code found in Session");
     localStorage.removeItem("lobbyDetails");
     window.location.href = "/";
+} else {
+    document.getElementById("lobby-code").textContent = lobbyCode;
+    initLobby();
 }
-document.getElementById("lobby-code").textContent = lobbyCode;
 
-let stompClient, lobbySubscription;
+let lobbySubscription;
+let isLeaving = false;
+let isStartingGame = false;
 
 async function validateLobby(code) {
     try {
         const res = await fetch(`/api/lobbies/exists?code=${encodeURIComponent(code)}`, {
             method: "GET",
-            headers: { "Authorization": "Bearer " + token }
+            headers: {"Authorization": "Bearer " + token}
         });
 
         if (!res.ok) throw new Error("Validation request failed");
@@ -34,7 +38,7 @@ async function getLobbyData(code) {
     try {
         const res = await fetch(`/api/lobbies/info?code=${encodeURIComponent(code)}`, {
             method: "GET",
-            headers: { "Authorization": "Bearer " + token }
+            headers: {"Authorization": "Bearer " + token}
         });
 
         if (!res.ok) throw new Error("Could not get info");
@@ -55,19 +59,24 @@ async function initLobby() {
         return;
     }
 
-    await socket.connectSocket("/ws/lobby");
+    await socket.connectSocket("/ws/lobby", token);
 
-    socket.subscribe(`/topic/lobby.${lobbyCode}`, (data) => {
+    lobbySubscription = socket.subscribe(`/topic/lobby.${lobbyCode}`, (data) => {
         if (data.action) handleDeltaMessage(data);
         else if (data.fileName) handleHostUploadedGameMessage(data);
         else renderPlayers(data.usernames, data.lobbyHost);
     });
 
-    socket.send("/app/join", { lobbyCode: lobbyCode });
+    socket.send("/app/join", {lobbyCode: lobbyCode});
 
     const lobbyData = await getLobbyData(lobbyCode);
+    if (!lobbyData) {
+        window.location.href = "/";
+        return;
+    }
     renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
     removeHostElements(lobbyData.lobbyHost);
+    configureGameStart(lobbyData);
 }
 
 function removeHostElements(hostUsername) {
@@ -81,7 +90,39 @@ function removeHostElements(hostUsername) {
     });
 }
 
-initLobby();
+function configureGameStart(lobbyData) {
+    const startButton = document.getElementById("start-game-btn");
+    const isHost = currentUser === lobbyData.lobbyHost;
+    if (startButton && isHost) {
+        startButton.disabled = !lobbyData.gameLoaded;
+        startButton.textContent = lobbyData.gameStarted ? "Open Game" : "Start Game";
+        startButton.title = lobbyData.gameLoaded ? "" : "Upload a game before starting.";
+    }
+
+    socket.subscribe(`/topic/game.${lobbyCode}`, state => {
+        if (state?.lobbyCode === lobbyCode) {
+            if (state.gameEnded) {
+                isStartingGame = false;
+                addFeedMessage("The host ended the game. You are back in the lobby.");
+                return;
+            }
+            isStartingGame = true;
+            window.location.href = `/game.html?code=${encodeURIComponent(lobbyCode)}`;
+        }
+    });
+
+    if (lobbyData.gameStarted) {
+        socket.send("/app/game/action", {lobbyCode, action: "SYNC"});
+    }
+
+    if (startButton && isHost) {
+        startButton.addEventListener("click", () => {
+            startButton.disabled = true;
+            startButton.textContent = "Starting…";
+            socket.send("/app/game/action", {lobbyCode, action: "START_GAME"});
+        });
+    }
+}
 
 export const crownChar = " 👑";
 export const playerList = document.getElementById("player-list");
@@ -92,8 +133,6 @@ export function renderPlayers(players, hostUsername) {
     players.forEach(username => {
         const li = document.createElement("li");
         li.textContent = username;
-
-        console.log(username, hostUsername, currentUser, username === hostUsername);
 
         if (username === currentUser) li.classList.add("you");
         if (username === hostUsername) {
@@ -114,22 +153,22 @@ export function addFeedMessage(text) {
 }
 
 document.getElementById("leave-btn").addEventListener("click", () => {
-    stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
+    isLeaving = true;
+    socket.send("/app/leave", {lobbyCode});
 
-    if (lobbySubscription) {
-        lobbySubscription.unsubscribe();
-    }
-    
-    stompClient.disconnect(() => {
-        console.log("Disconnected cleanly");
-        window.location.href = "/index.html";
-    });
+    if (lobbySubscription) socket.unsubscribe(`/topic/lobby.${lobbyCode}`);
+    socket.disconnect();
+    window.location.href = "/index.html";
 });
 
 window.addEventListener("beforeunload", () => {
-    if (stompClient && stompClient.connected) {
-        stompClient.send("/app/leave", {}, JSON.stringify( { lobbyCode: lobbyCode, name: null } ));
-        stompClient.disconnect();
+    if (lobbyCode && !isLeaving && !isStartingGame) {
+        try {
+            socket.send("/app/leave", {lobbyCode});
+        } catch (error) {
+            console.warn("Could not notify the lobby about leaving.", error);
+        }
+        socket.disconnect();
     }
 });
 
@@ -163,7 +202,7 @@ uploadBtn.addEventListener('click', async () => {
     try {
         const res = await fetch('/api/game/upload', {
             method: "POST",
-            headers: { "Authorization": "Bearer " + token },
+            headers: {"Authorization": "Bearer " + token},
             body: formData
         });
 
@@ -176,6 +215,8 @@ uploadBtn.addEventListener('click', async () => {
         }
 
         uploadStatus.textContent = "Upload successful.";
+        const startButton = document.getElementById("start-game-btn");
+        if (startButton) startButton.disabled = false;
     } catch (err) {
         console.error(err);
         uploadStatus.textContent = 'Upload error.';

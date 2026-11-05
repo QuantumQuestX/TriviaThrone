@@ -35,8 +35,14 @@ public class LobbyController {
         if (code == null || code.isBlank()) return null;
         Optional<Lobby> optLobby = lobbyService.getLobby(code);
         return optLobby.map(lobby ->
-                            new LobbyInfoMessage(code, lobby.getHostUsername(), lobby.listUsernames()))
-                       .orElse(null);
+                        new LobbyInfoMessage(
+                                code,
+                                lobby.getHostUsername(),
+                                lobby.listUsernames(),
+                                lobby.hasLoadedGame(),
+                                lobby.hasActiveGame()
+                        ))
+                .orElse(null);
     }
 
     @GetMapping("/exists")

@@ -2,8 +2,6 @@ package de.quantumquest.triviathrone.game;
 
 import de.quantumquest.triviathrone.dto.game.GameActionMessage;
 import de.quantumquest.triviathrone.server.LobbyService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -12,7 +10,6 @@ import java.security.Principal;
 
 @Controller
 public class GameWebSocketController {
-    private static final Logger logger = LoggerFactory.getLogger(GameWebSocketController.class);
     private final LobbyService lobbyService;
     private final GameEventService gameEventService;
 
@@ -26,33 +23,72 @@ public class GameWebSocketController {
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
-            if (!lobby.hasActiveGame()) return;
+            if (!lobby.listUsernames().contains(username)) return;
 
-            GameSession session = lobby.getGameSession();
+            if (msg.action() != GameActionMessage.ActionType.START_GAME && !lobby.hasActiveGame()) return;
+
+            GameSession session;
 
             switch (msg.action()) {
+                case START_GAME -> {
+                    if (!username.equals(lobby.getHostUsername())) return;
+                    if (!lobby.hasActiveGame()) lobby.startGame();
+                    GameSession startedSession = lobby.getGameSession();
+                    startedSession.setStateChangeListener(
+                            () -> gameEventService.broadcastState(msg.lobbyCode(), startedSession)
+                    );
+                    gameEventService.broadcastState(msg.lobbyCode(), startedSession);
+                    return;
+                }
+                case END_GAME -> {
+                    if (!username.equals(lobby.getHostUsername())) return;
+                    gameEventService.broadcastGameEnded(msg.lobbyCode());
+                    lobby.endGame();
+                    return;
+                }
+                case SYNC -> session = lobby.getGameSession();
+                case SELECT_ROUND -> {
+                    if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
+                    session.selectRound(msg.roundIdx());
+                }
                 case SELECT_QUESTION -> {
                     if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.selectQuestion(msg.roundIdx(), msg.categoryIdx(), msg.questionIdx());
                 }
                 case OPEN_BUZZ -> {
                     if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.openBuzz();
                 }
+                case CLOSE_BUZZ -> {
+                    if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
+                    session.closeBuzz();
+                }
                 case BUZZ -> {
+                    if (username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.registerBuzz(username);
                 }
                 case MARK_CORRECT -> {
                     if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.markCorrect();
                 }
                 case MARK_INCORRECT -> {
                     if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.markIncorrect();
                 }
                 case RESET -> {
                     if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
                     session.resetToIdle();
+                }
+                default -> {
+                    return;
                 }
             }
 

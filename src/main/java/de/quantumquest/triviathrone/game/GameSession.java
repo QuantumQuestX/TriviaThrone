@@ -1,7 +1,6 @@
 package de.quantumquest.triviathrone.game;
 
 import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
-import de.quantumquest.triviathrone.dto.game.GameStateMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
 import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
@@ -9,8 +8,10 @@ import de.quantumquest.triviathrone.server.Lobby;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +19,7 @@ public class GameSession {
 
     public enum State {
         IDLE,               // waiting for host to select question
-        QUESTION_SELECTED,  // question selected, not visible to clients yet
+        QUESTION_SELECTED,  // question is visible; waiting for the host to open the buzzer
         QUESTION_OPEN,      // clients see question, waiting for buzzer
         BUZZ_OPEN,          // clients can buzz in
         BUZZ_COLLECTING,    // collect all buzzes
@@ -28,17 +29,24 @@ public class GameSession {
 
     private static final long BUZZ_THRESHOLD_MS = 120;
 
-    private final Lobby lobby;
     private final GameDefinition definition;
 
     private final Map<String, Integer> scores = new ConcurrentHashMap<>();
     private final Map<String, Long> buzzTimes = new ConcurrentHashMap<>();
     private final Set<String> usedQuestions = ConcurrentHashMap.newKeySet();
+    private final Set<String> attemptedPlayers = ConcurrentHashMap.newKeySet();
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(task -> {
+        Thread thread = new Thread(task, "game-buzzer");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private volatile State currentState = State.IDLE;
     private volatile String buzzWinner;
+    private volatile Runnable stateChangeListener = () -> {
+    };
+    private ScheduledFuture<?> pendingBuzz;
 
     private volatile int currentRoundIdx;
     private volatile int currentCategoryIdx;
@@ -46,7 +54,6 @@ public class GameSession {
     private volatile int currentQuestionPoints;
 
     public GameSession(Lobby lobby, GameDefinition definition) {
-        this.lobby = lobby;
         this.definition = definition;
         lobby.listUsernames().forEach(username -> scores.put(username, 0));
     }
@@ -60,25 +67,45 @@ public class GameSession {
             throw new IllegalStateException("Cannot select question now");
         }
 
-        String key = round + ":" + category + ":" + question;
+        if (round < 0 || round >= definition.rounds().size()) {
+            throw new IllegalArgumentException("Round index is out of range");
+        }
+        var roundDefinition = definition.rounds().get(round);
+        if (category < 0 || category >= roundDefinition.categories().size()) {
+            throw new IllegalArgumentException("Category index is out of range");
+        }
+        var categoryDefinition = roundDefinition.categories().get(category);
+        if (question < 0 || question >= categoryDefinition.questions().size()) {
+            throw new IllegalArgumentException("Question index is out of range");
+        }
+
+        String key = questionKey(round, category, question);
 
         if (usedQuestions.contains(key)) {
             throw new IllegalStateException("Question already used");
         }
 
-        QuestionDefinition q = definition.rounds()
-                .get(round)
-                .categories().get(category)
-                .questions().get(question);
+        QuestionDefinition q = categoryDefinition.questions().get(question);
 
         currentRoundIdx = round;
         currentCategoryIdx = category;
         currentQuestionIdx = question;
         currentQuestionPoints = q.points();
+        attemptedPlayers.clear();
 
         usedQuestions.add(key);
 
         currentState = State.QUESTION_SELECTED;
+    }
+
+    public synchronized void selectRound(Integer round) {
+        if (currentState != State.IDLE) {
+            throw new IllegalStateException("Cannot change rounds while a question is active");
+        }
+        if (round == null || round < 0 || round >= definition.rounds().size()) {
+            throw new IllegalArgumentException("Round index is out of range");
+        }
+        currentRoundIdx = round;
     }
 
     public void openBuzz() {
@@ -94,7 +121,8 @@ public class GameSession {
     public void registerBuzz(String username) {
         synchronized (this) {
             if (currentState != State.BUZZ_OPEN &&
-                currentState != State.BUZZ_COLLECTING) return;
+                    currentState != State.BUZZ_COLLECTING) return;
+            if (attemptedPlayers.contains(username)) return;
 
             long now = System.nanoTime();
             buzzTimes.putIfAbsent(username, now);
@@ -102,7 +130,7 @@ public class GameSession {
             if (currentState == State.BUZZ_OPEN) {
                 currentState = State.BUZZ_COLLECTING;
 
-                scheduler.schedule(
+                pendingBuzz = scheduler.schedule(
                         this::finalizeBuzz,
                         BUZZ_THRESHOLD_MS,
                         TimeUnit.MILLISECONDS
@@ -111,7 +139,26 @@ public class GameSession {
         }
     }
 
-    private synchronized void finalizeBuzz() {
+    public void closeBuzz() {
+        synchronized (this) {
+            if (currentState == State.BUZZ_OPEN) {
+                currentState = State.QUESTION_SELECTED;
+            } else if (currentState == State.BUZZ_COLLECTING) {
+                finalizeBuzzLocked();
+            }
+        }
+    }
+
+    private void finalizeBuzz() {
+        synchronized (this) {
+            if (currentState != State.BUZZ_COLLECTING) return;
+            finalizeBuzzLocked();
+        }
+        stateChangeListener.run();
+    }
+
+    private void finalizeBuzzLocked() {
+        pendingBuzz = null;
         if (buzzTimes.isEmpty()) {
             currentState = State.QUESTION_SELECTED;
             return;
@@ -127,23 +174,66 @@ public class GameSession {
     }
 
     public synchronized void markCorrect() {
-        if (buzzWinner == null) return;
+        if (currentState != State.BUZZ_LOCKED || buzzWinner == null) return;
 
         scores.computeIfPresent(buzzWinner, (_, score) -> score + currentQuestionPoints);
         currentState = State.ANSWER_REVEAL;
     }
 
     public synchronized void markIncorrect() {
-        if (buzzWinner == null) return;
+        if (currentState != State.BUZZ_LOCKED || buzzWinner == null) return;
 
         scores.computeIfPresent(buzzWinner, (_, score) -> score - (currentQuestionPoints / 2));
-        currentState = State.ANSWER_REVEAL;
+        attemptedPlayers.add(buzzWinner);
+        buzzWinner = null;
+        buzzTimes.clear();
+        currentState = State.QUESTION_SELECTED;
     }
 
     public synchronized void resetToIdle() {
+        if (pendingBuzz != null) {
+            pendingBuzz.cancel(false);
+            pendingBuzz = null;
+        }
         buzzWinner = null;
         buzzTimes.clear();
+        attemptedPlayers.clear();
         currentState = State.IDLE;
+    }
+
+    public synchronized void setStateChangeListener(Runnable listener) {
+        stateChangeListener = listener == null ? () -> {
+        } : listener;
+    }
+
+    public synchronized GameQuestionMessage getCurrentQuestionMessage() {
+        if (currentState == State.IDLE) return null;
+
+        var round = definition.rounds().get(currentRoundIdx);
+        var category = round.categories().get(currentCategoryIdx);
+        return createGameQuestionMessage(
+                category,
+                category.questions().get(currentQuestionIdx)
+        );
+    }
+
+    public synchronized boolean isQuestionUsed(int round, int category, int question) {
+        return usedQuestions.contains(questionKey(round, category, question));
+    }
+
+    public synchronized Set<String> getBuzzedPlayers() {
+        Set<String> buzzed = new HashSet<>(attemptedPlayers);
+        buzzed.addAll(buzzTimes.keySet());
+        return Set.copyOf(buzzed);
+    }
+
+    public synchronized void close() {
+        if (pendingBuzz != null) pendingBuzz.cancel(false);
+        scheduler.shutdownNow();
+    }
+
+    private String questionKey(int round, int category, int question) {
+        return round + ":" + category + ":" + question;
     }
 
     private GameQuestionMessage createGameQuestionMessage(Category c, QuestionDefinition q) {
@@ -179,7 +269,7 @@ public class GameSession {
     }
 
     public Map<String, Integer> getScores() {
-        return scores;
+        return Map.copyOf(scores);
     }
 
     public GameDefinition getDefinition() {

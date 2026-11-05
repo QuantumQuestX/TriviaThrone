@@ -51,6 +51,7 @@ public class Lobby {
         if (definition == null)
             throw new IllegalArgumentException("GameDefinition cannot be null");
 
+        if (gameSession != null) gameSession.close();
         this.gameDefinition = definition;
         this.gameSession = null;
     }
@@ -68,11 +69,16 @@ public class Lobby {
     }
 
     public synchronized void endGame() {
+        if (gameSession != null) gameSession.close();
         this.gameSession = null;
     }
 
     public boolean hasActiveGame() {
         return gameSession != null;
+    }
+
+    public boolean hasLoadedGame() {
+        return gameDefinition != null;
     }
 
     public GameDefinition getGameDefinition() {

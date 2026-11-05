@@ -43,7 +43,8 @@ public class WebSocketLobbyController {
             lobbyEventService.userLeft(msg.lobbyCode(), lobby.getHostUsername(), username);
             if (lobby.listUsernames().isEmpty()) {
                 logger.info("Lobby with code {} is empty. Deleting...", msg.lobbyCode());
-                lobbyService.removeLobby(lobby.getLobbyCode());;
+                lobby.endGame();
+                lobbyService.removeLobby(lobby.getLobbyCode());
             }
         });
     }

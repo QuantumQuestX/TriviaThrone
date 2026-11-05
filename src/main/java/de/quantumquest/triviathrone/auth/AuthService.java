@@ -1,6 +1,5 @@
 package de.quantumquest.triviathrone.auth;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,14 +10,20 @@ import java.time.Instant;
 @Service
 public class AuthService {
     private final UserConfigLoader users;
-    private final PasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder encoder;
     private final TokenService tokens;
     private final RefreshTokenService refreshTokens;
 
-    public AuthService(UserConfigLoader users, TokenService tokens, RefreshTokenService refreshTokens) {
+    public AuthService(
+            UserConfigLoader users,
+            TokenService tokens,
+            RefreshTokenService refreshTokens,
+            PasswordEncoder encoder
+    ) {
         this.users = users;
         this.tokens = tokens;
         this.refreshTokens = refreshTokens;
+        this.encoder = encoder;
     }
 
     public void changePassword(String username, String oldPassword, String newPassword) {

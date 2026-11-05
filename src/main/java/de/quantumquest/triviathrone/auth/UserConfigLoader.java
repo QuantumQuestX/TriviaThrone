@@ -1,7 +1,7 @@
 package de.quantumquest.triviathrone.auth;
 
 import de.quantumquest.triviathrone.dto.UserFile;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -28,12 +28,13 @@ public class UserConfigLoader {
     private final Map<String, UserAccount> users = new ConcurrentHashMap<>();
     private final Path file;
     private final Yaml yaml;
-
     private final String initialPassword;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserConfigLoader(AuthProperties props) {
-        this.file = props.getUserFile();
-        this.initialPassword = props.getInitialPassword();
+    public UserConfigLoader(AuthProperties props, PasswordEncoder passwordEncoder) {
+        this.file = props.userFile();
+        this.initialPassword = props.initialPassword();
+        this.passwordEncoder = passwordEncoder;
 
         LoaderOptions loaderOptions = new LoaderOptions();
         loaderOptions.setAllowDuplicateKeys(false);
@@ -77,7 +78,6 @@ public class UserConfigLoader {
 
             boolean modified = false;
 
-            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             for (UserAccount user : data.getUsers()) {
                 if (user.getPasswordHash() == null) {
                     if (initialPassword == null || initialPassword.isBlank()) {

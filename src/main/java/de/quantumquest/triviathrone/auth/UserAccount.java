@@ -1,13 +1,13 @@
 package de.quantumquest.triviathrone.auth;
 
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class UserAccount {
     private String username;
     private String displayName;
     private String passwordHash;
-    private Set<String> roles = new HashSet<>();
+    private Set<String> roles = Set.of();
 
     public String getUsername() {
         return username;
@@ -38,19 +38,19 @@ public class UserAccount {
     }
 
     public void setRoles(Set<String> roles) {
-        this.roles = roles;
+        this.roles = roles == null ? Set.of() : Set.copyOf(roles);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof UserAccount other)) return false;
-        return username.equals(other.username);
+        return Objects.equals(username, other.username);
     }
 
     @Override
     public int hashCode() {
-        return username.hashCode();
+        return Objects.hashCode(username);
     }
 
     @Override

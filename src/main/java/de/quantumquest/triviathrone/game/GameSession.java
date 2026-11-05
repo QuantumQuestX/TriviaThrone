@@ -2,7 +2,6 @@ package de.quantumquest.triviathrone.game;
 
 import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
-import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
 import de.quantumquest.triviathrone.server.Lobby;
 
@@ -238,23 +237,12 @@ public class GameSession {
 
     private GameQuestionMessage createGameQuestionMessage(Category c, QuestionDefinition q) {
         String mediaUrl = q.mediaPath();
-        MediaType mediaType = MediaType.UNDEFINED;
-
-        if (mediaUrl != null && !mediaUrl.isBlank()) {
-            if (mediaUrl.endsWith(".mp4")) {
-                mediaType = MediaType.VIDEO;
-            } else if (mediaUrl.endsWith(".mp3") || mediaUrl.endsWith(".wav")) {
-                mediaType = MediaType.AUDIO;
-            } else {
-                mediaType = MediaType.IMAGE;
-            }
-        }
 
         return new GameQuestionMessage(
                 c.name(),
                 q.prompt(),
                 null,
-                mediaType,
+                q.mediaType(),
                 mediaUrl,
                 q.points()
         );

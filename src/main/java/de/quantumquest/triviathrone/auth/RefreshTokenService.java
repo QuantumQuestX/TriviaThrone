@@ -23,8 +23,8 @@ public class RefreshTokenService {
     private final long maxSessionSeconds;
 
     public RefreshTokenService(AuthProperties properties) {
-        this.validitySeconds = properties.getRefreshTokenValiditySeconds();
-        this.maxSessionSeconds = properties.getRefreshSessionMaxSeconds();
+        this.validitySeconds = properties.refreshTokenValiditySeconds();
+        this.maxSessionSeconds = properties.refreshSessionMaxSeconds();
         if (validitySeconds <= 0 || maxSessionSeconds <= 0) {
             throw new IllegalArgumentException("Refresh token lifetimes must be positive.");
         }

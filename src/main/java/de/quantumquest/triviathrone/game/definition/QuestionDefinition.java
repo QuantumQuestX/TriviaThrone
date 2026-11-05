@@ -1,4 +1,4 @@
 package de.quantumquest.triviathrone.game.definition;
 
-public record QuestionDefinition(int points, String prompt, String mediaPath) {
+public record QuestionDefinition(int points, String prompt, String mediaPath, MediaType mediaType) {
 }

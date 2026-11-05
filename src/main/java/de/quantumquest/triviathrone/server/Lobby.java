@@ -3,15 +3,14 @@ package de.quantumquest.triviathrone.server;
 import de.quantumquest.triviathrone.game.GameDefinition;
 import de.quantumquest.triviathrone.game.GameSession;
 
-import java.util.Collections;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Lobby {
     private final String code;
     private final String name;
     private final String hostUser;
-    private final Set<String> users = Collections.synchronizedSet(new TreeSet<>());
+    private final Set<String> users = new ConcurrentSkipListSet<>();
 
     private volatile GameDefinition gameDefinition;
     private volatile GameSession gameSession;

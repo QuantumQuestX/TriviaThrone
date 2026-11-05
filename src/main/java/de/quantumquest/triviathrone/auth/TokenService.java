@@ -18,8 +18,8 @@ public class TokenService {
     private final long validitySeconds;
 
     public TokenService(AuthProperties props) {
-        this.key = Keys.hmacShaKeyFor(props.getJwtSecret().getBytes(StandardCharsets.UTF_8));
-        this.validitySeconds = props.getTokenValiditySeconds();
+        this.key = Keys.hmacShaKeyFor(props.jwtSecret().getBytes(StandardCharsets.UTF_8));
+        this.validitySeconds = props.tokenValiditySeconds();
     }
 
     public String issueToken(UserAccount user) {

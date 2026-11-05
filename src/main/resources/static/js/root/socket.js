@@ -10,6 +10,7 @@ export async function connectSocket(endpoint = '/ws/lobby', token = null) {
 
         const socket = new SockJS(endpoint);
         stompClient = Stomp.over(socket);
+        stompClient.debug = () => {};
 
         stompClient.connect(
             { "Authorization": "Bearer " + token },

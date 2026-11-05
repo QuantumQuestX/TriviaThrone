@@ -1,83 +1,105 @@
-import { token } from "../root/token.js";
+import {apiFetch} from "../root/api.js";
+import {logout} from "../root/auth.js";
+import {saveLobbyDetails} from "../root/lobby-storage.js";
 
-let selectedLobby = null, selectedLobbyItem = null;
 const lobbyList = document.getElementById("lobby-list");
+const joinCodeInput = document.getElementById("join-code");
+let selectedLobbyCode = null;
+let isLoadingLobbies = false;
 
 async function loadLobbies() {
+    if (isLoadingLobbies) return;
+    isLoadingLobbies = true;
+
     try {
-        const res = await fetch("/api/lobbies", {
-            method: "GET",
-            headers: { "Authorization": "Bearer " + token }
-        });
+        const response = await apiFetch("/api/lobbies");
+        if (!response.ok) {
+            throw new Error("Could not load available lobbies.");
+        }
 
-        if (!res.ok) throw new Error("Failed to fetch lobbies");
-
-        const lobbies = await res.json();
-        lobbyList.innerHTML = "";
-        selectedLobby = null;
-        selectedLobbyItem = null;
+        const lobbies = await response.json();
+        const selectedCode = selectedLobbyCode;
+        const fragment = document.createDocumentFragment();
 
         lobbies.forEach(lobby => {
-            const li = document.createElement("li");
-            li.textContent = `${lobby.name} (Code: ${lobby.lobbyCode})`;
-            li.style.cursor = "pointer";
-
-            if (selectedLobby === lobby.lobbyCode) {
-                li.classList.add("selected");
-            }
-
-            li.addEventListener("click", () => {
-                document.querySelectorAll("#lobby-list li").forEach(n => n.classList.remove("selected"));
-                li.classList.add("selected");
-                selectedLobbyItem = {lobbyCode: lobby.lobbyCode, name: lobby.name};
-                selectedLobby = lobby.lobbyCode;
-            })
-
-            lobbyList.appendChild(li);
+            const item = document.createElement("li");
+            item.textContent = `${lobby.name} (Code: ${lobby.lobbyCode})`;
+            item.classList.toggle("selected", lobby.lobbyCode === selectedCode);
+            item.addEventListener("click", () => {
+                selectedLobbyCode = lobby.lobbyCode;
+                joinCodeInput.value = lobby.lobbyCode;
+                lobbyList.querySelector(".selected")?.classList.remove("selected");
+                item.classList.add("selected");
+            });
+            fragment.appendChild(item);
         });
-    } catch (err) {
-        console.error(err);
-        lobbyList.innerHTML = "<li>Error loading lobbies</li>";
+
+        lobbyList.replaceChildren(fragment);
+        if (!lobbies.some(lobby => lobby.lobbyCode === selectedCode)) {
+            selectedLobbyCode = null;
+        }
+    } catch (error) {
+        lobbyList.replaceChildren();
+        const item = document.createElement("li");
+        item.textContent = error.message || "Error loading lobbies.";
+        lobbyList.appendChild(item);
+    } finally {
+        isLoadingLobbies = false;
     }
 }
 
-loadLobbies();
-setInterval(loadLobbies, 3000);
-
-// Join lobby
-document.getElementById("join-btn").addEventListener("click", async () => {
-    const code = selectedLobby || document.getElementById("join-code").value;
-    if (!code || !selectedLobbyItem) return alert("Enter a lobby code");
-
-    localStorage.setItem("lobbyDetails", JSON.stringify(selectedLobbyItem));
-    window.location.href = "/lobby.html";
-});
-
-// Logout
-document.getElementById("logout-btn").addEventListener("click", () => {
-    localStorage.removeItem("token");
-    window.location.href = "/login.html";
-});
-
-// Create lobby
-document.getElementById("create-btn").addEventListener("click", async () => {
-    const name = document.getElementById("lobby-name").value;
-    if (!name) return alert("Enter a lobby name");
+async function joinLobby() {
+    const lobbyCode = (selectedLobbyCode || joinCodeInput.value).trim();
+    if (!lobbyCode) {
+        window.alert("Enter a lobby code.");
+        return;
+    }
 
     try {
-        const res = await fetch(`/api/lobbies/create?name=${encodeURIComponent(name)}&code=null`, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token }
-        });
-        if (!res.ok) throw new Error("Failed to create lobby");
+        const response = await apiFetch(`/api/lobbies/exists?code=${encodeURIComponent(lobbyCode)}`);
+        if (!response.ok || !(await response.json())) {
+            throw new Error("That lobby does not exist.");
+        }
 
-        const lobby = await res.json();
-        console.log(lobby);
+        saveLobbyDetails({lobbyCode});
+        window.location.assign("/lobby.html");
+    } catch (error) {
+        window.alert(error.message);
+    }
+}
 
-        localStorage.setItem("lobbyDetails", JSON.stringify(lobby));
-        window.location.href = "/lobby.html";
-    } catch (err) {
-        console.error(err);
-        alert("Error creating lobby: " + err.message);
+async function createLobby() {
+    const name = document.getElementById("lobby-name").value.trim();
+    if (!name) {
+        window.alert("Enter a lobby name.");
+        return;
+    }
+
+    try {
+        const parameters = new URLSearchParams({name, code: "null"});
+        const response = await apiFetch(`/api/lobbies/create?${parameters}`, {method: "POST"});
+        if (!response.ok) {
+            throw new Error("Could not create the lobby.");
+        }
+
+        saveLobbyDetails(await response.json());
+        window.location.assign("/lobby.html");
+    } catch (error) {
+        window.alert(`Error creating lobby: ${error.message}`);
+    }
+}
+
+document.getElementById("join-btn").addEventListener("click", joinLobby);
+document.getElementById("create-btn").addEventListener("click", createLobby);
+document.getElementById("logout-btn").addEventListener("click", async () => {
+    try {
+        await logout();
+        window.location.replace("/login.html");
+    } catch (error) {
+        window.alert(error.message);
     }
 });
+
+void loadLobbies();
+const lobbyRefreshTimer = window.setInterval(loadLobbies, 3000);
+window.addEventListener("pagehide", () => window.clearInterval(lobbyRefreshTimer), {once: true});

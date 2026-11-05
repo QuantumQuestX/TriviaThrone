@@ -1,69 +1,100 @@
+import {getAccessToken, refreshAccessToken} from "./auth.js";
+
 let stompClient = null;
+let connectionPromise = null;
+let connectedEndpoint = null;
+let pendingEndpoint = null;
 const subscriptions = new Map();
 
-export async function connectSocket(endpoint = '/ws/lobby', token = null) {
-    return new Promise((resolve, reject) => {
-        if (stompClient && stompClient.connected) {
-            resolve(stompClient);
-            return;
+export async function connectSocket(endpoint = "/ws/lobby") {
+    if (stompClient?.connected && connectedEndpoint === endpoint) {
+        return stompClient;
+    }
+    if (connectionPromise) {
+        if (pendingEndpoint !== endpoint) {
+            throw new Error("A connection to a different WebSocket endpoint is already starting.");
         }
+        return connectionPromise;
+    }
 
-        const socket = new SockJS(endpoint);
-        stompClient = Stomp.over(socket);
-        stompClient.debug = () => {};
+    pendingEndpoint = endpoint;
+    connectionPromise = connectWithRefresh(endpoint)
+        .finally(() => {
+            connectionPromise = null;
+            pendingEndpoint = null;
+        });
+    return connectionPromise;
+}
 
-        stompClient.connect(
-            { "Authorization": "Bearer " + token },
+async function connectWithRefresh(endpoint) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const token = await getAccessToken();
+        try {
+            return await openConnection(endpoint, token);
+        } catch (error) {
+            if (attempt === 1) throw error;
+            await refreshAccessToken();
+        }
+    }
+    throw new Error("Could not establish the WebSocket connection.");
+}
+
+function openConnection(endpoint, token) {
+    return new Promise((resolve, reject) => {
+        const client = Stomp.over(new SockJS(endpoint));
+        client.debug = () => {};
+        client.connect(
+            {Authorization: `Bearer ${token}`},
             () => {
-                console.log("WebSocket connected:", endpoint);
-                resolve(stompClient);
+                stompClient = client;
+                connectedEndpoint = endpoint;
+                resolve(client);
             },
-            (err) => {
-                console.error("WebSocket connection failed:", err);
-                reject(err);
-            }
+            error => reject(error)
         );
     });
 }
 
 export function subscribe(topic, callback) {
-    if (!stompClient || !stompClient.connected) {
-        throw new Error("WebSocket not connected");
+    if (!stompClient?.connected) {
+        throw new Error("WebSocket not connected.");
     }
 
-    if (subscriptions.has(topic)) {
-        subscriptions.get(topic).unsubscribe();
-    }
-
-    const sub = stompClient.subscribe(topic, (message) => {
-        callback(JSON.parse(message.body))
+    unsubscribe(topic);
+    const subscription = stompClient.subscribe(topic, message => {
+        try {
+            callback(JSON.parse(message.body));
+        } catch (error) {
+            console.error(`Could not process WebSocket message for ${topic}.`, error);
+        }
     });
-
-    subscriptions.set(topic, sub);
-    return sub;
+    subscriptions.set(topic, subscription);
+    return subscription;
 }
 
 export function unsubscribe(topic) {
-    const sub = subscriptions.get(topic);
-    if (sub) {
-        sub.unsubscribe();
+    const subscription = subscriptions.get(topic);
+    if (subscription) {
+        subscription.unsubscribe();
         subscriptions.delete(topic);
     }
 }
 
 export function send(destination, payload = {}) {
-    if (!stompClient || !stompClient.connected) {
-        throw new Error("WebSocket not connected");
+    if (!stompClient?.connected) {
+        throw new Error("WebSocket not connected.");
     }
     stompClient.send(destination, {}, JSON.stringify(payload));
 }
 
 export function disconnect() {
-    if (stompClient && stompClient.connected) {
-        subscriptions.forEach((sub) => sub.unsubscribe());
-        subscriptions.clear();
-        stompClient.disconnect(() => {
-            console.log("WebSocket disconnected");
-        });
+    const client = stompClient;
+    stompClient = null;
+    connectedEndpoint = null;
+    subscriptions.forEach(subscription => subscription.unsubscribe());
+    subscriptions.clear();
+
+    if (client?.connected) {
+        client.disconnect();
     }
 }

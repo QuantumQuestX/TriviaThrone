@@ -2,6 +2,7 @@ package de.quantumquest.triviathrone;
 
 import de.quantumquest.triviathrone.auth.AuthProperties;
 import de.quantumquest.triviathrone.auth.JwtAuthFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +22,11 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(
                                 "/auth/login",
+                                "/auth/refresh",
+                                "/auth/logout",
                                 "/login.html",
                                 "/index.html",
                                 "/lobby.html",

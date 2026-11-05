@@ -1,17 +1,23 @@
-import {token, currentUser} from "../root/token.js";
+import {apiFetch} from "../root/api.js";
+import {getCurrentUser} from "../root/auth.js";
+import {clearLobbyDetails, getLobbyDetails} from "../root/lobby-storage.js";
 import {handleDeltaMessage, handleHostUploadedGameMessage} from "./messages.js";
 import * as socket from "../root/socket.js";
 
-const lobbyDetails = JSON.parse(localStorage.getItem("lobbyDetails")) || "{}";
+const currentUser = getCurrentUser();
+const lobbyDetails = getLobbyDetails();
 const lobbyCode = lobbyDetails.lobbyCode;
 
 if (!lobbyCode) {
     console.warn("No lobby code found in Session");
-    localStorage.removeItem("lobbyDetails");
+    clearLobbyDetails();
     window.location.href = "/";
 } else {
     document.getElementById("lobby-code").textContent = lobbyCode;
-    initLobby();
+    initLobby().catch(error => {
+        console.error("Could not initialize the lobby.", error);
+        addFeedMessage("Could not connect to this lobby. Please return to the dashboard and try again.");
+    });
 }
 
 let lobbySubscription;
@@ -19,35 +25,15 @@ let isLeaving = false;
 let isStartingGame = false;
 
 async function validateLobby(code) {
-    try {
-        const res = await fetch(`/api/lobbies/exists?code=${encodeURIComponent(code)}`, {
-            method: "GET",
-            headers: {"Authorization": "Bearer " + token}
-        });
-
-        if (!res.ok) throw new Error("Validation request failed");
-
-        return await res.json();
-    } catch (err) {
-        console.error("Validation error: ", err);
-        return false;
-    }
+    const response = await apiFetch(`/api/lobbies/exists?code=${encodeURIComponent(code)}`);
+    if (!response.ok) throw new Error("Could not verify that this lobby exists.");
+    return response.json();
 }
 
 async function getLobbyData(code) {
-    try {
-        const res = await fetch(`/api/lobbies/info?code=${encodeURIComponent(code)}`, {
-            method: "GET",
-            headers: {"Authorization": "Bearer " + token}
-        });
-
-        if (!res.ok) throw new Error("Could not get info");
-
-        return await res.json();
-    } catch (err) {
-        console.error("Could not get info");
-        return null;
-    }
+    const response = await apiFetch(`/api/lobbies/info?code=${encodeURIComponent(code)}`);
+    if (!response.ok) throw new Error("Could not load lobby information.");
+    return response.json();
 }
 
 async function initLobby() {
@@ -59,7 +45,7 @@ async function initLobby() {
         return;
     }
 
-    await socket.connectSocket("/ws/lobby", token);
+    await socket.connectSocket("/ws/lobby");
 
     lobbySubscription = socket.subscribe(`/topic/lobby.${lobbyCode}`, (data) => {
         if (data.action) handleDeltaMessage(data);
@@ -158,6 +144,7 @@ document.getElementById("leave-btn").addEventListener("click", () => {
 
     if (lobbySubscription) socket.unsubscribe(`/topic/lobby.${lobbyCode}`);
     socket.disconnect();
+    clearLobbyDetails();
     window.location.href = "/index.html";
 });
 
@@ -200,9 +187,8 @@ uploadBtn.addEventListener('click', async () => {
     uploadStatus.textContent = 'Uploading...';
 
     try {
-        const res = await fetch('/api/game/upload', {
+        const res = await apiFetch('/api/game/upload', {
             method: "POST",
-            headers: {"Authorization": "Bearer " + token},
             body: formData
         });
 

@@ -1,7 +1,5 @@
 package de.quantumquest.triviathrone.auth;
 
-import de.quantumquest.triviathrone.auth.AuthProperties;
-import de.quantumquest.triviathrone.auth.UserAccount;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -41,5 +39,9 @@ public class TokenService {
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token);
+    }
+
+    public long getValiditySeconds() {
+        return validitySeconds;
     }
 }

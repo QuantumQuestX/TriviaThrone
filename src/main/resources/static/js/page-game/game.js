@@ -1,11 +1,14 @@
 import * as gameSocket from "./game-socket.js";
 import * as socket from "../root/socket.js";
 import {PlayerView} from "./jeopardy/player-view.js";
-import {currentUser, token} from "../root/token.js";
+import {apiFetch} from "../root/api.js";
+import {getCurrentUser} from "../root/auth.js";
+import {clearLobbyDetails, getLobbyDetails} from "../root/lobby-storage.js";
 import {QuestionManager} from "./jeopardy/question-manager.js";
 
+const currentUser = getCurrentUser();
 const lobbyCode = new URLSearchParams(window.location.search).get("code")
-    || JSON.parse(localStorage.getItem("lobbyDetails") || "{}").lobbyCode;
+    || getLobbyDetails().lobbyCode;
 const playerViews = new Map();
 const questionManager = new QuestionManager();
 let isHost = false;
@@ -33,9 +36,7 @@ if (!lobbyCode) {
 }
 
 async function initializeGame() {
-    const response = await fetch(`/api/lobbies/info?code=${encodeURIComponent(lobbyCode)}`, {
-        headers: {Authorization: `Bearer ${token}`}
-    });
+    const response = await apiFetch(`/api/lobbies/info?code=${encodeURIComponent(lobbyCode)}`);
     if (!response.ok) throw new Error("Could not load lobby information");
 
     const lobby = await response.json();
@@ -119,7 +120,7 @@ function configureLeaveButton() {
     document.getElementById("leave-btn").addEventListener("click", () => {
         socket.send("/app/leave", {lobbyCode});
         gameSocket.disconnect();
-        localStorage.removeItem("lobbyDetails");
+        clearLobbyDetails();
         window.location.href = "/index.html";
     });
 
@@ -193,7 +194,7 @@ function renderBoard(state, preserveSelection = false) {
     round.categories.forEach(category => {
         const heading = document.createElement("div");
         heading.className = "j-category";
-        heading.textContent = category;
+        heading.textContent = String(category ?? "");
         canvas.appendChild(heading);
     });
 

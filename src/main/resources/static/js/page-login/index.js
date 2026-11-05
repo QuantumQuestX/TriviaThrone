@@ -1,1 +1,1 @@
-import {} from "./login.js";
+import "./login.js";

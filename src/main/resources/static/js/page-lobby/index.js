@@ -1,4 +1,5 @@
-import {} from "../root/token.js";
-import {} from "../root/topbar.js";
-import {} from "./lobby.js";
-import {} from "./messages.js";
+import {bootAuthenticatedPage} from "../root/page-bootstrap.js";
+
+await bootAuthenticatedPage(async () => {
+    await import("./lobby.js");
+});

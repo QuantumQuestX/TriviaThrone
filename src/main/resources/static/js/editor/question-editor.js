@@ -86,15 +86,9 @@ export class QuestionEditor {
 
     updateVisibility() {
         const type = this.typeSelect.value;
-
         const mediaTypes = ['image', 'video', 'audio'];
-        mediaTypes.includes(type) 
-                ? this.mediaSection.classList.remove('is-hidden')
-                : this.mediaSection.classList.add('is-hidden');
-
-        type === 'mcq' 
-                ? this.choiceSection.classList.remove('is-hidden')
-                : this.choiceSection.classList.add('is-hidden')
+        this.mediaSection.classList.toggle('is-hidden', !mediaTypes.includes(type));
+        this.choiceSection.classList.toggle('is-hidden', type !== 'mcq');
 
         if (mediaTypes.includes(type)) {
             this.updateMediaOptions(type);
@@ -158,8 +152,11 @@ export class QuestionEditor {
                 this.mediaSelect.appendChild(option);
             });
 
-        if (this.currentQuestion && this.currentQuestion.media && this.currentQuestion.media.type === type) {
-            this.mediaSelect.value = this.currentQuestion.media.id;
+        const mediaId = typeof this.currentQuestion?.media === 'string'
+            ? this.currentQuestion.media
+            : this.currentQuestion?.media?.id;
+        if (mediaId) {
+            this.mediaSelect.value = mediaId;
         }
     }
 
@@ -173,42 +170,47 @@ export class QuestionEditor {
             return;
         }
 
-        this.currentQuestion.setPrompt(this.promptInput.value);
-        this.currentQuestion.setPoints(parseInt(this.pointsInput.value, 10));
-        this.currentQuestion.setType(this.typeSelect.value);
+        const points = Number(this.pointsInput.value);
+        if (!Number.isInteger(points) || points < 100 || points > 10000 || points % 100 !== 0) {
+            alert("Points must be a whole number between 100 and 10000, in increments of 100.");
+            this.pointsInput.focus();
+            return;
+        }
 
+        let choices = null;
         if (this.typeSelect.value === 'mcq') {
-            const collectedChoices = this.collectChoices();
-
-            const validChoices = collectedChoices.filter(c => c.text.trim() !== '');
-            if (validChoices.length < 1 || validChoices.length !== collectedChoices.length) {
-                alert("Multiple Choice question cannot have no or empty choices.");
-
-                if (collectedChoices.length > 0)
-                    this.choiceContainer.querySelector('input[type="text"]').focus();
-                else
-                    this.addChoiceBtn.focus();
-
+            choices = this.collectChoices();
+            if (choices.length < 2 || choices.some(choice => !choice.text.trim())) {
+                alert("Add at least two non-empty choices.");
+                this.choiceContainer.querySelector('input[type="text"]')?.focus();
                 return;
             }
 
-            this.currentQuestion.setOptions(collectedChoices);
+            if (choices.filter(choice => choice.correct).length !== 1) {
+                alert("Select exactly one correct choice.");
+                this.choiceContainer.querySelector('input[type="checkbox"]')?.focus();
+                return;
+            }
         }
 
-        if (['image', 'video', 'audio'].includes(this.typeSelect.value)) {
-            const mediaValue = this.mediaSelect.value;
-
-            if (!mediaValue || mediaValue === GLOBAL_MEDIA_PLACEHOLDER_VALUE) {
+        const mediaTypes = ['image', 'video', 'audio'];
+        let media = null;
+        if (mediaTypes.includes(this.typeSelect.value)) {
+            media = this.mediaSelect.value;
+            if (!media || media === GLOBAL_MEDIA_PLACEHOLDER_VALUE) {
                 alert("Media Question cannot have no selected media");
                 this.mediaSection.focus();
                 return;
             }
-
-            this.currentQuestion.setMedia(mediaValue);
         }
 
-        if (this.onApplyCallback)
-            this.onApplyCallback(this.currentQuestion);
+        this.currentQuestion.setPrompt(promptValue);
+        this.currentQuestion.setPoints(points);
+        this.currentQuestion.setType(this.typeSelect.value);
+        this.currentQuestion.setOptions(choices);
+        this.currentQuestion.setMedia(media);
+
+        this.onApplyCallback?.(this.currentQuestion);
 
         this.close();
     }

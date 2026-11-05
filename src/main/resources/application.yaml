@@ -4,6 +4,11 @@ spring:
 
 auth:
   user-file: users.yml
-  jwt-secret: "CHANCE_THIS_SECRET_CHANGE_THIS_SECRET"
-  token-validity-seconds: 7200
+  # Override with a private signing key outside local development.
+  jwt-secret: ${AUTH_JWT_SECRET:CHANCE_THIS_SECRET_CHANGE_THIS_SECRET}
+  token-validity-seconds: 900
+  refresh-token-validity-seconds: 604800
+  refresh-session-max-seconds: 2592000
+  # Enable when serving the application over HTTPS.
+  refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:false}
   initialPassword: testPassword#123

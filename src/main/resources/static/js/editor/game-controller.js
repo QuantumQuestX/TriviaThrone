@@ -7,9 +7,9 @@ import { exportGame } from "./builder.js";
 export class GameController {
     constructor(boardController) {
         this.boardController = boardController;
-        this.ResourceManager = new ResourceManager();
+        this.resourceManager = new ResourceManager();
 
-        this.game = { rounds: [], resources: this.ResourceManager };
+        this.game = { rounds: [], resources: this.resourceManager };
         this.game.meta = {
             id: crypto.randomUUID(),
             title: "",
@@ -58,14 +58,14 @@ export class GameController {
         this.refreshRoundSelect();
         this.updateCountLabels();
 
-        this.resourceHandler = new ResourceHandler(this.ResourceManager);
+        this.resourceHandler = new ResourceHandler(this.resourceManager);
         this.resourceHandler.init();
 
         const questionEditorPanel = document.getElementById('question-editor-panel');
         const questionEditor = new QuestionEditor(
             questionEditorPanel,
             (q) => this.boardController.board.applyQuestion(q),
-            this.ResourceManager
+            this.resourceManager
         );
 
         this.boardController.setQuestionEditor(questionEditor);
@@ -77,7 +77,7 @@ export class GameController {
         this.roundSelect.innerHTML = '';
         this.game.rounds.forEach((round, idx) => {
             const option = document.createElement('option');
-            option.value = idx;
+            option.value = String(idx);
             option.textContent = round.name;
             this.roundSelect.appendChild(option);
         });

@@ -1,0 +1,30 @@
+@import "../root.css";
+@import "../components/panel.css";
+@import "../components/inputs.css";
+@import "../components/buttons.css";
+@import "../components/account.css";
+
+.dashboard-page #lobby-list {
+    list-style: none;
+    margin-bottom: 1rem;
+}
+
+.dashboard-page #lobby-list li {
+    padding: 0.5rem;
+    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.dashboard-page #lobby-list li:not(:last-child) {
+    border-bottom: 2px solid var(--border);
+}
+
+.dashboard-page #lobby-list li:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+}
+
+.dashboard-page #lobby-list li.selected {
+    background: #1e2238;
+    border-left: 4px solid var(--accent);
+    transform: translateX(2px);
+}

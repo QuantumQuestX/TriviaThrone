@@ -1,5 +1,4 @@
 import * as socket from "../root/socket.js";
-import { token } from "../root/token.js";
 
 export const Actions = Object.freeze({
     START_GAME: "START_GAME",
@@ -18,7 +17,7 @@ export const Actions = Object.freeze({
 let currentTopic = null;
 
 export async function subscribeToGame(lobbyCode, onStateUpdate) {
-    await socket.connectSocket("/ws/lobby", token);
+    await socket.connectSocket("/ws/lobby");
     
     const topic = `/topic/game.${lobbyCode}`;
 

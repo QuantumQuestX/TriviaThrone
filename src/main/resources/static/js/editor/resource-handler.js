@@ -1,6 +1,6 @@
 export class ResourceHandler {
     constructor(resourceManager) {
-        this.ResourceManager = resourceManager;
+        this.resourceManager = resourceManager;
         this.mediaSelect = document.getElementById('question-media-select');
     }
 
@@ -27,7 +27,12 @@ export class ResourceHandler {
         let added = 0;
         
         for (const file of files) {
-            const resource = this.ResourceManager.addFile(file);
+            const existing = this.resourceManager.getAll().some(resource =>
+                resource.name === file.name && resource.size === file.size
+            );
+            if (existing) continue;
+
+            const resource = this.resourceManager.addFile(file);
             this.renderResource(resource, container);
             added++;
         }
@@ -75,7 +80,8 @@ export class ResourceHandler {
 
         if (resource.type === 'image') {
             const img = document.createElement('img');
-            img.src = URL.createObjectURL(resource.file);
+            img.dataset.objectUrl = URL.createObjectURL(resource.file);
+            img.src = img.dataset.objectUrl;
             preview.appendChild(img);
         } else {
             const icon = document.createElement('div');
@@ -99,9 +105,20 @@ export class ResourceHandler {
         id.textContent = resource.id;
 
         meta.append(name, id);
-        item.append(preview, meta);
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'danger-btn resource-remove-btn';
+        removeButton.textContent = '×';
+        removeButton.setAttribute('aria-label', `Remove ${resource.name}`);
+        item.append(preview, meta, removeButton);
 
-        item.addEventListener('click', () => {
+        removeButton.addEventListener('click', () => {
+            this.resourceManager.remove(resource.id);
+            const imageUrl = preview.querySelector('img')?.dataset.objectUrl;
+            if (imageUrl) URL.revokeObjectURL(imageUrl);
+            [...this.mediaSelect.options]
+                .filter(option => option.value === resource.id)
+                .forEach(option => option.remove());
             item.remove();
         });
 

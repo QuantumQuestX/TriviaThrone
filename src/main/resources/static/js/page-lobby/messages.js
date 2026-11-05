@@ -1,5 +1,7 @@
-import { currentUser } from "../root/token.js";
+import {getCurrentUser} from "../root/auth.js";
 import { playerList, crownChar, addFeedMessage } from "./lobby.js";
+
+const currentUser = getCurrentUser();
 
 export function handleDeltaMessage(deltaMsg) {
     const { lobbyHost, username, action } = deltaMsg;

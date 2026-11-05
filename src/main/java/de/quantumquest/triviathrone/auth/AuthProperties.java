@@ -10,6 +10,9 @@ public class AuthProperties {
     private Path userFile;
     private String jwtSecret;
     private long tokenValiditySeconds;
+    private long refreshTokenValiditySeconds;
+    private long refreshSessionMaxSeconds;
+    private boolean refreshCookieSecure;
     private String initialPassword;
 
     public Path getUserFile() {
@@ -34,6 +37,30 @@ public class AuthProperties {
 
     public void setTokenValiditySeconds(long tokenValiditySeconds) {
         this.tokenValiditySeconds = tokenValiditySeconds;
+    }
+
+    public long getRefreshTokenValiditySeconds() {
+        return refreshTokenValiditySeconds;
+    }
+
+    public void setRefreshTokenValiditySeconds(long refreshTokenValiditySeconds) {
+        this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
+    }
+
+    public long getRefreshSessionMaxSeconds() {
+        return refreshSessionMaxSeconds;
+    }
+
+    public void setRefreshSessionMaxSeconds(long refreshSessionMaxSeconds) {
+        this.refreshSessionMaxSeconds = refreshSessionMaxSeconds;
+    }
+
+    public boolean isRefreshCookieSecure() {
+        return refreshCookieSecure;
+    }
+
+    public void setRefreshCookieSecure(boolean refreshCookieSecure) {
+        this.refreshCookieSecure = refreshCookieSecure;
     }
 
     public String getInitialPassword() {

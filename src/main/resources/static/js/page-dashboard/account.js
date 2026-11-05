@@ -1,44 +1,40 @@
+import {apiFetch} from "../root/api.js";
+import {logout} from "../root/auth.js";
+
 document.getElementById("change-password-form").addEventListener("submit", async(e) => {
     const form = e.target;
     e.preventDefault();
 
     const current = document.getElementById("current-password").value;
-    const newPass = document.getElementById("new-password").value;
-    const confirmPass = document.getElementById("confirm-password").value;
+    const newPassword = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
     const message = document.getElementById("password-message");
 
     message.className = "";
     message.textContent = "";
 
-    if (newPass !== confirmPass) {
+    if (newPassword !== confirmPassword) {
         message.textContent = "New passwords do not match.";
         message.classList.add("error");
         return;
     }
 
-    if (newPass.length < 8) {
+    if (newPassword.length < 8) {
         message.textContent = "Password must be at least 8 chars long";
         message.classList.add("error");
         return;
     }
 
-    try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            message.textContent = "You are not logged in.";
-            message.classList.add("error");
-            return;
-        }
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
 
-        const response = await fetch("/auth/change-password", {
+    try {
+        const response = await apiFetch("/auth/change-password", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 oldPassword: current,
-                newPassword: newPass
+                newPassword
             })
         });
 
@@ -51,10 +47,11 @@ document.getElementById("change-password-form").addEventListener("submit", async
         message.classList.add("success");
         form.reset();
 
-        localStorage.removeItem("token");
-        window.location.href ="/login.html";
+        await logout();
+        window.location.replace("/login.html");
     } catch (error) {
         message.textContent = error.message;
         message.classList.add("error");
+        submitButton.disabled = false;
     }
 });

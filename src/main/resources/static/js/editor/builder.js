@@ -3,12 +3,7 @@ import JSZip from "https://cdn.skypack.dev/jszip";
 export async function exportGame(game) {
     const zip = new JSZip();
 
-    try {
-        const manifestXml = buildManifestXml(game);
-        zip.file("manifest.xml", manifestXml);
-    } catch (err) {
-        throw err;
-    }
+    zip.file("manifest.xml", buildManifestXml(game));
 
     const resourceFolder = zip.folder("resources");
 
@@ -21,10 +16,14 @@ export async function exportGame(game) {
 
     const blob = await zip.generateAsync( { type: "blob" } );
 
+    const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+    link.href = objectUrl;
     link.download = `${sanitizeFileName(game.meta?.title || "game")}.game.throne`;
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }
 
 function sanitizeFileName(name) {
@@ -77,7 +76,7 @@ function buildManifestXml(game) {
     game.rounds.forEach((round, roundIdx) => {
         const roundEl = doc.createElement("round");
 
-        roundEl.setAttribute("index", roundIdx);
+        roundEl.setAttribute("index", String(roundIdx));
         roundEl.setAttribute("name", round.name);
         roundEl.setAttribute("questionCount", round.questionCount);
         roundEl.setAttribute("categoryCount", round.categoryCount);
@@ -88,7 +87,7 @@ function buildManifestXml(game) {
                 if (!category) return;
 
                 const cEl = doc.createElement("category");
-                cEl.setAttribute("row", i);
+                cEl.setAttribute("row", String(i));
 
                 cEl.textContent = category.name;
 
@@ -116,9 +115,9 @@ function buildManifestXml(game) {
                     }
 
                     const qEl = doc.createElement("question");
-                    qEl.setAttribute("row", rowIdx);
-                    qEl.setAttribute("category", colIdx);
-                    qEl.setAttribute("points", question.points ?? 0);
+                    qEl.setAttribute("row", String(rowIdx));
+                    qEl.setAttribute("category", String(colIdx));
+                    qEl.setAttribute("points", String(question.points ?? 0));
                     qEl.setAttribute("type", question.type || "text");
 
                     const promptEl = doc.createElement("prompt");
@@ -157,7 +156,7 @@ function buildManifestXml(game) {
         roundsEl.appendChild(roundEl);
     });
 
-    if (roundsEl.childElementCount == 0) {
+    if (roundsEl.childElementCount === 0) {
         throw new Error(`No rounds configured.`);
     }
 

@@ -87,7 +87,7 @@ public class AuthController {
         );
         ResponseCookie cookie = ResponseCookie.from(RefreshTokenService.COOKIE_NAME, session.refreshToken())
                 .httpOnly(true)
-                .secure(properties.isRefreshCookieSecure())
+                .secure(properties.refreshCookieSecure())
                 .sameSite("Strict")
                 .path("/auth")
                 .maxAge(Duration.ofSeconds(remainingSeconds))
@@ -100,7 +100,7 @@ public class AuthController {
     private void clearRefreshCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from(RefreshTokenService.COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(properties.isRefreshCookieSecure())
+                .secure(properties.refreshCookieSecure())
                 .sameSite("Strict")
                 .path("/auth")
                 .maxAge(Duration.ZERO)

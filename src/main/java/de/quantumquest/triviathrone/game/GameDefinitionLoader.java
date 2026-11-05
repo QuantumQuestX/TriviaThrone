@@ -1,17 +1,24 @@
 package de.quantumquest.triviathrone.game;
 
 import de.quantumquest.triviathrone.game.definition.Category;
+import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
 import de.quantumquest.triviathrone.game.definition.Round;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class GameDefinitionLoader {
     private GameDefinitionLoader() {
@@ -21,7 +28,7 @@ public final class GameDefinitionLoader {
         try {
             Path manifestXml = lobbyDir.resolve("manifest.xml");
 
-            if (!Files.exists(manifestXml)) {
+            if (!Files.isRegularFile(manifestXml)) {
                 throw new IllegalStateException("manifest.xml not found in lobby directory");
             }
 
@@ -29,6 +36,14 @@ public final class GameDefinitionLoader {
             factory.setNamespaceAware(false);
             factory.setIgnoringComments(true);
             factory.setIgnoringElementContentWhitespace(true);
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+            factory.setXIncludeAware(false);
+            factory.setExpandEntityReferences(false);
 
             Document doc = factory.newDocumentBuilder().parse(manifestXml.toFile());
 
@@ -40,6 +55,7 @@ public final class GameDefinitionLoader {
 
             String title = getTextContent(metaElement, "title");
             String description = getTextContent(metaElement, "description");
+            Map<String, String> resourcePaths = getResourcePaths(gameElement);
 
             Element roundsElement = getSingleChild(gameElement, "rounds");
             NodeList roundNodes = roundsElement.getElementsByTagName("round");
@@ -77,12 +93,10 @@ public final class GameDefinitionLoader {
 
                     String prompt = getTextContent(questionElement, "prompt");
 
-                    String mediaPath = null;
-                    if (questionElement.hasAttribute("media")) {
-                        mediaPath = questionElement.getAttribute("media");
-                    }
+                    String mediaPath = getMediaPath(questionElement, resourcePaths);
+                    MediaType mediaType = detectMediaType(lobbyDir, mediaPath);
 
-                    matrix[category][row] = new QuestionDefinition(points, prompt, mediaPath);
+                    matrix[category][row] = new QuestionDefinition(points, prompt, mediaPath, mediaType);
                 }
 
                 List<Category> categories = new ArrayList<>();
@@ -111,10 +125,54 @@ public final class GameDefinitionLoader {
             }
 
             return new GameDefinition(title, description, rounds);
-        } catch (java.io.IOException | javax.xml.parsers.ParserConfigurationException
-                 | org.xml.sax.SAXException e) {
+        } catch (IOException | ParserConfigurationException | SAXException e) {
             throw new IllegalStateException("Could not parse game manifest", e);
         }
+    }
+
+    private static Map<String, String> getResourcePaths(Element gameElement) {
+        Map<String, String> resourcePaths = new HashMap<>();
+        NodeList resourceNodes = gameElement.getElementsByTagName("resource");
+        for (int i = 0; i < resourceNodes.getLength(); i++) {
+            Element resource = (Element) resourceNodes.item(i);
+            String id = resource.getAttribute("id");
+            String file = resource.getAttribute("file");
+            if (!id.isBlank() && !file.isBlank() && resourcePaths.putIfAbsent(id, file) != null) {
+                throw new IllegalArgumentException("Duplicate resource id: " + id);
+            }
+        }
+        return Map.copyOf(resourcePaths);
+    }
+
+    private static String getMediaPath(Element question, Map<String, String> resourcePaths) {
+        if (question.hasAttribute("media")) {
+            return question.getAttribute("media");
+        }
+
+        NodeList mediaNodes = question.getElementsByTagName("media");
+        if (mediaNodes.getLength() == 0) {
+            return null;
+        }
+
+        String resourceId = ((Element) mediaNodes.item(0)).getAttribute("ref");
+        String mediaPath = resourcePaths.get(resourceId);
+        if (mediaPath == null) {
+            throw new IllegalArgumentException("Question references an unknown media resource");
+        }
+        return mediaPath;
+    }
+
+    private static MediaType detectMediaType(Path lobbyDir, String mediaPath) throws IOException {
+        if (mediaPath == null || mediaPath.isBlank()) {
+            return MediaType.UNDEFINED;
+        }
+
+        Path root = lobbyDir.toAbsolutePath().normalize();
+        Path mediaFile = root.resolve(mediaPath).normalize();
+        if (!mediaFile.startsWith(root)) {
+            return MediaType.UNDEFINED;
+        }
+        return MediaType.detect(mediaFile);
     }
 
     private static Element getSingleChild(Element parent, String tag) {

@@ -11,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -42,19 +41,28 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = tokens.parse(token).getBody();
 
                 String username = claims.getSubject();
-                List<String> roles = (List<String>) claims.get("roles");
+                Object roleClaim = claims.get("roles");
+                if (!(roleClaim instanceof List<?> roles)
+                        || roles.stream().anyMatch(role -> !(role instanceof String))) {
+                    throw new IllegalArgumentException("Invalid roles claim");
+                }
 
                 List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+                        .map(String.class::cast)
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                         .toList();
 
                 UserAccount account = userConfigLoader.findByUsername(username);
+                if (account == null) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
+                    return;
+                }
                 Authentication auth = new UsernamePasswordAuthenticationToken(
                         account, null, authorities
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (JwtException e) {
+            } catch (JwtException | IllegalArgumentException e) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
                 return;
             }

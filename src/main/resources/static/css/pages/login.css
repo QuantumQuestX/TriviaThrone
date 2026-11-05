@@ -1,16 +1,12 @@
-@import "/css/root.css";
-@import "/css/components/panel.css";
-@import "/css/components/inputs.css";
-@import "/css/components/buttons.css";
-
-:root {
-    --gap: 15px;
-}
+@import "../root.css";
+@import "../components/panel.css";
+@import "../components/inputs.css";
+@import "../components/buttons.css";
 
 .login-body {
+    --login-gap: 15px;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
 }
 
 .login-header {
@@ -24,22 +20,26 @@
     align-items: center;
 }
 
+#login-container {
+    width: min(100% - 2rem, 28rem);
+}
+
 #login-inputs {
     display: grid;
     grid-template-rows: 1fr 1fr;
-    gap: var(--gap);
+    gap: var(--login-gap);
     user-select: text;
 }
 
 #login-form {
     display: flex;
     flex-direction: column;
-    gap: var(--gap);
+    gap: var(--login-gap);
     justify-content: space-between;
 }
 
 #login-error {
-    color: var(--danger);
-    min-height: calc(var(--gap) * 2);
+    min-height: calc(var(--login-gap) * 2);
     margin: 0 auto;
+    color: var(--danger);
 }

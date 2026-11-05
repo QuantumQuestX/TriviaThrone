@@ -23,9 +23,9 @@
 
     background: var(--btn);
 
-    box-shadow: 
-            0 0 0 4px rgba(0, 0, 0, 0.7),
-            0 12px 25px rgba(0, 0, 0, 0.9);
+    box-shadow:
+        0 0 0 4px rgba(0, 0, 0, 0.7),
+        0 12px 25px rgba(0, 0, 0, 0.9);
 
     animation: pulse 2.2s infinite ease-in-out;
     transition: transform 0.1s ease, filter 0.15s ease;
@@ -34,7 +34,7 @@
     flex-shrink: 0;
 }
 
-.buzzer:hover {
+.buzzer:hover:not(:disabled) {
     background: var(--btn-hover);
 }
 
@@ -43,4 +43,25 @@
     filter: brightness(70%);
     cursor: not-allowed;
     animation: none;
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 4px rgba(0, 0, 0, 0.7),
+            0 12px 25px rgba(0, 0, 0, 0.9);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 7px rgba(108, 92, 231, 0.25),
+            0 12px 30px rgba(0, 0, 0, 0.9);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .buzzer {
+        animation: none;
+    }
 }

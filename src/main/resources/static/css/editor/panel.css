@@ -1,11 +1,11 @@
-:root {
+.editor-page {
     --panel-expanded-width: 320px;
     --collapsed-width: 60px;
     --panel-transition: 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-}
-
-body {
+    display: flex;
+    flex-direction: column;
     overflow-y: hidden;
+    height: 100vh;
 }
 
 .editor-scroll-wrapper {
@@ -13,11 +13,6 @@ body {
     overflow-x: auto;
     overflow-y: hidden;
     height: calc(100vh - var(--top-bar-height));
-}
-
-header {
-    width: 100%;
-    box-sizing: border-box;
 }
 
 main.editor-layout {
@@ -32,7 +27,7 @@ main.editor-layout {
     overflow-x: auto;
 }
 
-.panel {
+.editor-layout > section.panel {
     flex: 1 1 auto;
     min-width: 0;
     overflow-y: auto;
@@ -51,7 +46,7 @@ main.editor-layout {
 }
 
 .side-panel.collapsed {
-    flex-basis: 60px;
+    flex-basis: var(--collapsed-width);
     padding-top: 0;
     padding-left: 0;
     padding-right: 0;
@@ -61,15 +56,14 @@ main.editor-layout {
     display: flex;
     align-items: center;
     white-space: nowrap;
-    
     width: 100%;
     height: 40px;
     margin-top: 10px;
     margin-bottom: 1rem;
 }
 
-.panel-header,
-.panel-content {
+.side-panel > .panel-header,
+.side-panel > .panel-content {
     width: var(--panel-expanded-width);
     flex-shrink: 0;
     box-sizing: border-box;
@@ -136,16 +130,15 @@ main.editor-layout {
     color: var(--accent);
     background: var(--bg-panel-light);
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                 color 0.4s;
 }
-
 
 .side-panel.collapsed .fold-btn {
     color: var(--muted);
 }
 
-#left-panel.collapsed .fold-btn { 
+#left-panel.collapsed .fold-btn {
     transform: rotateZ(180deg);
 }
 
@@ -163,8 +156,4 @@ main.editor-layout {
     display: none;
     opacity: 0;
     pointer-events: none;
-}
-
-@media (max-width: 1450px) {
-    
 }

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{0} - TriviaThrone</title>
-    <link rel="stylesheet" href="/css/game.css">
+    <link rel="stylesheet" href="/css/pages/game.css">
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
-<body>
-    <header class="login-header">
+<body class="game-page">
+    <header class="site-header">
         <h1 id="game-title">TriviaThrone</h1>
         <div id="lobby-info">
             Lobby Code: <span id="lobby-code">A123</span>
@@ -20,8 +20,8 @@
         </nav>
     </header>
 
-    <main data-game="jeopardy">
-        <section id="question-panel" class="panel">
+    <main class="game-layout" data-game="jeopardy">
+        <section id="question-panel" class="game-stage panel">
             <div id="jeopardy-board" class="hidden">
                 <h2 id="jeopardy-round-title">&lt;round-title&gt;</h2>
                 <div id="round-selector" class="round-selector" role="tablist" aria-label="Game rounds"></div>
@@ -58,7 +58,7 @@
 
         <p id="game-status" class="game-status" role="status" aria-live="polite">Connecting to game…</p>
 
-        <section id="host-panel" class="panel" data-admin>
+        <section id="host-panel" class="host-controls panel" data-admin>
             <div class="host-panel">
                 <h4>Buzzer</h4>
                 <div class="host-panel-container">
@@ -77,11 +77,11 @@
             <button id="host-end-game" class="danger-btn">End Game &amp; Return to Lobby</button>
         </section>
 
-        <section id="player-buzzer-panel" class="panel">
+        <section id="player-buzzer-panel" class="player-buzzer-panel panel">
             <div id="players-left" class="players players-left">
             </div>
 
-            <div id="main-buzzer-container">
+            <div id="main-buzzer-container" class="main-buzzer-container">
                 <button id="main-buzzer" class="buzzer" disabled aria-label="Buzz in">BUZZ</button>
                 <span id="main-score">0</span>
             </div>

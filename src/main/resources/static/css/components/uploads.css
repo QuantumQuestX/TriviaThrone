@@ -17,15 +17,15 @@
 }
 
 .upload-status {
-    --font-size: 14px;
+    --status-font-size: 0.875rem;
     margin-top: 10px;
-    height: var(--font-size);
-    font-size: var(--font-size);
+    min-height: 1.2em;
+    font-size: var(--status-font-size);
     color: var(--muted);
 }
 
 .upload-status::before {
-    content: 'Status: ';
+    content: "Status: ";
     color: rgba(255, 255, 255, 0.20);
 }
 

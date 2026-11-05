@@ -20,4 +20,16 @@
     --border: #2b2f3a;
 
     --top-bar-height: 80px;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-panel: 0 0 10px rgba(0, 0, 0, 0.5);
 }

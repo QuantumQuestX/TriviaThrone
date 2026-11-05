@@ -8,7 +8,7 @@
 main[data-game="jeopardy"] {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--top-bar-height));
+    min-height: calc(100vh - var(--top-bar-height));
     gap: 1.5rem;
     padding: 1.5rem;
 }
@@ -37,6 +37,47 @@ main[data-game="jeopardy"] {
     justify-content: center;
     font-size: 2rem;
     text-align: center;
+}
+
+#host-panel.hidden,
+#jeopardy-board.hidden,
+.question-view.hidden {
+    display: none;
+}
+
+#jeopardy-board {
+    display: flex;
+    flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+#round-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#round-selector button[aria-selected="true"] {
+    outline: 2px solid var(--accent-hover);
+}
+
+#round-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+#round-selector button[aria-selected="true"] {
+    outline: 2px solid var(--accent-hover);
+}
+
+#jeopardy-canvas {
+    min-height: 0;
 }
 
 #player-buzzer-panel {
@@ -87,11 +128,17 @@ main[data-game="jeopardy"] {
     pointer-events: none;
 }
 
-#jeopardy-board {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
+.game-status {
+    min-height: 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.buzzer.buzzed,
+.player-buzzer.buzzed {
+    background: var(--success);
+    color: #07140c;
 }
 
 #jeopardy-round-title {
@@ -117,6 +164,38 @@ main[data-game="jeopardy"] {
     from {
         opacity: 0;
         transform: translateY(10px);
+    }
+
+    @media (max-width: 700px) {
+        main[data-game="jeopardy"] {
+            padding: 0.75rem;
+            gap: 0.75rem;
+        }
+
+        #question-panel,
+        #player-buzzer-panel {
+            padding: 0.75rem;
+        }
+
+        #player-buzzer-panel {
+            gap: 0.5rem;
+        }
+
+        .players {
+            gap: 0.5rem;
+        }
+
+        .player-buzzer {
+            --size: 48px;
+        }
+
+        .question-view {
+            padding: 0.75rem;
+        }
+
+        #host-panel {
+            flex-wrap: wrap;
+        }
     }
     to {
         opacity: 1;

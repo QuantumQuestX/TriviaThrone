@@ -4,8 +4,13 @@ export class PlayerView {
         this.score = 0;
         this.isSelf = isSelf;
 
-        this.buzzerElement = this.createElement();
-        this.scoreElement = this.buzzerElement.querySelector(".player-score");
+        this.element = this.createElement();
+        this.buzzerElement = this.isSelf
+            ? this.element
+            : this.element.querySelector(".player-buzzer");
+        this.scoreElement = this.isSelf
+            ? document.getElementById("main-score")
+            : this.element.querySelector(".player-score");
     }
 
     createElement() {
@@ -37,7 +42,7 @@ export class PlayerView {
 
     mount(parent) {
         if (!this.isSelf) {
-            parent.appendChild(this.buzzerElement);
+            parent.appendChild(this.element);
         }
     }
 
@@ -47,10 +52,12 @@ export class PlayerView {
     }
 
     setBuzzWinner(isWinner) {
-        this.element.classList.toggle("buzzed", isWinner);
+        this.buzzerElement.classList.toggle("buzzed", isWinner);
     }
 
     setBuzzEnabled(enabled) {
-        this.buzzerElement.disabled = !enabled;
+        if (this.isSelf) {
+            this.buzzerElement.disabled = !enabled;
+        }
     }
 }

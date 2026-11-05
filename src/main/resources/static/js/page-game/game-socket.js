@@ -1,8 +1,14 @@
 import * as socket from "../root/socket.js";
+import { token } from "../root/token.js";
 
 export const Actions = Object.freeze({
+    START_GAME: "START_GAME",
+    END_GAME: "END_GAME",
+    SYNC: "SYNC",
+    SELECT_ROUND: "SELECT_ROUND",
     SELECT_QUESTION: "SELECT_QUESTION",
     OPEN_BUZZ: "OPEN_BUZZ",
+    CLOSE_BUZZ: "CLOSE_BUZZ",
     BUZZ: "BUZZ",
     MARK_CORRECT: "MARK_CORRECT",
     MARK_INCORRECT: "MARK_INCORRECT",
@@ -12,7 +18,7 @@ export const Actions = Object.freeze({
 let currentTopic = null;
 
 export async function subscribeToGame(lobbyCode, onStateUpdate) {
-    await socket.connectSocket("/ws/game");
+    await socket.connectSocket("/ws/lobby", token);
     
     const topic = `/topic/game.${lobbyCode}`;
 
@@ -27,29 +33,26 @@ export async function subscribeToGame(lobbyCode, onStateUpdate) {
     currentTopic = topic;
 }
 
-export async function sendOpenBuzz(lobbyCode) {
-    sendAction(lobbyCode, Actions.OPEN_BUZZ);
+export function sendAction(lobbyCode, action, details = {}) {
+    socket.send("/app/game/action", {
+        lobbyCode,
+        action,
+        ...details
+    });
 }
 
-export async function sendBuzz(lobbyCode) {
+export function sendBuzz(lobbyCode) {
     sendAction(lobbyCode, Actions.BUZZ);
 }
 
-export async function setMarkCorrect(lobbyCode) {
-    sendAction(lobbyCode, Actions.MARK_CORRECT);
+export function sendOpenBuzz(lobbyCode) {
+    sendAction(lobbyCode, Actions.OPEN_BUZZ);
 }
 
-export async function setMarkIncorrect(lobbyCode) {
-    sendAction(lobbyCode, Actions.MARK_INCORRECT);
+export function sendCloseBuzz(lobbyCode) {
+    sendAction(lobbyCode, Actions.CLOSE_BUZZ);
 }
 
-export async function sendReset(lobbyCode) {
-    sendAction(lobbyCode, Actions.RESET);
-}
-
-function sendAction(lobbyCode, action) {
-    socket.send("/app/game/action", {
-        lobbyCode: lobbyCode,
-        action: action
-    });
+export function disconnect() {
+    socket.disconnect();
 }

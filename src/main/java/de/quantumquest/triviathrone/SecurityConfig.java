@@ -26,6 +26,7 @@ public class SecurityConfig {
                                 "/login.html",
                                 "/index.html",
                                 "/lobby.html",
+                                "/game.html",
                                 "/editor.html",
                                 "/ws/**",
                                 "/",

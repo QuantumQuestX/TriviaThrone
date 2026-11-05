@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
+import de.quantumquest.triviathrone.game.GameDefinitionLoader;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,13 +12,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -56,7 +55,8 @@ public class GameUploadController {
             return ResponseEntity.badRequest().body("File is empty.");
         }
 
-        if (!Objects.requireNonNull(file.getOriginalFilename()).endsWith(".game.throne")) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.endsWith(".game.throne")) {
             return ResponseEntity.badRequest().body("Invalid file type.");
         }
 
@@ -83,7 +83,7 @@ public class GameUploadController {
                     Path newFile = lobbyDir.resolve(entry.getName()).normalize();
 
                     if (!newFile.startsWith(lobbyDir)) {
-                        throw new RuntimeException("Invalid zip entry.");
+                        throw new IllegalArgumentException("Invalid zip entry.");
                     }
 
                     if (entry.isDirectory()) {
@@ -104,11 +104,16 @@ public class GameUploadController {
                 }
             }
 
-            logger.info("[{}] {} uploaded game \"{}\".", lobbyCode, lobbyHostUsername, file.getOriginalFilename());
-            lobbyEventService.hostUploadedGame(lobbyCode, lobbyHostUsername, file.getOriginalFilename());
+            optLobby.get().loadGame(GameDefinitionLoader.parse(lobbyDir));
+            logger.info("[{}] {} uploaded game \"{}\".", lobbyCode, lobbyHostUsername, originalFilename);
+            lobbyEventService.hostUploadedGame(lobbyCode, lobbyHostUsername, originalFilename);
             return ResponseEntity.ok("Game uploaded successfully.");
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Upload failed");
+            logger.error("[{}] Could not store uploaded game", lobbyCode, e);
+            return ResponseEntity.internalServerError().body("Could not store game file.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            logger.warn("[{}] Could not process uploaded game", lobbyCode, e);
+            return ResponseEntity.badRequest().body("Could not process game file: " + e.getMessage());
         }
     }
 }

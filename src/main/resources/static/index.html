@@ -10,7 +10,7 @@
     <header class="site-header">
         <h1>TriviaThrone</h1>
         <nav>
-            <p id="username-info">Logged in as: <span id="username-display"></span></p>
+            <p id="username-info">Logged in as: <span id="username-display" data-current-user></span></p>
             <button id="dashboard-btn" class="primary-btn">Dashboard</button>
             <button id="account-btn" class="primary-btn">Account</button>
             <button id="logout-btn" class="danger-btn">Logout</button>
@@ -20,10 +20,7 @@
         <section id="dashboard-section" class="panel">
             <h2>Available Lobbies</h2>
             <ul id="lobby-list">
-                <li>Hallo</li>
-                <li>Hallo</li>
-                <li>Hallo</li>
-                <li>Hallo</li>
+                <li role="status">Loading lobbies…</li>
             </ul>
 
             <div class="separator"></div>
@@ -40,7 +37,7 @@
             <h2>Account Settings</h2>
 
             <div class="account-info">
-                <p>Username: <span id="username-display"></span></p>
+                <p>Username: <span id="account-username-display" data-current-user></span></p>
                 <p>Token expires in: <span id="token-expiry"></span></p>
             </div>
 

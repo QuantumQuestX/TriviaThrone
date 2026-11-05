@@ -21,6 +21,13 @@ async function loadLobbies() {
         const selectedCode = selectedLobbyCode;
         const fragment = document.createDocumentFragment();
 
+        if (lobbies.length === 0) {
+            const emptyMessage = document.createElement("li");
+            emptyMessage.setAttribute("role", "status");
+            emptyMessage.textContent = "No lobbies available.";
+            fragment.appendChild(emptyMessage);
+        }
+
         lobbies.forEach(lobby => {
             const item = document.createElement("li");
             item.textContent = `${lobby.name} (Code: ${lobby.lobbyCode})`;
@@ -41,6 +48,7 @@ async function loadLobbies() {
     } catch (error) {
         lobbyList.replaceChildren();
         const item = document.createElement("li");
+        item.setAttribute("role", "status");
         item.textContent = error.message || "Error loading lobbies.";
         lobbyList.appendChild(item);
     } finally {
@@ -76,7 +84,7 @@ async function createLobby() {
     }
 
     try {
-        const parameters = new URLSearchParams({name, code: "null"});
+        const parameters = new URLSearchParams({name});
         const response = await apiFetch(`/api/lobbies/create?${parameters}`, {method: "POST"});
         if (!response.ok) {
             throw new Error("Could not create the lobby.");

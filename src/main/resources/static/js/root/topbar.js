@@ -1,7 +1,7 @@
 import {getAccessTokenExpiresAt, getCurrentUser} from "./auth.js";
 
 function initTopbarUserByToken() {
-    document.querySelectorAll("#username-display").forEach(element => {
+    document.querySelectorAll("[data-current-user]").forEach(element => {
         element.textContent = getCurrentUser() || "Unknown";
     });
 

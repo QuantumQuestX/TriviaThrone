@@ -42,7 +42,11 @@ public class GameWebSocketController {
                 }
                 case END_GAME -> {
                     if (!username.equals(lobby.getHostUsername())) return;
-                    gameEventService.broadcastGameEnded(msg.lobbyCode());
+                    gameEventService.broadcastGameEnded(
+                            msg.lobbyCode(),
+                            lobby.getGameSession(),
+                            lobby.getHostUsername()
+                    );
                     lobby.endGame();
                     return;
                 }
@@ -90,6 +94,15 @@ public class GameWebSocketController {
                 case RESET -> {
                     if (!username.equals(lobby.getHostUsername())) return;
                     session = lobby.getGameSession();
+                    if (!session.hasUnusedQuestions()) {
+                        gameEventService.broadcastGameEnded(
+                                msg.lobbyCode(),
+                                session,
+                                lobby.getHostUsername()
+                        );
+                        lobby.endGame();
+                        return;
+                    }
                     session.resetToIdle();
                 }
                 default -> {

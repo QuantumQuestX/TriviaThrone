@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -46,12 +47,15 @@ class GameWebSocketControllerTest {
                 "Test game",
                 "Description",
                 List.of(new Round("Round 1", List.of(
-                        new Category("Category", List.of(new QuestionDefinition(
-                                100,
-                                "Prompt",
-                                "resources/clue.mp4",
-                                MediaType.VIDEO
-                        )))
+                        new Category("Category", List.of(
+                                new QuestionDefinition(
+                                        100,
+                                        "Prompt",
+                                        "resources/clue.mp4",
+                                        MediaType.VIDEO
+                                ),
+                                new QuestionDefinition(200, "Second prompt", null, MediaType.UNDEFINED)
+                        ))
                 )))
         ));
         lobby.startGame();
@@ -87,6 +91,43 @@ class GameWebSocketControllerTest {
 
         assertEquals(GameSession.State.QUESTION_SELECTED, session.getCurrentState());
         verify(gameEventService, never()).broadcastState(eq(LOBBY_CODE), eq(session));
+    }
+
+    @Test
+    void hostBroadcastsFinalLeaderboardBeforeEndingGame() {
+        controller.handleAction(
+                new GameActionMessage(LOBBY_CODE, GameActionMessage.ActionType.END_GAME, null, null, null),
+                principal("host")
+        );
+
+        verify(gameEventService).broadcastGameEnded(LOBBY_CODE, session, "host");
+        assertFalse(lobby.hasActiveGame());
+    }
+
+    @Test
+    void hostCanAdvanceToAnotherQuestionWithoutEndingGame() {
+        controller.handleAction(
+                new GameActionMessage(LOBBY_CODE, GameActionMessage.ActionType.RESET, null, null, null),
+                principal("host")
+        );
+
+        assertEquals(GameSession.State.IDLE, session.getCurrentState());
+        verify(gameEventService).broadcastState(LOBBY_CODE, session);
+        verify(gameEventService, never()).broadcastGameEnded(LOBBY_CODE, session, "host");
+    }
+
+    @Test
+    void hostAdvancingPastFinalQuestionShowsLeaderboardAndEndsGame() {
+        session.resetToIdle();
+        session.selectQuestion(0, 0, 1);
+
+        controller.handleAction(
+                new GameActionMessage(LOBBY_CODE, GameActionMessage.ActionType.RESET, null, null, null),
+                principal("host")
+        );
+
+        verify(gameEventService).broadcastGameEnded(LOBBY_CODE, session, "host");
+        assertFalse(lobby.hasActiveGame());
     }
 
     private static Principal principal(String username) {

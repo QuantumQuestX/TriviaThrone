@@ -70,7 +70,7 @@ async function joinLobby() {
         }
 
         saveLobbyDetails({lobbyCode});
-        window.location.assign("/lobby.html");
+        window.location.assign("/lobby");
     } catch (error) {
         window.alert(error.message);
     }
@@ -91,7 +91,7 @@ async function createLobby() {
         }
 
         saveLobbyDetails(await response.json());
-        window.location.assign("/lobby.html");
+        window.location.assign("/lobby");
     } catch (error) {
         window.alert(`Error creating lobby: ${error.message}`);
     }
@@ -102,7 +102,7 @@ document.getElementById("create-btn").addEventListener("click", createLobby);
 document.getElementById("logout-btn").addEventListener("click", async () => {
     try {
         await logout();
-        window.location.replace("/login.html");
+        window.location.replace("/login");
     } catch (error) {
         window.alert(error.message);
     }

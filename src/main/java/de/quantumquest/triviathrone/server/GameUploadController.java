@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,14 +37,19 @@ import java.util.zip.ZipInputStream;
 @RequestMapping("/api/game")
 public class GameUploadController {
     private static final Logger logger = LoggerFactory.getLogger(GameUploadController.class);
-    private static final Path STORAGE_DIR = Path.of("upload", "games");
 
     private final LobbyService lobbyService;
     private final LobbyEventService lobbyEventService;
+    private final Path storageDir;
 
-    public GameUploadController(LobbyService lobbyService, LobbyEventService lobbyEventService) {
+    public GameUploadController(
+            LobbyService lobbyService,
+            LobbyEventService lobbyEventService,
+            @Value("${triviathrone.games.storage-dir:upload/games}") String storageDir
+    ) {
         this.lobbyService = lobbyService;
         this.lobbyEventService = lobbyEventService;
+        this.storageDir = Path.of(storageDir);
     }
 
     @GetMapping("/{lobbyCode}/media")
@@ -68,7 +74,7 @@ public class GameUploadController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        Path storageRoot = STORAGE_DIR.toAbsolutePath().normalize();
+        Path storageRoot = storageDir.toAbsolutePath().normalize();
         Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
         Path mediaFile = lobbyDir.resolve(mediaPath).normalize();
         if (!lobbyDir.startsWith(storageRoot)
@@ -120,7 +126,7 @@ public class GameUploadController {
         }
 
         try {
-            Path storageRoot = STORAGE_DIR.toAbsolutePath().normalize();
+            Path storageRoot = storageDir.toAbsolutePath().normalize();
             Files.createDirectories(storageRoot);
             Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
             if (!lobbyDir.startsWith(storageRoot)) {

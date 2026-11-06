@@ -14,6 +14,8 @@ const questionManager = new QuestionManager();
 let isHost = false;
 let hostUsername = null;
 let lastQuestionKey = null;
+let lastMediaPlaybackToken = null;
+let lastMediaPauseToken = null;
 let selectedRoundIdx = 0;
 
 const stateLabels = {
@@ -94,6 +96,9 @@ function layoutPlayers(players) {
 }
 
 function configureHostControls() {
+    document.getElementById("host-play-media").addEventListener("click", () => {
+        gameSocket.sendAction(lobbyCode, gameSocket.Actions.PLAY_MEDIA);
+    });
     document.getElementById("host-buzzer-enable").addEventListener("click", () => {
         gameSocket.sendOpenBuzz(lobbyCode);
     });
@@ -150,6 +155,8 @@ function applyGameState(state) {
     document.title = `${state.gameTitle || "Trivia Throne"} - TriviaThrone`;
     document.getElementById("game-status").textContent =
         state.buzzWinner ? `${state.buzzWinner} buzzed first.` : stateLabels[state.state] || "Waiting for the host…";
+    renderMediaPlayback(state);
+    renderMediaPause(state);
 }
 
 function renderBoard(state, preserveSelection = false) {
@@ -235,7 +242,10 @@ function renderQuestion(state) {
 
     const key = `${state.curRoundIdx}:${state.curCatIdx}:${state.curQuestionIdx}`;
     if (key !== lastQuestionKey) {
-        questionManager.showQuestion(question);
+        questionManager.showQuestion(question).catch(error => {
+            console.error("Could not load question media:", error);
+            document.getElementById("game-status").textContent = "Could not load question media.";
+        });
         lastQuestionKey = key;
     }
 }
@@ -255,10 +265,52 @@ function renderBuzzer(state) {
 }
 
 function renderHostControls(state) {
+    const playMediaButton = document.getElementById("host-play-media");
+    const mediaType = state.question?.mediaType;
+    const canStartMedia = state.state === "QUESTION_SELECTED" || state.state === "BUZZ_OPEN";
+    const hasPlayableMedia = canStartMedia
+        && Boolean(state.question?.mediaUrl)
+        && (mediaType === "VIDEO" || mediaType === "AUDIO");
+    playMediaButton.disabled = !isHost || !hasPlayableMedia;
+    playMediaButton.textContent = mediaType === "VIDEO"
+        ? "Play Video + Open Buzzer"
+        : mediaType === "AUDIO" ? "Play Audio + Open Buzzer" : "Play Media + Open Buzzer";
+
     document.getElementById("host-buzzer-enable").disabled = state.state !== "QUESTION_SELECTED";
     document.getElementById("host-buzzer-disable").disabled =
         state.state !== "BUZZ_OPEN" && state.state !== "BUZZ_COLLECTING";
     document.getElementById("host-show-question").disabled = state.state !== "BUZZ_LOCKED";
     document.getElementById("host-hide-question").disabled = state.state !== "BUZZ_LOCKED";
     document.getElementById("host-next-question").disabled = state.state === "IDLE";
+}
+
+function renderMediaPlayback(state) {
+    const token = state.mediaPlaybackToken;
+    if (!token) {
+        lastMediaPlaybackToken = null;
+        return;
+    }
+    if (token === lastMediaPlaybackToken) return;
+
+    lastMediaPlaybackToken = token;
+    questionManager.playMedia().catch(error => {
+        if (error.name === "AbortError") return;
+        console.warn("Could not start synchronized media playback:", error);
+        document.getElementById("game-status").textContent =
+            "Your browser blocked synchronized media playback.";
+    });
+}
+
+function renderMediaPause(state) {
+    const token = state.mediaPauseToken;
+    if (!token) {
+        lastMediaPauseToken = null;
+        return;
+    }
+    if (token === lastMediaPauseToken) return;
+
+    lastMediaPauseToken = token;
+    questionManager.pauseMedia().catch(error => {
+        console.warn("Could not pause media after a buzz:", error);
+    });
 }

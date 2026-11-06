@@ -10,7 +10,8 @@ public record GameStateMessage(String lobbyCode, GameSession.State state, String
                                Map<String, Integer> scores,
                                Integer curRoundIdx, Integer curCatIdx, Integer curQuestionIdx,
                                String gameTitle, List<RoundBoardMessage> rounds, String roundName,
-                               GameQuestionMessage question, Set<String> buzzedPlayers) {
+                               GameQuestionMessage question, Set<String> buzzedPlayers,
+                               String mediaPlaybackToken, String mediaPauseToken) {
     public GameStateMessage {
         scores = Map.copyOf(scores);
         rounds = List.copyOf(rounds);

@@ -57,6 +57,11 @@ public class GameWebSocketController {
                     session = lobby.getGameSession();
                     session.selectQuestion(msg.roundIdx(), msg.categoryIdx(), msg.questionIdx());
                 }
+                case PLAY_MEDIA -> {
+                    if (!username.equals(lobby.getHostUsername())) return;
+                    session = lobby.getGameSession();
+                    session.playMedia();
+                }
                 case OPEN_BUZZ -> {
                     if (!username.equals(lobby.getHostUsername())) return;
                     session = lobby.getGameSession();

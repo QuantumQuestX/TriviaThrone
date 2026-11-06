@@ -12,18 +12,28 @@ export class QuestionManager {
 
     showQuestion(question) {
         this.reset();
+        let mediaLoadPromise = Promise.resolve();
 
         this.categoryEl.textContent = question.category;
         this.pointsEl.textContent = question.points;
         this.textEl.textContent = question.prompt;
 
         if (question.mediaType && question.mediaType !== MediaType.UNDEFINED) {
-            this.mediaController.setMedia(question.mediaType, question.mediaUrl);
+            mediaLoadPromise = this.mediaController.setMedia(question.mediaType, question.mediaUrl);
         }
 
         if (question.multipleChoice && question.choices?.length) {
             this.renderChoices(question.choices);
         }
+        return mediaLoadPromise;
+    }
+
+    playMedia() {
+        return this.mediaController.play();
+    }
+
+    pauseMedia() {
+        return this.mediaController.pause();
     }
 
     renderChoices(choices) {

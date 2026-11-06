@@ -12,6 +12,9 @@ export class MediaController {
         this.videoElement = document.getElementById("q-media-video");
         this.audioElement = document.getElementById("q-media-audio");
         this.imageElement = document.getElementById("q-media-image");
+        this.mediaFrame = document.getElementById("media-frame");
+        this.placeholderElement = document.getElementById("media-placeholder");
+        this.placeholderText = document.getElementById("media-placeholder-text");
         this.type = null;
         this.loadId = 0;
         this.playbackVersion = 0;
@@ -27,6 +30,13 @@ export class MediaController {
 
         this.clearMedia();
         this.type = type;
+        if (type === MediaType.VIDEO) {
+            this.mediaFrame.classList.remove("hidden");
+            this.showPlaceholder("Video ready. Waiting for the host to start it.");
+        } else if (type === MediaType.AUDIO) {
+            this.mediaFrame.classList.remove("hidden");
+            this.showPlaceholder("Audio ready. Waiting for the host to start it.");
+        }
         const loadId = this.loadId;
         this.mediaLoadPromise = this.loadMedia(type, url, loadId);
         return this.mediaLoadPromise;
@@ -51,6 +61,8 @@ export class MediaController {
 
         this.imageElement.src = "";
         this.imageElement.classList.add("hidden");
+        this.mediaFrame.classList.add("hidden");
+        this.placeholderElement.classList.add("hidden");
         this.type = null;
     }
 
@@ -70,7 +82,9 @@ export class MediaController {
         }
         this.objectUrl = URL.createObjectURL(mediaBlob);
         element.src = this.objectUrl;
-        element.classList.remove("hidden");
+        if (type === MediaType.IMAGE) {
+            element.classList.remove("hidden");
+        }
     }
 
     getElement(type) {
@@ -91,22 +105,48 @@ export class MediaController {
         return this.mediaLoadPromise.then(() => {
             if (playbackVersion !== this.playbackVersion) return;
             if (this.type === MediaType.VIDEO) {
-                return this.videoElement.play();
+                return this.videoElement.play().then(() => {
+                    if (playbackVersion !== this.playbackVersion) {
+                        this.videoElement.pause();
+                        return;
+                    }
+                    this.videoElement.classList.remove("hidden");
+                    this.placeholderElement.classList.add("hidden");
+                });
             } else if (this.type === MediaType.AUDIO) {
-                return this.audioElement.play();
+                return this.audioElement.play().then(() => {
+                    if (playbackVersion === this.playbackVersion) {
+                        this.showPlaceholder("Audio is playing. Buzz to pause.");
+                    }
+                });
             }
         });
     }
 
     pause() {
         const playbackVersion = ++this.playbackVersion;
+        const type = this.type;
+        if (type !== MediaType.VIDEO && type !== MediaType.AUDIO) {
+            return Promise.resolve();
+        }
+
+        const element = this.getElement(type);
+        element.pause();
+        element.classList.add("hidden");
+        this.showPlaceholder(
+            type === MediaType.VIDEO
+                ? "Buzz received. Video paused."
+                : "Buzz received. Audio paused."
+        );
+
         return this.mediaLoadPromise.then(() => {
             if (playbackVersion !== this.playbackVersion) return;
-            if (this.type === MediaType.VIDEO) {
-                this.videoElement.pause();
-            } else if (this.type === MediaType.AUDIO) {
-                this.audioElement.pause();
-            }
+            element.pause();
         });
+    }
+
+    showPlaceholder(message) {
+        this.placeholderText.textContent = message;
+        this.placeholderElement.classList.remove("hidden");
     }
 }

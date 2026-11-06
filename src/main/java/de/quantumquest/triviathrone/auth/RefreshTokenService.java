@@ -10,30 +10,40 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class RefreshTokenService {
     public static final String COOKIE_NAME = "refresh_token";
 
     private final SecureRandom random = new SecureRandom();
-    private final ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+    private final Map<String, RefreshTokenSession> sessions;
+    private final RefreshTokenSessionStore sessionStore;
     private final long validitySeconds;
     private final long maxSessionSeconds;
 
-    public RefreshTokenService(AuthProperties properties) {
+    public RefreshTokenService(AuthProperties properties, RefreshTokenSessionStore sessionStore) {
+        this.sessionStore = sessionStore;
         this.validitySeconds = properties.refreshTokenValiditySeconds();
         this.maxSessionSeconds = properties.refreshSessionMaxSeconds();
         if (validitySeconds <= 0 || maxSessionSeconds <= 0) {
             throw new IllegalArgumentException("Refresh token lifetimes must be positive.");
         }
+        this.sessions = new HashMap<>(sessionStore.load());
     }
 
     public synchronized IssuedToken issue(String username) {
         Instant now = Instant.now();
         Instant absoluteExpiry = now.plusSeconds(maxSessionSeconds);
-        return issue(username, min(now.plusSeconds(validitySeconds), absoluteExpiry), absoluteExpiry);
+        Instant expiry = min(now.plusSeconds(validitySeconds), absoluteExpiry);
+        IssuedToken token = createToken(username, expiry);
+
+        Map<String, RefreshTokenSession> updatedSessions = new HashMap<>(sessions);
+        purgeExpired(updatedSessions, now);
+        updatedSessions.put(digest(token.value()), new RefreshTokenSession(username, expiry, absoluteExpiry));
+        saveAndReplace(updatedSessions);
+        return token;
     }
 
     public synchronized IssuedToken rotate(String presentedToken) {
@@ -41,7 +51,8 @@ public class RefreshTokenService {
             throw invalidToken();
         }
 
-        Session session = sessions.remove(digest(presentedToken));
+        String presentedDigest = digest(presentedToken);
+        RefreshTokenSession session = sessions.get(presentedDigest);
         Instant now = Instant.now();
         if (session == null || !now.isBefore(session.expiresAt())
                 || !now.isBefore(session.absoluteExpiry())) {
@@ -49,32 +60,48 @@ public class RefreshTokenService {
         }
 
         Instant expiry = min(now.plusSeconds(validitySeconds), session.absoluteExpiry());
-        return issue(session.username(), expiry, session.absoluteExpiry());
+        IssuedToken token = createToken(session.username(), expiry);
+        Map<String, RefreshTokenSession> updatedSessions = new HashMap<>(sessions);
+        updatedSessions.remove(presentedDigest);
+        purgeExpired(updatedSessions, now);
+        updatedSessions.put(digest(token.value()),
+                new RefreshTokenSession(session.username(), expiry, session.absoluteExpiry()));
+        saveAndReplace(updatedSessions);
+        return token;
     }
 
     public synchronized void revoke(String token) {
         if (token != null && !token.isBlank()) {
-            sessions.remove(digest(token));
+            Map<String, RefreshTokenSession> updatedSessions = new HashMap<>(sessions);
+            if (updatedSessions.remove(digest(token)) != null) {
+                saveAndReplace(updatedSessions);
+            }
         }
     }
 
     public synchronized void revokeAll(String username) {
-        sessions.entrySet().removeIf(entry -> entry.getValue().username().equals(username));
+        Map<String, RefreshTokenSession> updatedSessions = new HashMap<>(sessions);
+        if (updatedSessions.entrySet().removeIf(entry -> entry.getValue().username().equals(username))) {
+            saveAndReplace(updatedSessions);
+        }
     }
 
-    private IssuedToken issue(String username, Instant expiry, Instant absoluteExpiry) {
-        purgeExpired();
-
+    private IssuedToken createToken(String username, Instant expiry) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        sessions.put(digest(token), new Session(username, expiry, absoluteExpiry));
         return new IssuedToken(username, token, expiry);
     }
 
-    private void purgeExpired() {
-        Instant now = Instant.now();
-        sessions.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().expiresAt()));
+    private void saveAndReplace(Map<String, RefreshTokenSession> updatedSessions) {
+        sessionStore.save(updatedSessions);
+        sessions.clear();
+        sessions.putAll(updatedSessions);
+    }
+
+    private static void purgeExpired(Map<String, RefreshTokenSession> sessions, Instant now) {
+        sessions.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().expiresAt())
+                || !now.isBefore(entry.getValue().absoluteExpiry()));
     }
 
     private static String digest(String token) {
@@ -93,9 +120,6 @@ public class RefreshTokenService {
 
     private static ResponseStatusException invalidToken() {
         return new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
-    }
-
-    private record Session(String username, Instant expiresAt, Instant absoluteExpiry) {
     }
 
     public record IssuedToken(String username, String value, Instant expiresAt) {

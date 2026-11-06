@@ -28,3 +28,11 @@
     border-left: 4px solid var(--accent);
     transform: translateX(2px);
 }
+
+.dashboard-page .editor-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+}

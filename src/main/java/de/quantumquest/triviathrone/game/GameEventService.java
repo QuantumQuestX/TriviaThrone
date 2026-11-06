@@ -5,6 +5,8 @@ import de.quantumquest.triviathrone.dto.game.GameEndedMessage;
 import de.quantumquest.triviathrone.dto.game.GameStateMessage.QuestionTileMessage;
 import de.quantumquest.triviathrone.dto.game.GameStateMessage.RoundBoardMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
+import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.game.definition.Round;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +24,10 @@ public class GameEventService {
     public void broadcastState(String lobbyCode, GameSession session) {
         if (session == null) return;
 
-        var definition = session.getDefinition();
+        GameDefinition definition = session.getDefinition();
         List<RoundBoardMessage> rounds = IntStream.range(0, definition.rounds().size())
                 .mapToObj(roundIdx -> {
-                    var round = definition.rounds().get(roundIdx);
+                    Round round = definition.rounds().get(roundIdx);
                     List<String> categories = round.categories().stream()
                             .map(Category::name)
                             .toList();
@@ -36,7 +38,10 @@ public class GameEventService {
                     List<List<QuestionTileMessage>> questions = IntStream.range(0, questionCount)
                             .mapToObj(questionIdx -> IntStream.range(0, round.categories().size())
                                     .mapToObj(categoryIdx -> {
-                                        var question = round.categories().get(categoryIdx).questions().get(questionIdx);
+                                        QuestionDefinition question = round.categories()
+                                                .get(categoryIdx)
+                                                .questions()
+                                                .get(questionIdx);
                                         return new QuestionTileMessage(
                                                 question.points(),
                                                 session.isQuestionUsed(roundIdx, categoryIdx, questionIdx)

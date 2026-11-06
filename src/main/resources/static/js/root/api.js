@@ -1,7 +1,6 @@
 import {
     AuthenticationError,
     getAccessToken,
-    isAccessTokenNearExpiry,
     redirectToLogin,
     refreshAccessToken
 } from "./auth.js";
@@ -19,10 +18,6 @@ export async function apiFetch(resource, options = {}) {
         token = currentToken;
         response = await sendAuthenticatedRequest(resource, options, token);
         if (response.status !== 401) return response;
-    }
-
-    if (!isAccessTokenNearExpiry()) {
-        return response;
     }
 
     try {

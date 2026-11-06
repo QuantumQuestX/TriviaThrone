@@ -41,7 +41,13 @@
                     </div>
 
                     <div id="question-media" class="question-media">
-                        <video id="q-media-video" class="hidden"></video>
+                        <div id="media-frame" class="media-frame hidden">
+                            <div id="media-placeholder" class="media-placeholder" role="status" aria-live="polite">
+                                <span class="media-placeholder-icon" aria-hidden="true">▶</span>
+                                <p id="media-placeholder-text"></p>
+                            </div>
+                            <video id="q-media-video" class="hidden"></video>
+                        </div>
                         <audio id="q-media-audio" class="hidden"></audio>
                         <img id="q-media-image" class="hidden" alt="Question Media">
                     </div>

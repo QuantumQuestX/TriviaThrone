@@ -4,6 +4,7 @@ import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
 import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.game.definition.Round;
 import de.quantumquest.triviathrone.server.Lobby;
 
 import java.util.HashSet;
@@ -77,11 +78,11 @@ public class GameSession {
         if (round < 0 || round >= definition.rounds().size()) {
             throw new IllegalArgumentException("Round index is out of range");
         }
-        var roundDefinition = definition.rounds().get(round);
+        Round roundDefinition = definition.rounds().get(round);
         if (category < 0 || category >= roundDefinition.categories().size()) {
             throw new IllegalArgumentException("Category index is out of range");
         }
-        var categoryDefinition = roundDefinition.categories().get(category);
+        Category categoryDefinition = roundDefinition.categories().get(category);
         if (question < 0 || question >= categoryDefinition.questions().size()) {
             throw new IllegalArgumentException("Question index is out of range");
         }
@@ -110,7 +111,7 @@ public class GameSession {
     public synchronized void playMedia() {
         if (currentState != State.QUESTION_SELECTED && currentState != State.BUZZ_OPEN) return;
 
-        var question = definition.rounds().get(currentRoundIdx)
+        QuestionDefinition question = definition.rounds().get(currentRoundIdx)
                 .categories().get(currentCategoryIdx)
                 .questions().get(currentQuestionIdx);
         if ((question.mediaType() == MediaType.AUDIO || question.mediaType() == MediaType.VIDEO)
@@ -238,8 +239,8 @@ public class GameSession {
     public synchronized GameQuestionMessage getCurrentQuestionMessage() {
         if (currentState == State.IDLE) return null;
 
-        var round = definition.rounds().get(currentRoundIdx);
-        var category = round.categories().get(currentCategoryIdx);
+        Round round = definition.rounds().get(currentRoundIdx);
+        Category category = round.categories().get(currentCategoryIdx);
         return createGameQuestionMessage(
                 category,
                 category.questions().get(currentQuestionIdx)
@@ -269,7 +270,7 @@ public class GameSession {
         String mediaUrl = q.mediaPath() == null
                 ? null
                 : "/api/game/" + lobbyCode + "/media?path="
-                        + URLEncoder.encode(q.mediaPath(), StandardCharsets.UTF_8);
+                + URLEncoder.encode(q.mediaPath(), StandardCharsets.UTF_8);
 
         return new GameQuestionMessage(
                 c.name(),

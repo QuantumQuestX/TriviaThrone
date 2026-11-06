@@ -8,5 +8,4 @@ export function initializeEditor() {
     const boardController = new BoardController(jeopardyCanvas);
     const gameController = new GameController(boardController);
     gameController.init();
-    gameController.init();
 }

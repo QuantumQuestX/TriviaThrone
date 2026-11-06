@@ -2,12 +2,16 @@ package de.quantumquest.triviathrone.game;
 
 import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
+import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
 import de.quantumquest.triviathrone.server.Lobby;
 
+import java.util.HashSet;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -29,6 +33,7 @@ public class GameSession {
     private static final long BUZZ_THRESHOLD_MS = 120;
 
     private final GameDefinition definition;
+    private final String lobbyCode;
 
     private final Map<String, Integer> scores = new ConcurrentHashMap<>();
     private final Map<String, Long> buzzTimes = new ConcurrentHashMap<>();
@@ -51,9 +56,12 @@ public class GameSession {
     private volatile int currentCategoryIdx;
     private volatile int currentQuestionIdx;
     private volatile int currentQuestionPoints;
+    private String mediaPlaybackToken;
+    private String mediaPauseToken;
 
     public GameSession(Lobby lobby, GameDefinition definition) {
         this.definition = definition;
+        this.lobbyCode = lobby.getLobbyCode();
         lobby.listUsernames().forEach(username -> scores.put(username, 0));
     }
 
@@ -90,11 +98,30 @@ public class GameSession {
         currentCategoryIdx = category;
         currentQuestionIdx = question;
         currentQuestionPoints = q.points();
+        mediaPlaybackToken = null;
+        mediaPauseToken = null;
         attemptedPlayers.clear();
 
         usedQuestions.add(key);
 
         currentState = State.QUESTION_SELECTED;
+    }
+
+    public synchronized void playMedia() {
+        if (currentState != State.QUESTION_SELECTED && currentState != State.BUZZ_OPEN) return;
+
+        var question = definition.rounds().get(currentRoundIdx)
+                .categories().get(currentCategoryIdx)
+                .questions().get(currentQuestionIdx);
+        if ((question.mediaType() == MediaType.AUDIO || question.mediaType() == MediaType.VIDEO)
+                && question.mediaPath() != null && !question.mediaPath().isBlank()) {
+            mediaPlaybackToken = UUID.randomUUID().toString();
+            if (currentState == State.QUESTION_SELECTED) {
+                buzzWinner = null;
+                buzzTimes.clear();
+                currentState = State.BUZZ_OPEN;
+            }
+        }
     }
 
     public synchronized void selectRound(Integer round) {
@@ -128,6 +155,7 @@ public class GameSession {
 
             if (currentState == State.BUZZ_OPEN) {
                 currentState = State.BUZZ_COLLECTING;
+                mediaPauseToken = UUID.randomUUID().toString();
 
                 pendingBuzz = scheduler.schedule(
                         this::finalizeBuzz,
@@ -197,6 +225,8 @@ public class GameSession {
         buzzWinner = null;
         buzzTimes.clear();
         attemptedPlayers.clear();
+        mediaPlaybackToken = null;
+        mediaPauseToken = null;
         currentState = State.IDLE;
     }
 
@@ -236,7 +266,10 @@ public class GameSession {
     }
 
     private GameQuestionMessage createGameQuestionMessage(Category c, QuestionDefinition q) {
-        String mediaUrl = q.mediaPath();
+        String mediaUrl = q.mediaPath() == null
+                ? null
+                : "/api/game/" + lobbyCode + "/media?path="
+                        + URLEncoder.encode(q.mediaPath(), StandardCharsets.UTF_8);
 
         return new GameQuestionMessage(
                 c.name(),
@@ -274,5 +307,13 @@ public class GameSession {
 
     public int getCurrentQuestionIdx() {
         return currentQuestionIdx;
+    }
+
+    public synchronized String getMediaPlaybackToken() {
+        return mediaPlaybackToken;
+    }
+
+    public synchronized String getMediaPauseToken() {
+        return mediaPauseToken;
     }
 }

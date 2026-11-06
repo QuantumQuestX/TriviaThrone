@@ -6,6 +6,7 @@ export const Actions = Object.freeze({
     SYNC: "SYNC",
     SELECT_ROUND: "SELECT_ROUND",
     SELECT_QUESTION: "SELECT_QUESTION",
+    PLAY_MEDIA: "PLAY_MEDIA",
     OPEN_BUZZ: "OPEN_BUZZ",
     CLOSE_BUZZ: "CLOSE_BUZZ",
     BUZZ: "BUZZ",

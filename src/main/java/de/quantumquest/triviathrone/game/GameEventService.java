@@ -64,7 +64,9 @@ public class GameEventService {
                 rounds,
                 roundName,
                 session.getCurrentQuestionMessage(),
-                session.getBuzzedPlayers()
+                session.getBuzzedPlayers(),
+                session.getMediaPlaybackToken(),
+                session.getMediaPauseToken()
         );
 
         messagingTemplate.convertAndSend(

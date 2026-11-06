@@ -48,7 +48,7 @@ document.getElementById("change-password-form").addEventListener("submit", async
         form.reset();
 
         await logout();
-        window.location.replace("/login.html");
+        window.location.replace("/login");
     } catch (error) {
         message.textContent = error.message;
         message.classList.add("error");

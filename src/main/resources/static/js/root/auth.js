@@ -128,8 +128,8 @@ export function clearSession() {
 }
 
 export function redirectToLogin() {
-    if (window.location.pathname !== "/login.html") {
-        window.location.replace("/login.html");
+    if (window.location.pathname !== "/login") {
+        window.location.replace("/login");
     }
 }
 

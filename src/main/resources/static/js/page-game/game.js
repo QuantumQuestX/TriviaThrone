@@ -5,6 +5,7 @@ import {apiFetch} from "../root/api.js";
 import {getCurrentUser} from "../root/auth.js";
 import {clearLobbyDetails, getLobbyDetails} from "../root/lobby-storage.js";
 import {QuestionManager} from "./jeopardy/question-manager.js";
+import {renderLeaderboard} from "./leaderboard.js";
 
 const currentUser = getCurrentUser();
 const lobbyCode = new URLSearchParams(window.location.search).get("code")
@@ -29,7 +30,7 @@ const stateLabels = {
 };
 
 if (!lobbyCode) {
-    window.location.href = "/index.html";
+    window.location.href = "/";
 } else {
     initializeGame().catch(error => {
         console.error("Could not start the game page:", error);
@@ -44,7 +45,7 @@ async function initializeGame() {
     const lobby = await response.json();
     if (!lobby) {
         localStorage.removeItem("lobbyDetails");
-        window.location.href = "/index.html";
+        window.location.href = "/";
         return;
     }
 
@@ -58,7 +59,7 @@ async function initializeGame() {
 
     await gameSocket.subscribeToGame(lobbyCode, state => {
         if (state?.gameEnded) {
-            window.location.href = "/lobby.html";
+            showLeaderboard(state["leaderboard"]);
             return;
         }
         applyGameState(state);
@@ -115,23 +116,35 @@ function configureHostControls() {
         gameSocket.sendAction(lobbyCode, gameSocket.Actions.RESET);
     });
     document.getElementById("host-end-game").addEventListener("click", () => {
-        if (window.confirm("End the game and close this lobby for everyone?")) {
+        if (window.confirm("End the game and show the final leaderboard to everyone?")) {
             gameSocket.sendAction(lobbyCode, gameSocket.Actions.END_GAME);
         }
     });
 }
 
 function configureLeaveButton() {
-    document.getElementById("leave-btn").addEventListener("click", () => {
+    const leaveGame = () => {
         socket.send("/app/leave", {lobbyCode});
         gameSocket.disconnect();
         clearLobbyDetails();
-        window.location.href = "/index.html";
-    });
+        window.location.href = "/";
+    };
+
+    document.getElementById("leave-btn").addEventListener("click", leaveGame);
+    document.getElementById("leaderboard-back").addEventListener("click", leaveGame);
 
     document.getElementById("main-buzzer").addEventListener("click", () => {
         gameSocket.sendBuzz(lobbyCode);
     });
+}
+
+function showLeaderboard(entries) {
+    document.getElementById("question-panel").classList.add("hidden");
+    document.getElementById("game-status").classList.add("hidden");
+    document.getElementById("host-panel").classList.add("hidden");
+    document.getElementById("player-buzzer-panel").classList.add("hidden");
+    document.getElementById("leaderboard-panel").classList.remove("hidden");
+    renderLeaderboard(document.getElementById("leaderboard-list"), entries || []);
 }
 
 function applyGameState(state) {
@@ -266,6 +279,13 @@ function renderBuzzer(state) {
 
 function renderHostControls(state) {
     const playMediaButton = document.getElementById("host-play-media");
+    const hasUnusedQuestions = state.rounds?.some(round =>
+        round.questions.some(row => row.some(tile => !tile.used))
+    ) ?? false;
+    const nextQuestionButton = document.getElementById("host-next-question");
+    nextQuestionButton.textContent = hasUnusedQuestions
+        ? "Next Question"
+        : "Finish & Show Leaderboard";
     const mediaType = state.question?.mediaType;
     const canStartMedia = state.state === "QUESTION_SELECTED" || state.state === "BUZZ_OPEN";
     const hasPlayableMedia = canStartMedia

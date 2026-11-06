@@ -7,11 +7,31 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class ViewController {
     @GetMapping("/")
     public String root() {
-        return "redirect:/index.html";
+        return "forward:/index.html";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "forward:/login.html";
+    }
+
+    @GetMapping("/lobby")
+    public String lobby() {
+        return "forward:/lobby.html";
+    }
+
+    @GetMapping("/game")
+    public String game() {
+        return "forward:/game.html";
+    }
+
+    @GetMapping("/editor")
+    public String editor() {
+        return "forward:/editor.html";
     }
 
     @GetMapping("/account")
     public String account() {
-        return "redirect:/index.html?page=account";
+        return "redirect:/?page=account";
     }
 }

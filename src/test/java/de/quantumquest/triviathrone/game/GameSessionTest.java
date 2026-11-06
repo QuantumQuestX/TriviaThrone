@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameSessionTest {
     private GameSession session;
@@ -83,6 +85,20 @@ class GameSessionTest {
         assertNotNull(session.getMediaPlaybackToken());
     }
 
+    @Test
+    void reportsWhetherQuestionsRemainUnused() {
+        session = createSession(MediaType.VIDEO, "resources/clue.mp4");
+
+        assertTrue(session.hasUnusedQuestions());
+        session.selectQuestion(0, 0, 0);
+        assertTrue(session.hasUnusedQuestions());
+
+        session.resetToIdle();
+        session.selectQuestion(0, 0, 1);
+
+        assertFalse(session.hasUnusedQuestions());
+    }
+
     private static GameSession createSession(MediaType mediaType, String mediaPath) {
         Lobby lobby = new Lobby("ROOM01", "Test lobby", "host");
         lobby.addUser("player");
@@ -91,7 +107,10 @@ class GameSessionTest {
                 "Test game",
                 "Description",
                 List.of(new Round("Round 1", List.of(
-                        new Category("Category", List.of(question))
+                        new Category("Category", List.of(
+                                question,
+                                new QuestionDefinition(200, "Second prompt", null, MediaType.UNDEFINED)
+                        ))
                 )))
         );
         return new GameSession(lobby, definition);

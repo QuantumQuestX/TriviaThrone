@@ -93,7 +93,7 @@ function configureGameStart(lobbyData) {
                 return;
             }
             isStartingGame = true;
-            window.location.href = `/game.html?code=${encodeURIComponent(lobbyCode)}`;
+            window.location.href = `/game?code=${encodeURIComponent(lobbyCode)}`;
         }
     });
 
@@ -145,7 +145,7 @@ document.getElementById("leave-btn").addEventListener("click", () => {
     if (lobbySubscription) socket.unsubscribe(`/topic/lobby.${lobbyCode}`);
     socket.disconnect();
     clearLobbyDetails();
-    window.location.href = "/index.html";
+    window.location.href = "/";
 });
 
 window.addEventListener("beforeunload", () => {

@@ -251,6 +251,14 @@ public class GameSession {
         return usedQuestions.contains(questionKey(round, category, question));
     }
 
+    public synchronized boolean hasUnusedQuestions() {
+        int totalQuestions = definition.rounds().stream()
+                .flatMap(round -> round.categories().stream())
+                .mapToInt(category -> category.questions().size())
+                .sum();
+        return usedQuestions.size() < totalQuestions;
+    }
+
     public synchronized Set<String> getBuzzedPlayers() {
         Set<String> buzzed = new HashSet<>(attemptedPlayers);
         buzzed.addAll(buzzTimes.keySet());

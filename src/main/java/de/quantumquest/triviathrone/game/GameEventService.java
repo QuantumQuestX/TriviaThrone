@@ -11,6 +11,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Comparator;
 import java.util.stream.IntStream;
 
 @Service
@@ -80,10 +82,18 @@ public class GameEventService {
         );
     }
 
-    public void broadcastGameEnded(String lobbyCode) {
+    public void broadcastGameEnded(String lobbyCode, GameSession session, String hostUsername) {
+        List<GameEndedMessage.LeaderboardEntry> leaderboard = session.getScores().entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(hostUsername))
+                .sorted(Comparator.comparingInt((Map.Entry<String, Integer> entry) -> entry.getValue())
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey))
+                .map(entry -> new GameEndedMessage.LeaderboardEntry(entry.getKey(), entry.getValue()))
+                .toList();
+
         messagingTemplate.convertAndSend(
                 "/topic/game." + lobbyCode,
-                new GameEndedMessage(lobbyCode, true)
+                new GameEndedMessage(lobbyCode, true, leaderboard)
         );
     }
 }

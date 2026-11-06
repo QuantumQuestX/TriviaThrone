@@ -64,6 +64,12 @@
 
         <p id="game-status" class="game-status" role="status" aria-live="polite">Connecting to game…</p>
 
+        <section id="leaderboard-panel" class="leaderboard panel hidden" aria-labelledby="leaderboard-title">
+            <h2 id="leaderboard-title">Final Leaderboard</h2>
+            <ol id="leaderboard-list" class="leaderboard-list"></ol>
+            <button id="leaderboard-back" class="primary-btn">Back to Lobby</button>
+        </section>
+
         <section id="host-panel" class="host-controls panel" data-admin>
             <div class="host-panel">
                 <h4>Buzzer</h4>
@@ -81,7 +87,7 @@
                 </div>
             </div>
             <button id="host-next-question" class="primary-btn" disabled>Next Question</button>
-            <button id="host-end-game" class="danger-btn">End Game &amp; Return to Lobby</button>
+            <button id="host-end-game" class="danger-btn">End Game &amp; Show Leaderboard</button>
         </section>
 
         <section id="player-buzzer-panel" class="player-buzzer-panel panel">

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 @ConfigurationProperties(prefix = "auth")
 public record AuthProperties(
         Path userFile,
+        Path refreshTokenFile,
         String jwtSecret,
         long tokenValiditySeconds,
         long refreshTokenValiditySeconds,

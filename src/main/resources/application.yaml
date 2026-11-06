@@ -4,6 +4,7 @@ spring:
 
 auth:
   user-file: users.yml
+  refresh-token-file: ${AUTH_REFRESH_TOKEN_FILE:refresh-tokens.xml}
   # Override with a private signing key outside local development.
   jwt-secret: ${AUTH_JWT_SECRET:CHANCE_THIS_SECRET_CHANGE_THIS_SECRET}
   token-validity-seconds: 900

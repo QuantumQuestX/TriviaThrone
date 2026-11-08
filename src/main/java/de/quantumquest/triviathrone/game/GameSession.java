@@ -283,7 +283,8 @@ public class GameSession {
         return new GameQuestionMessage(
                 c.name(),
                 q.prompt(),
-                null,
+                q.choices(),
+                currentState == State.ANSWER_REVEAL ? q.correctChoiceIndex() : null,
                 q.mediaType(),
                 mediaUrl,
                 q.points()

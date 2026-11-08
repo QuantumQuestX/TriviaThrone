@@ -99,6 +99,38 @@ class GameSessionTest {
         assertFalse(session.hasUnusedQuestions());
     }
 
+    @Test
+    void multipleChoiceAnswersAreRevealedOnlyAfterHostMarksCorrect() {
+        Lobby lobby = new Lobby("ROOM01", "Test lobby", "host");
+        lobby.addUser("player");
+        QuestionDefinition question = new QuestionDefinition(
+                200,
+                "Which ocean is largest?",
+                null,
+                MediaType.UNDEFINED,
+                List.of("Atlantic Ocean", "Pacific Ocean"),
+                1
+        );
+        session = new GameSession(lobby, new GameDefinition(
+                "Test game",
+                "Description",
+                List.of(new Round("Round 1", List.of(new Category("Geography", List.of(question)))))
+        ));
+
+        session.selectQuestion(0, 0, 0);
+
+        assertEquals(List.of("Atlantic Ocean", "Pacific Ocean"),
+                session.getCurrentQuestionMessage().choices());
+        assertNull(session.getCurrentQuestionMessage().correctChoiceIndex());
+
+        session.openBuzz();
+        session.registerBuzz("player");
+        session.closeBuzz();
+        session.markCorrect();
+
+        assertEquals(1, session.getCurrentQuestionMessage().correctChoiceIndex());
+    }
+
     private static GameSession createSession(MediaType mediaType, String mediaPath) {
         Lobby lobby = new Lobby("ROOM01", "Test lobby", "host");
         lobby.addUser("player");

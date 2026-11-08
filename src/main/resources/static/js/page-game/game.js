@@ -261,6 +261,10 @@ function renderQuestion(state) {
         });
         lastQuestionKey = key;
     }
+
+    if (state.state === "ANSWER_REVEAL" && Number.isInteger(question.correctChoiceIndex)) {
+        questionManager.revealCorrectAnswer(question.correctChoiceIndex);
+    }
 }
 
 function renderBuzzer(state) {

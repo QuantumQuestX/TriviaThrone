@@ -23,10 +23,26 @@ class FakeElement {
     constructor(...classes) {
         this.classList = new FakeClassList(...classes);
         this.textContent = "";
+        this.children = [];
+        this._innerHTML = "";
         this.src = "";
         this.paused = true;
         this.playCount = 0;
         this.pauseCount = 0;
+    }
+
+    set innerHTML(value) {
+        this._innerHTML = value;
+        this.children = [];
+    }
+
+    get innerHTML() {
+        return this._innerHTML;
+    }
+
+    appendChild(child) {
+        this.children.push(child);
+        return child;
     }
 
     play() {
@@ -61,6 +77,9 @@ globalThis.window = {
 globalThis.document = {
     getElementById(id) {
         return elements[id];
+    },
+    createElement() {
+        return new FakeElement();
     }
 };
 
@@ -199,4 +218,29 @@ test("QuestionManager waits for authenticated media loading before reporting que
     assert.equal(elements["question-points"].textContent, 200);
     assert.equal(elements["question-text"].textContent, "Name the song");
     assert.match(elements["media-placeholder-text"].textContent, /Waiting for the host/);
+});
+
+test("QuestionManager renders multiple-choice options and reveals the answer only when told", async () => {
+    const manager = new QuestionManager();
+    const questionChoices = elements["question-choices"];
+
+    await manager.showQuestion({
+        category: "Geography",
+        points: 200,
+        prompt: "Which ocean is largest?",
+        choices: ["Atlantic Ocean", "Pacific Ocean"],
+        correctChoiceIndex: null
+    });
+
+    assert.equal(questionChoices.classList.contains("hidden"), false);
+    assert.deepEqual(questionChoices.children.map(choice => choice.textContent), [
+        "A. Atlantic Ocean",
+        "B. Pacific Ocean"
+    ]);
+    assert.equal(questionChoices.children.some(choice => choice.classList.contains("correct")), false);
+
+    manager.revealCorrectAnswer(1);
+
+    assert.equal(questionChoices.children[0].classList.contains("wrong"), true);
+    assert.equal(questionChoices.children[1].classList.contains("correct"), true);
 });

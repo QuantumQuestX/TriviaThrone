@@ -116,13 +116,14 @@
     font-size: 1.2rem;
     font-weight: 600;
 
-    cursor: pointer;
+    cursor: default;
     transition: all 0.2s ease;
 }
 
-.question-choice:hover:not(.closed):not(:disabled) {
-    border-color: var(--accent);
-    transform: translateY(-2px);
+.question-choice.correct,
+.question-choice.wrong {
+    cursor: default;
+    opacity: 1;
 }
 
 .question-choice.correct {

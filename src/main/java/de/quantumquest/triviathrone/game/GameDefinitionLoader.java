@@ -16,15 +16,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 public final class GameDefinitionLoader {
     private GameDefinitionLoader() {
     }
 
     public static GameDefinition parse(Path lobbyDir) {
+        Objects.requireNonNull(lobbyDir, "lobbyDir");
         try {
             Path manifestXml = lobbyDir.resolve("manifest.xml");
 
@@ -50,12 +50,12 @@ public final class GameDefinitionLoader {
             doc.getDocumentElement().normalize();
 
             Element gameElement = doc.getDocumentElement();
+            GameResourceResolver resources = new GameResourceResolver(lobbyDir, gameElement);
 
             Element metaElement = getSingleChild(gameElement, "meta");
 
             String title = getTextContent(metaElement, "title");
             String description = getTextContent(metaElement, "description");
-            Map<String, String> resourcePaths = getResourcePaths(gameElement);
 
             Element roundsElement = getSingleChild(gameElement, "rounds");
             NodeList roundNodes = roundsElement.getElementsByTagName("round");
@@ -92,13 +92,14 @@ public final class GameDefinitionLoader {
                     }
 
                     String prompt = getTextContent(questionElement, "prompt");
-                    ParsedChoices parsedChoices = getChoices(questionElement);
+                    GameQuestionChoicesParser.ParsedChoices parsedChoices =
+                            GameQuestionChoicesParser.parse(questionElement);
                     if ("mcq".equals(questionElement.getAttribute("type")) && parsedChoices.choices().isEmpty()) {
                         throw new IllegalArgumentException("Multiple-choice questions must have answer choices");
                     }
 
-                    String mediaPath = getMediaPath(questionElement, resourcePaths);
-                    MediaType mediaType = detectMediaType(lobbyDir, mediaPath);
+                    String mediaPath = resources.mediaPathFor(questionElement);
+                    MediaType mediaType = resources.detectMediaType(mediaPath);
 
                     matrix[category][row] = new QuestionDefinition(
                             points,
@@ -139,98 +140,6 @@ public final class GameDefinitionLoader {
         } catch (IOException | ParserConfigurationException | SAXException e) {
             throw new IllegalStateException("Could not parse game manifest", e);
         }
-    }
-
-    private static Map<String, String> getResourcePaths(Element gameElement) {
-        Map<String, String> resourcePaths = new HashMap<>();
-        NodeList resourceNodes = gameElement.getElementsByTagName("resource");
-        for (int i = 0; i < resourceNodes.getLength(); i++) {
-            Element resource = (Element) resourceNodes.item(i);
-            String id = resource.getAttribute("id");
-            String file = resource.getAttribute("file");
-            if (!id.isBlank() && !file.isBlank() && resourcePaths.putIfAbsent(id, file) != null) {
-                throw new IllegalArgumentException("Duplicate resource id: " + id);
-            }
-        }
-        return Map.copyOf(resourcePaths);
-    }
-
-    private static String getMediaPath(Element question, Map<String, String> resourcePaths) {
-        if (question.hasAttribute("media")) {
-            return question.getAttribute("media");
-        }
-
-        NodeList mediaNodes = question.getElementsByTagName("media");
-        if (mediaNodes.getLength() == 0) {
-            return null;
-        }
-
-        String resourceId = ((Element) mediaNodes.item(0)).getAttribute("ref");
-        String mediaPath = resourcePaths.get(resourceId);
-        if (mediaPath == null) {
-            throw new IllegalArgumentException("Question references an unknown media resource");
-        }
-        return mediaPath;
-    }
-
-    private static ParsedChoices getChoices(Element question) {
-        NodeList optionsNodes = question.getElementsByTagName("options");
-        if (optionsNodes.getLength() == 0) {
-            return new ParsedChoices(List.of(), null);
-        }
-        if (optionsNodes.getLength() != 1) {
-            throw new IllegalArgumentException("Question must have at most one options element");
-        }
-
-        NodeList optionNodes = ((Element) optionsNodes.item(0)).getElementsByTagName("option");
-        if (optionNodes.getLength() < 2 || optionNodes.getLength() > 4) {
-            throw new IllegalArgumentException("Multiple-choice questions must have between two and four choices");
-        }
-
-        List<String> choices = new ArrayList<>();
-        Integer correctChoiceIndex = null;
-        for (int index = 0; index < optionNodes.getLength(); index++) {
-            Element option = (Element) optionNodes.item(index);
-            String text = option.getTextContent().trim();
-            if (text.isBlank()) {
-                throw new IllegalArgumentException("Multiple-choice choices cannot be empty");
-            }
-
-            String correctAttribute = option.getAttribute("correct");
-            if (!correctAttribute.isBlank()
-                    && !"true".equals(correctAttribute)
-                    && !"false".equals(correctAttribute)) {
-                throw new IllegalArgumentException("Multiple-choice correct attribute must be true or false");
-            }
-            if ("true".equals(correctAttribute)) {
-                if (correctChoiceIndex != null) {
-                    throw new IllegalArgumentException("Multiple-choice questions must have exactly one correct choice");
-                }
-                correctChoiceIndex = index;
-            }
-            choices.add(text);
-        }
-
-        if (correctChoiceIndex == null) {
-            throw new IllegalArgumentException("Multiple-choice questions must have exactly one correct choice");
-        }
-        return new ParsedChoices(choices, correctChoiceIndex);
-    }
-
-    private record ParsedChoices(List<String> choices, Integer correctChoiceIndex) {
-    }
-
-    private static MediaType detectMediaType(Path lobbyDir, String mediaPath) throws IOException {
-        if (mediaPath == null || mediaPath.isBlank()) {
-            return MediaType.UNDEFINED;
-        }
-
-        Path root = lobbyDir.toAbsolutePath().normalize();
-        Path mediaFile = root.resolve(mediaPath).normalize();
-        if (!mediaFile.startsWith(root)) {
-            return MediaType.UNDEFINED;
-        }
-        return MediaType.detect(mediaFile);
     }
 
     private static Element getSingleChild(Element parent, String tag) {

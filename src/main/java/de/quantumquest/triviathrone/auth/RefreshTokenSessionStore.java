@@ -1,15 +1,19 @@
 package de.quantumquest.triviathrone.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
-import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,37 +24,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class RefreshTokenSessionStore {
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Path sessionFile;
 
     public RefreshTokenSessionStore(AuthProperties properties) {
-        this.sessionFile = properties.refreshTokenFile().toAbsolutePath();
+        this.sessionFile = Objects.requireNonNull(properties, "properties")
+                .refreshTokenFile()
+                .toAbsolutePath();
     }
 
-    public Map<String, RefreshTokenSession> load() {
+    Map<String, RefreshTokenSession> load() {
         Map<String, RefreshTokenSession> sessions = new HashMap<>();
         try {
             if (Files.exists(sessionFile)) {
                 loadXmlSessions(sessions);
-                return sessions;
-            }
-
-            Path legacyFile = legacyJsonFile();
-            if (Files.exists(legacyFile)) {
-                loadLegacyJsonSessions(legacyFile, sessions);
-                save(sessions);
-                Files.delete(legacyFile);
             }
             return sessions;
-        } catch (IOException | XMLStreamException exception) {
+        } catch (IOException | SAXException | ParserConfigurationException exception) {
             throw new IllegalStateException("Failed to load refresh-token sessions from " + sessionFile, exception);
         }
     }
 
-    public void save(Map<String, RefreshTokenSession> sessions) {
+    void save(Map<String, RefreshTokenSession> sessions) {
+        Objects.requireNonNull(sessions, "sessions");
         List<PersistedSession> persistedSessions = new ArrayList<>();
         sessions.forEach((tokenDigest, session) -> persistedSessions.add(new PersistedSession(
                 tokenDigest,
@@ -66,66 +65,28 @@ public class RefreshTokenSessionStore {
                 Files.createDirectories(parent);
             }
             writeXml(temporaryFile, persistedSessions);
+            ValidatedXmlParser.parse(temporaryFile, "refresh-tokens.dtd", "refresh-tokens.xsd");
             Files.move(temporaryFile, sessionFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException | XMLStreamException exception) {
+        } catch (IOException | XMLStreamException | SAXException | ParserConfigurationException exception) {
             throw new IllegalStateException("Failed to persist refresh-token sessions to " + sessionFile, exception);
         }
     }
 
     private void loadXmlSessions(Map<String, RefreshTokenSession> sessions)
-            throws IOException, XMLStreamException {
-        XMLInputFactory factory = XMLInputFactory.newFactory();
-        factory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-        factory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);
-        factory.setXMLResolver((publicId, systemId, baseUri, namespace) -> {
-            throw new XMLStreamException("External entities are disabled.");
-        });
-
-        boolean rootSeen = false;
-        try (InputStream input = Files.newInputStream(sessionFile)) {
-            XMLStreamReader reader = factory.createXMLStreamReader(input, StandardCharsets.UTF_8.name());
-            try {
-                while (reader.hasNext()) {
-                    if (reader.next() != XMLStreamReader.START_ELEMENT) {
-                        continue;
-                    }
-
-                    String element = reader.getLocalName();
-                    if (!rootSeen && "refreshSessions".equals(element)) {
-                        rootSeen = true;
-                    } else if (rootSeen && "session".equals(element)) {
-                        String tokenDigest = requiredAttribute(reader, "tokenDigest");
-                        String username = requiredAttribute(reader, "username");
-                        long expiresAt = Long.parseLong(requiredAttribute(reader, "expiresAtEpochSecond"));
-                        long absoluteExpiry = Long.parseLong(requiredAttribute(reader, "absoluteExpiryEpochSecond"));
-                        addIfActive(sessions, tokenDigest, username, expiresAt, absoluteExpiry);
-                    } else {
-                        throw new IllegalStateException("Refresh-token XML contains an unexpected element: " + element);
-                    }
-                }
-            } finally {
-                reader.close();
-            }
-        }
-
-        if (!rootSeen) {
-            throw new IllegalStateException("Refresh-token XML is empty or malformed: " + sessionFile);
-        }
-    }
-
-    private void loadLegacyJsonSessions(Path legacyFile, Map<String, RefreshTokenSession> sessions)
-            throws IOException {
-        PersistedSessions persisted = objectMapper.readValue(legacyFile.toFile(), PersistedSessions.class);
-        if (persisted == null || persisted.sessions() == null) {
-            throw new IllegalStateException("Legacy refresh-token file is empty or malformed: " + legacyFile);
-        }
-
-        for (PersistedSession entry : persisted.sessions()) {
-            if (entry == null || entry.tokenDigest() == null || entry.username() == null) {
-                throw new IllegalStateException("Legacy refresh-token file contains an invalid session: " + legacyFile);
-            }
-            addIfActive(sessions, entry.tokenDigest(), entry.username(),
-                    entry.expiresAtEpochSecond(), entry.absoluteExpiryEpochSecond());
+            throws IOException, SAXException, ParserConfigurationException {
+        Document document = ValidatedXmlParser.parse(
+                sessionFile,
+                "refresh-tokens.dtd",
+                "refresh-tokens.xsd"
+        );
+        NodeList sessionNodes = document.getDocumentElement().getElementsByTagName("session");
+        for (int index = 0; index < sessionNodes.getLength(); index++) {
+            Element session = (Element) sessionNodes.item(index);
+            String tokenDigest = requiredAttribute(session, "tokenDigest");
+            String username = requiredAttribute(session, "username");
+            long expiresAt = Long.parseLong(requiredAttribute(session, "expiresAtEpochSecond"));
+            long absoluteExpiry = Long.parseLong(requiredAttribute(session, "absoluteExpiryEpochSecond"));
+            addIfActive(sessions, tokenDigest, username, expiresAt, absoluteExpiry);
         }
     }
 
@@ -146,7 +107,15 @@ public class RefreshTokenSessionStore {
                     .createXMLStreamWriter(output, StandardCharsets.UTF_8.name());
             try {
                 writer.writeStartDocument(StandardCharsets.UTF_8.name(), "1.0");
+                writer.writeDTD("<!DOCTYPE refreshSessions SYSTEM \"refresh-tokens.dtd\">");
                 writer.writeStartElement("refreshSessions");
+                writer.writeNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI);
+                writer.writeAttribute(
+                        "xsi",
+                        XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
+                        "noNamespaceSchemaLocation",
+                        "refresh-tokens.xsd"
+                );
                 for (PersistedSession session : persistedSessions) {
                     writer.writeStartElement("session");
                     writer.writeAttribute("tokenDigest", session.tokenDigest());
@@ -165,23 +134,12 @@ public class RefreshTokenSessionStore {
         }
     }
 
-    private static String requiredAttribute(XMLStreamReader reader, String name) {
-        String value = reader.getAttributeValue(null, name);
-        if (value == null || value.isBlank()) {
+    private static String requiredAttribute(Element element, String name) {
+        String value = element.getAttribute(name);
+        if (value.isBlank()) {
             throw new IllegalStateException("Refresh-token XML session is missing attribute: " + name);
         }
         return value;
-    }
-
-    private Path legacyJsonFile() {
-        String fileName = sessionFile.getFileName().toString();
-        if (fileName.endsWith(".xml")) {
-            return sessionFile.resolveSibling(fileName.substring(0, fileName.length() - 4) + ".json");
-        }
-        return sessionFile.resolveSibling("refresh-tokens.json");
-    }
-
-    private record PersistedSessions(List<PersistedSession> sessions) {
     }
 
     private record PersistedSession(

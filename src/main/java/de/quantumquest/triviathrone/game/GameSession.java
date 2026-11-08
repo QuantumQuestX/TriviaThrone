@@ -4,20 +4,14 @@ import de.quantumquest.triviathrone.dto.game.GameQuestionMessage;
 import de.quantumquest.triviathrone.game.definition.Category;
 import de.quantumquest.triviathrone.game.definition.MediaType;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
-import de.quantumquest.triviathrone.game.definition.Round;
 import de.quantumquest.triviathrone.server.Lobby;
 
-import java.util.HashSet;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class GameSession {
 
@@ -31,95 +25,48 @@ public class GameSession {
         ANSWER_REVEAL       // showing correct answer and updating scores
     }
 
-    private static final long BUZZ_THRESHOLD_MS = 120;
-
-    private final GameDefinition definition;
+    private final GameQuestionBoard board;
+    private final GameScoreboard scoreboard;
     private final String lobbyCode;
 
-    private final Map<String, Integer> scores = new ConcurrentHashMap<>();
-    private final Map<String, Long> buzzTimes = new ConcurrentHashMap<>();
-    private final Set<String> usedQuestions = ConcurrentHashMap.newKeySet();
-    private final Set<String> attemptedPlayers = ConcurrentHashMap.newKeySet();
-
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(task -> {
-        Thread thread = new Thread(task, "game-buzzer");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private final GameBuzzer buzzer;
 
     private volatile State currentState = State.IDLE;
-    private volatile String buzzWinner;
     private volatile Runnable stateChangeListener = () -> {
     };
-    private ScheduledFuture<?> pendingBuzz;
 
-    private volatile int currentRoundIdx;
-    private volatile int currentCategoryIdx;
-    private volatile int currentQuestionIdx;
-    private volatile int currentQuestionPoints;
     private String mediaPlaybackToken;
     private String mediaPauseToken;
 
     public GameSession(Lobby lobby, GameDefinition definition) {
-        this.definition = definition;
+        Objects.requireNonNull(lobby, "lobby");
+        this.board = new GameQuestionBoard(definition);
+        this.scoreboard = new GameScoreboard(lobby.listUsernames());
         this.lobbyCode = lobby.getLobbyCode();
-        lobby.listUsernames().forEach(username -> scores.put(username, 0));
+        this.buzzer = new GameBuzzer(this::onBuzzFinalized);
     }
 
     public synchronized void selectQuestion(Integer round, Integer category, Integer question) {
-        if (round == null || category == null || question == null) {
-            throw new IllegalArgumentException("No round, category, or question index given");
-        }
-
         if (currentState != State.IDLE) {
             throw new IllegalStateException("Cannot select question now");
         }
 
-        if (round < 0 || round >= definition.rounds().size()) {
-            throw new IllegalArgumentException("Round index is out of range");
-        }
-        Round roundDefinition = definition.rounds().get(round);
-        if (category < 0 || category >= roundDefinition.categories().size()) {
-            throw new IllegalArgumentException("Category index is out of range");
-        }
-        Category categoryDefinition = roundDefinition.categories().get(category);
-        if (question < 0 || question >= categoryDefinition.questions().size()) {
-            throw new IllegalArgumentException("Question index is out of range");
-        }
-
-        String key = questionKey(round, category, question);
-
-        if (usedQuestions.contains(key)) {
-            throw new IllegalStateException("Question already used");
-        }
-
-        QuestionDefinition q = categoryDefinition.questions().get(question);
-
-        currentRoundIdx = round;
-        currentCategoryIdx = category;
-        currentQuestionIdx = question;
-        currentQuestionPoints = q.points();
+        board.selectQuestion(round, category, question);
+        buzzer.reset();
         mediaPlaybackToken = null;
         mediaPauseToken = null;
-        attemptedPlayers.clear();
-
-        usedQuestions.add(key);
-
         currentState = State.QUESTION_SELECTED;
     }
 
     public synchronized void playMedia() {
         if (currentState != State.QUESTION_SELECTED && currentState != State.BUZZ_OPEN) return;
 
-        QuestionDefinition question = definition.rounds().get(currentRoundIdx)
-                .categories().get(currentCategoryIdx)
-                .questions().get(currentQuestionIdx);
+        QuestionDefinition question = board.currentQuestion();
         if ((question.mediaType() == MediaType.AUDIO || question.mediaType() == MediaType.VIDEO)
                 && question.mediaPath() != null && !question.mediaPath().isBlank()) {
             mediaPlaybackToken = UUID.randomUUID().toString();
             if (currentState == State.QUESTION_SELECTED) {
-                buzzWinner = null;
-                buzzTimes.clear();
+                buzzer.open();
                 currentState = State.BUZZ_OPEN;
             }
         }
@@ -129,106 +76,60 @@ public class GameSession {
         if (currentState != State.IDLE) {
             throw new IllegalStateException("Cannot change rounds while a question is active");
         }
-        if (round == null || round < 0 || round >= definition.rounds().size()) {
-            throw new IllegalArgumentException("Round index is out of range");
-        }
-        currentRoundIdx = round;
+        board.selectRound(round);
     }
 
-    public void openBuzz() {
-        synchronized (this) {
-            if (currentState != State.QUESTION_SELECTED) return;
-
-            buzzWinner = null;
-            buzzTimes.clear();
-            currentState = State.BUZZ_OPEN;
-        }
+    public synchronized void openBuzz() {
+        if (currentState != State.QUESTION_SELECTED) return;
+        buzzer.open();
+        currentState = State.BUZZ_OPEN;
     }
 
-    public void registerBuzz(String username) {
-        synchronized (this) {
-            if (currentState != State.BUZZ_OPEN &&
-                    currentState != State.BUZZ_COLLECTING) return;
-            if (attemptedPlayers.contains(username)) return;
-
-            long now = System.nanoTime();
-            buzzTimes.putIfAbsent(username, now);
-
-            if (currentState == State.BUZZ_OPEN) {
-                currentState = State.BUZZ_COLLECTING;
-                mediaPauseToken = UUID.randomUUID().toString();
-
-                pendingBuzz = scheduler.schedule(
-                        this::finalizeBuzz,
-                        BUZZ_THRESHOLD_MS,
-                        TimeUnit.MILLISECONDS
-                );
-            }
+    public synchronized void registerBuzz(String username) {
+        Objects.requireNonNull(username, "username");
+        if (currentState != State.BUZZ_OPEN && currentState != State.BUZZ_COLLECTING) return;
+        GameBuzzer.Registration registration = buzzer.register(username);
+        if (registration == GameBuzzer.Registration.FIRST) {
+            currentState = State.BUZZ_COLLECTING;
+            mediaPauseToken = UUID.randomUUID().toString();
         }
     }
 
-    public void closeBuzz() {
-        synchronized (this) {
-            if (currentState == State.BUZZ_OPEN) {
-                currentState = State.QUESTION_SELECTED;
-            } else if (currentState == State.BUZZ_COLLECTING) {
-                finalizeBuzzLocked();
-            }
-        }
-    }
-
-    private void finalizeBuzz() {
-        synchronized (this) {
-            if (currentState != State.BUZZ_COLLECTING) return;
-            finalizeBuzzLocked();
-        }
-        stateChangeListener.run();
-    }
-
-    private void finalizeBuzzLocked() {
-        pendingBuzz = null;
-        if (buzzTimes.isEmpty()) {
-            currentState = State.QUESTION_SELECTED;
-            return;
-        }
-
-        buzzWinner = buzzTimes.entrySet()
-                .stream()
-                .min(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(null);
-
-        currentState = State.BUZZ_LOCKED;
+    public synchronized void closeBuzz() {
+        if (currentState != State.BUZZ_OPEN && currentState != State.BUZZ_COLLECTING) return;
+        currentState = buzzer.closeBuzz() == null ? State.QUESTION_SELECTED : State.BUZZ_LOCKED;
     }
 
     public synchronized void markCorrect() {
+        String buzzWinner = buzzer.winner();
         if (currentState != State.BUZZ_LOCKED || buzzWinner == null) return;
 
-        scores.computeIfPresent(buzzWinner, (_, score) -> score + currentQuestionPoints);
+        scoreboard.addPoints(buzzWinner, board.currentQuestion().points());
         currentState = State.ANSWER_REVEAL;
     }
 
     public synchronized void markIncorrect() {
+        String buzzWinner = buzzer.winner();
         if (currentState != State.BUZZ_LOCKED || buzzWinner == null) return;
 
-        scores.computeIfPresent(buzzWinner, (_, score) -> score - (currentQuestionPoints / 2));
-        attemptedPlayers.add(buzzWinner);
-        buzzWinner = null;
-        buzzTimes.clear();
+        scoreboard.addPoints(buzzWinner, -(board.currentQuestion().points() / 2));
+        buzzer.markIncorrect();
         currentState = State.QUESTION_SELECTED;
     }
 
     public synchronized void resetToIdle() {
-        if (pendingBuzz != null) {
-            pendingBuzz.cancel(false);
-            pendingBuzz = null;
-        }
-        buzzWinner = null;
-        buzzTimes.clear();
-        attemptedPlayers.clear();
+        buzzer.reset();
         mediaPlaybackToken = null;
         mediaPauseToken = null;
         currentState = State.IDLE;
+    }
+
+    private void onBuzzFinalized(String winner) {
+        synchronized (this) {
+            if (currentState != State.BUZZ_COLLECTING) return;
+            currentState = winner == null ? State.QUESTION_SELECTED : State.BUZZ_LOCKED;
+        }
+        stateChangeListener.run();
     }
 
     public synchronized void setStateChangeListener(Runnable listener) {
@@ -239,55 +140,39 @@ public class GameSession {
     public synchronized GameQuestionMessage getCurrentQuestionMessage() {
         if (currentState == State.IDLE) return null;
 
-        Round round = definition.rounds().get(currentRoundIdx);
-        Category category = round.categories().get(currentCategoryIdx);
-        return createGameQuestionMessage(
-                category,
-                category.questions().get(currentQuestionIdx)
-        );
+        return createGameQuestionMessage(board.currentCategory(), board.currentQuestion());
     }
 
     public synchronized boolean isQuestionUsed(int round, int category, int question) {
-        return usedQuestions.contains(questionKey(round, category, question));
+        return board.isQuestionUsed(round, category, question);
     }
 
     public synchronized boolean hasUnusedQuestions() {
-        int totalQuestions = definition.rounds().stream()
-                .flatMap(round -> round.categories().stream())
-                .mapToInt(category -> category.questions().size())
-                .sum();
-        return usedQuestions.size() < totalQuestions;
+        return board.hasUnusedQuestions();
     }
 
     public synchronized Set<String> getBuzzedPlayers() {
-        Set<String> buzzed = new HashSet<>(attemptedPlayers);
-        buzzed.addAll(buzzTimes.keySet());
-        return Set.copyOf(buzzed);
+        return buzzer.getBuzzedPlayers();
     }
 
     public synchronized void close() {
-        if (pendingBuzz != null) pendingBuzz.cancel(false);
-        scheduler.shutdownNow();
+        buzzer.close();
     }
 
-    private String questionKey(int round, int category, int question) {
-        return round + ":" + category + ":" + question;
-    }
-
-    private GameQuestionMessage createGameQuestionMessage(Category c, QuestionDefinition q) {
-        String mediaUrl = q.mediaPath() == null
+    private GameQuestionMessage createGameQuestionMessage(Category category, QuestionDefinition question) {
+        String mediaUrl = question.mediaPath() == null
                 ? null
                 : "/api/game/" + lobbyCode + "/media?path="
-                + URLEncoder.encode(q.mediaPath(), StandardCharsets.UTF_8);
+                + URLEncoder.encode(question.mediaPath(), StandardCharsets.UTF_8);
 
         return new GameQuestionMessage(
-                c.name(),
-                q.prompt(),
-                q.choices(),
-                currentState == State.ANSWER_REVEAL ? q.correctChoiceIndex() : null,
-                q.mediaType(),
+                category.name(),
+                question.prompt(),
+                question.choices(),
+                currentState == State.ANSWER_REVEAL ? question.correctChoiceIndex() : null,
+                question.mediaType(),
                 mediaUrl,
-                q.points()
+                question.points()
         );
     }
 
@@ -296,27 +181,27 @@ public class GameSession {
     }
 
     public String getBuzzWinner() {
-        return buzzWinner;
+        return buzzer.winner();
     }
 
     public Map<String, Integer> getScores() {
-        return Map.copyOf(scores);
+        return scoreboard.snapshot();
     }
 
     public GameDefinition getDefinition() {
-        return definition;
+        return board.definition();
     }
 
-    public int getCurrentRoundIdx() {
-        return currentRoundIdx;
+    public synchronized int getCurrentRoundIdx() {
+        return board.currentRoundIdx();
     }
 
-    public int getCurrentCategoryIdx() {
-        return currentCategoryIdx;
+    public synchronized int getCurrentCategoryIdx() {
+        return board.currentCategoryIdx();
     }
 
-    public int getCurrentQuestionIdx() {
-        return currentQuestionIdx;
+    public synchronized int getCurrentQuestionIdx() {
+        return board.currentQuestionIdx();
     }
 
     public synchronized String getMediaPlaybackToken() {

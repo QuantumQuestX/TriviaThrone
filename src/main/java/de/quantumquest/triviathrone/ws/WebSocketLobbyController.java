@@ -10,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.Objects;
 
 @Controller
 public class WebSocketLobbyController {
@@ -18,12 +19,14 @@ public class WebSocketLobbyController {
     private final LobbyEventService lobbyEventService;
 
     public WebSocketLobbyController(LobbyService lobbyService, LobbyEventService lobbyEventService) {
-        this.lobbyService = lobbyService;
-        this.lobbyEventService = lobbyEventService;
+        this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
+        this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
     }
 
     @MessageMapping("/join")
     public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
+        Objects.requireNonNull(msg, "msg");
+        Objects.requireNonNull(principal, "principal");
         logger.info("OnJoin: {} joined lobby with code {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 
@@ -35,6 +38,8 @@ public class WebSocketLobbyController {
 
     @MessageMapping("/leave")
     public void leave(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
+        Objects.requireNonNull(msg, "msg");
+        Objects.requireNonNull(principal, "principal");
         logger.info("OnLeave: {} left lobby with code {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 

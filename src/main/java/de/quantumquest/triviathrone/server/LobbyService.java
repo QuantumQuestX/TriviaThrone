@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,31 +21,30 @@ public class LobbyService {
     private final SecureRandom random = new SecureRandom();
 
     public Lobby createLobby(String name, UserAccount hostAccount) {
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(hostAccount, "hostAccount");
+        String hostUsername = Objects.requireNonNull(hostAccount.getUsername(), "host username");
         Lobby lobby;
         String code;
         do {
             code = generateCode();
-            lobby = new Lobby(code, name, hostAccount.getUsername());
+            lobby = new Lobby(code, name, hostUsername);
         } while (lobbies.putIfAbsent(code, lobby) != null);
 
-        logger.info("Creating lobby with code {} by {}", code, hostAccount.getUsername());
+        logger.info("Creating lobby with code {} by {}", code, hostUsername);
         return lobby;
     }
 
     public void removeLobby(String code) {
-        lobbies.remove(code);
+        lobbies.remove(Objects.requireNonNull(code, "code"));
     }
 
     public Optional<Lobby> getLobby(String code) {
-        return Optional.ofNullable(lobbies.get(code));
+        return Optional.ofNullable(lobbies.get(Objects.requireNonNull(code, "code")));
     }
 
     public List<Lobby> listLobbies() {
         return List.copyOf(lobbies.values());
-    }
-
-    public Optional<Lobby> getLobbyForUsername(String username) {
-        return lobbies.values().stream().filter(lobby -> lobby.listUsernames().contains(username)).findFirst();
     }
 
     private String generateCode() {

@@ -4,6 +4,7 @@ import de.quantumquest.triviathrone.game.GameSession;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public record GameStateMessage(String lobbyCode, GameSession.State state, String buzzWinner,
@@ -13,15 +14,21 @@ public record GameStateMessage(String lobbyCode, GameSession.State state, String
                                GameQuestionMessage question, Set<String> buzzedPlayers,
                                String mediaPlaybackToken, String mediaPauseToken) {
     public GameStateMessage {
-        scores = Map.copyOf(scores);
-        rounds = List.copyOf(rounds);
-        buzzedPlayers = Set.copyOf(buzzedPlayers);
+        Objects.requireNonNull(lobbyCode, "lobbyCode");
+        Objects.requireNonNull(state, "state");
+        scores = Map.copyOf(Objects.requireNonNull(scores, "scores"));
+        Objects.requireNonNull(gameTitle, "gameTitle");
+        rounds = List.copyOf(Objects.requireNonNull(rounds, "rounds"));
+        buzzedPlayers = Set.copyOf(Objects.requireNonNull(buzzedPlayers, "buzzedPlayers"));
     }
 
     public record RoundBoardMessage(String name, List<String> categories, List<List<QuestionTileMessage>> questions) {
         public RoundBoardMessage {
-            categories = List.copyOf(categories);
-            questions = questions.stream().map(List::copyOf).toList();
+            Objects.requireNonNull(name, "name");
+            categories = List.copyOf(Objects.requireNonNull(categories, "categories"));
+            questions = Objects.requireNonNull(questions, "questions").stream()
+                    .map(questionRow -> List.copyOf(Objects.requireNonNull(questionRow, "question row")))
+                    .toList();
         }
     }
 

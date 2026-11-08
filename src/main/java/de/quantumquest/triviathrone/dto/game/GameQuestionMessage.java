@@ -3,6 +3,7 @@ package de.quantumquest.triviathrone.dto.game;
 import de.quantumquest.triviathrone.game.definition.MediaType;
 
 import java.util.List;
+import java.util.Objects;
 
 public record GameQuestionMessage(
         String category,
@@ -14,6 +15,9 @@ public record GameQuestionMessage(
         int points
 ) {
     public GameQuestionMessage {
+        Objects.requireNonNull(category, "category");
+        Objects.requireNonNull(prompt, "prompt");
+        Objects.requireNonNull(mediaType, "mediaType");
         choices = choices == null ? List.of() : List.copyOf(choices);
     }
 }

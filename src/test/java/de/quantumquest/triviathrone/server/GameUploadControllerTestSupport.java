@@ -32,7 +32,7 @@ final class GameUploadControllerTestSupport {
         GameUploadController controller = new GameUploadController(
                 lobbyService,
                 lobbyEventService,
-                storageDir.toString()
+                new LobbyGameFiles(storageDir.toString())
         );
         Lobby lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");
         lobby.addUser("player");

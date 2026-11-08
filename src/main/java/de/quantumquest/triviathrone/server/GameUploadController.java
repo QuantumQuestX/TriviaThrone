@@ -2,14 +2,12 @@ package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
 import de.quantumquest.triviathrone.game.GameDefinition;
-import de.quantumquest.triviathrone.game.GameDefinitionLoader;
 import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +25,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/game")
@@ -40,16 +36,16 @@ public class GameUploadController {
 
     private final LobbyService lobbyService;
     private final LobbyEventService lobbyEventService;
-    private final Path storageDir;
+    private final LobbyGameFiles lobbyGameFiles;
 
     public GameUploadController(
             LobbyService lobbyService,
             LobbyEventService lobbyEventService,
-            @Value("${triviathrone.games.storage-dir:upload/games}") String storageDir
+            LobbyGameFiles lobbyGameFiles
     ) {
-        this.lobbyService = lobbyService;
-        this.lobbyEventService = lobbyEventService;
-        this.storageDir = Path.of(storageDir);
+        this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
+        this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
+        this.lobbyGameFiles = Objects.requireNonNull(lobbyGameFiles, "lobbyGameFiles");
     }
 
     @GetMapping("/{lobbyCode}/media")
@@ -58,6 +54,7 @@ public class GameUploadController {
             @RequestParam("path") String mediaPath,
             @AuthenticationPrincipal UserAccount user
     ) throws IOException {
+        Objects.requireNonNull(user, "user");
         Lobby lobby = lobbyService.getLobby(lobbyCode)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!lobby.listUsernames().contains(user.getUsername())) {
@@ -74,20 +71,8 @@ public class GameUploadController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        Path storageRoot = storageDir.toAbsolutePath().normalize();
-        Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
-        Path mediaFile = lobbyDir.resolve(mediaPath).normalize();
-        if (!lobbyDir.startsWith(storageRoot)
-                || !mediaFile.startsWith(lobbyDir)
-                || !Files.isRegularFile(mediaFile)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
-
-        Path realLobbyDir = lobbyDir.toRealPath();
-        Path realMediaFile = mediaFile.toRealPath();
-        if (!realMediaFile.startsWith(realLobbyDir)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
+        Path realMediaFile = lobbyGameFiles.findMediaFile(lobbyCode, mediaPath)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         String contentType;
         try (InputStream media = Files.newInputStream(realMediaFile)) {
@@ -105,6 +90,9 @@ public class GameUploadController {
             @RequestParam("lobbyCode") String lobbyCode,
             @AuthenticationPrincipal UserAccount user
     ) {
+        Objects.requireNonNull(file, "file");
+        Objects.requireNonNull(lobbyCode, "lobbyCode");
+        Objects.requireNonNull(user, "user");
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("File is empty.");
         }
@@ -126,42 +114,12 @@ public class GameUploadController {
         }
 
         try {
-            Path storageRoot = storageDir.toAbsolutePath().normalize();
-            Files.createDirectories(storageRoot);
-            Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
-            if (!lobbyDir.startsWith(storageRoot)) {
-                return ResponseEntity.badRequest().body("Invalid lobby code.");
-            }
-            Files.createDirectories(lobbyDir);
-
-            boolean manifestFound = false;
-            try (ZipInputStream zip = new ZipInputStream(file.getInputStream())) {
-                ZipEntry entry;
-                while ((entry = zip.getNextEntry()) != null) {
-                    Path destination = lobbyDir.resolve(entry.getName()).normalize();
-                    if (!destination.startsWith(lobbyDir)) {
-                        throw new IllegalArgumentException("Invalid zip entry.");
-                    }
-
-                    if (entry.isDirectory()) {
-                        Files.createDirectories(destination);
-                        continue;
-                    }
-
-                    if (entry.getName().equals("manifest.xml")) {
-                        manifestFound = true;
-                    }
-
-                    Files.createDirectories(destination.getParent());
-                    Files.copy(zip, destination, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-
-            if (!manifestFound) {
+            Optional<GameDefinition> definition = lobbyGameFiles.extractUploadedGame(lobbyCode, file);
+            if (definition.isEmpty()) {
                 return ResponseEntity.badRequest().body("manifest.xml missing");
             }
 
-            lobby.loadGame(GameDefinitionLoader.parse(lobbyDir));
+            lobby.loadGame(definition.orElseThrow());
             logger.info("[{}] {} uploaded game \"{}\".", lobbyCode, hostUsername, originalFilename);
             lobbyEventService.hostUploadedGame(lobbyCode, hostUsername, originalFilename);
             return ResponseEntity.ok("Game uploaded successfully.");

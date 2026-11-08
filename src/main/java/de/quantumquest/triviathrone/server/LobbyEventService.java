@@ -5,12 +5,14 @@ import de.quantumquest.triviathrone.dto.lobby.LobbyHostUploadMessage;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class LobbyEventService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public LobbyEventService(SimpMessagingTemplate simpMessagingTemplate) {
-        this.messagingTemplate = simpMessagingTemplate;
+        this.messagingTemplate = Objects.requireNonNull(simpMessagingTemplate, "messagingTemplate");
     }
 
     public void userJoined(String lobbyCode, String lobbyHost, String username) {

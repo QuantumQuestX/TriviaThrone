@@ -1,0 +1,10 @@
+<!ELEMENT users (user*)>
+<!ATTLIST users
+    xmlns:xsi CDATA #FIXED "http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation CDATA #REQUIRED>
+<!ELEMENT user (username, displayName?, passwordHash?, roles?)>
+<!ELEMENT username (#PCDATA)>
+<!ELEMENT displayName (#PCDATA)>
+<!ELEMENT passwordHash (#PCDATA)>
+<!ELEMENT roles (role*)>
+<!ELEMENT role (#PCDATA)>

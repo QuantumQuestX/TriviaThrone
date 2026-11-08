@@ -16,7 +16,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
+import java.util.Objects;
 
 @Component
 public class JwtChannelInterceptor implements ChannelInterceptor {
@@ -24,8 +24,8 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
     private final UserConfigLoader userConfigLoader;
 
     public JwtChannelInterceptor(TokenService tokenService, UserConfigLoader userConfigLoader) {
-        this.tokenService = tokenService;
-        this.userConfigLoader = userConfigLoader;
+        this.tokenService = Objects.requireNonNull(tokenService, "tokenService");
+        this.userConfigLoader = Objects.requireNonNull(userConfigLoader, "userConfigLoader");
     }
 
     @Override

@@ -22,7 +22,7 @@ export class QuestionManager {
             mediaLoadPromise = this.mediaController.setMedia(question.mediaType, question.mediaUrl);
         }
 
-        if (question.multipleChoice && question.choices?.length) {
+        if (question.choices?.length) {
             this.renderChoices(question.choices);
         }
         return mediaLoadPromise;
@@ -40,10 +40,10 @@ export class QuestionManager {
         this.choicesContainer.classList.remove("hidden");
         this.choicesContainer.innerHTML = "";
 
-        choices.slice(0, 4).forEach(choiceText => {
+        choices.slice(0, 4).forEach((choiceText, index) => {
             const choiceEl = document.createElement("div");
-            choiceEl.className = "question-choice closed";
-            choiceEl.textContent = choiceText;
+            choiceEl.className = "question-choice";
+            choiceEl.textContent = `${String.fromCharCode(65 + index)}. ${choiceText}`;
             this.choicesContainer.appendChild(choiceEl);
         });
     }

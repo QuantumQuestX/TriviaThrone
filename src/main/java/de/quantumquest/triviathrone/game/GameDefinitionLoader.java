@@ -92,11 +92,22 @@ public final class GameDefinitionLoader {
                     }
 
                     String prompt = getTextContent(questionElement, "prompt");
+                    ParsedChoices parsedChoices = getChoices(questionElement);
+                    if ("mcq".equals(questionElement.getAttribute("type")) && parsedChoices.choices().isEmpty()) {
+                        throw new IllegalArgumentException("Multiple-choice questions must have answer choices");
+                    }
 
                     String mediaPath = getMediaPath(questionElement, resourcePaths);
                     MediaType mediaType = detectMediaType(lobbyDir, mediaPath);
 
-                    matrix[category][row] = new QuestionDefinition(points, prompt, mediaPath, mediaType);
+                    matrix[category][row] = new QuestionDefinition(
+                            points,
+                            prompt,
+                            mediaPath,
+                            mediaType,
+                            parsedChoices.choices(),
+                            parsedChoices.correctChoiceIndex()
+                    );
                 }
 
                 List<Category> categories = new ArrayList<>();
@@ -160,6 +171,53 @@ public final class GameDefinitionLoader {
             throw new IllegalArgumentException("Question references an unknown media resource");
         }
         return mediaPath;
+    }
+
+    private static ParsedChoices getChoices(Element question) {
+        NodeList optionsNodes = question.getElementsByTagName("options");
+        if (optionsNodes.getLength() == 0) {
+            return new ParsedChoices(List.of(), null);
+        }
+        if (optionsNodes.getLength() != 1) {
+            throw new IllegalArgumentException("Question must have at most one options element");
+        }
+
+        NodeList optionNodes = ((Element) optionsNodes.item(0)).getElementsByTagName("option");
+        if (optionNodes.getLength() < 2 || optionNodes.getLength() > 4) {
+            throw new IllegalArgumentException("Multiple-choice questions must have between two and four choices");
+        }
+
+        List<String> choices = new ArrayList<>();
+        Integer correctChoiceIndex = null;
+        for (int index = 0; index < optionNodes.getLength(); index++) {
+            Element option = (Element) optionNodes.item(index);
+            String text = option.getTextContent().trim();
+            if (text.isBlank()) {
+                throw new IllegalArgumentException("Multiple-choice choices cannot be empty");
+            }
+
+            String correctAttribute = option.getAttribute("correct");
+            if (!correctAttribute.isBlank()
+                    && !"true".equals(correctAttribute)
+                    && !"false".equals(correctAttribute)) {
+                throw new IllegalArgumentException("Multiple-choice correct attribute must be true or false");
+            }
+            if ("true".equals(correctAttribute)) {
+                if (correctChoiceIndex != null) {
+                    throw new IllegalArgumentException("Multiple-choice questions must have exactly one correct choice");
+                }
+                correctChoiceIndex = index;
+            }
+            choices.add(text);
+        }
+
+        if (correctChoiceIndex == null) {
+            throw new IllegalArgumentException("Multiple-choice questions must have exactly one correct choice");
+        }
+        return new ParsedChoices(choices, correctChoiceIndex);
+    }
+
+    private record ParsedChoices(List<String> choices, Integer correctChoiceIndex) {
     }
 
     private static MediaType detectMediaType(Path lobbyDir, String mediaPath) throws IOException {

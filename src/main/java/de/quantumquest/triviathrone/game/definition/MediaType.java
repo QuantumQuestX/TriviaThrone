@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public enum MediaType {
     AUDIO,
@@ -14,6 +15,7 @@ public enum MediaType {
     UNDEFINED;
 
     public static MediaType detect(Path file) throws IOException {
+        Objects.requireNonNull(file, "file");
         if (!Files.isRegularFile(file)) {
             return UNDEFINED;
         }

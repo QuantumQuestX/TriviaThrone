@@ -1,4 +1,5 @@
-users.yml
+users.xml
+users.xml.tmp
 refresh-tokens.xml
 refresh-tokens.xml.tmp
 upload/

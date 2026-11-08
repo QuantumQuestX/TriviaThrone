@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Service
@@ -20,7 +21,7 @@ public class GameEventService {
     private final SimpMessagingTemplate messagingTemplate;
 
     public GameEventService(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+        this.messagingTemplate = Objects.requireNonNull(messagingTemplate, "messagingTemplate");
     }
 
     public void broadcastState(String lobbyCode, GameSession session) {

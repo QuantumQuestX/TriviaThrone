@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.game.definition;
 
 import java.util.List;
+import java.util.Objects;
 
 public record QuestionDefinition(
         int points,
@@ -11,6 +12,8 @@ public record QuestionDefinition(
         Integer correctChoiceIndex
 ) {
     public QuestionDefinition {
+        Objects.requireNonNull(prompt, "prompt");
+        Objects.requireNonNull(mediaType, "mediaType");
         choices = choices == null ? List.of() : List.copyOf(choices);
         if (choices.isEmpty() != (correctChoiceIndex == null)
                 || correctChoiceIndex != null

@@ -3,6 +3,7 @@ package de.quantumquest.triviathrone.server;
 import de.quantumquest.triviathrone.game.GameDefinition;
 import de.quantumquest.triviathrone.game.GameSession;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -16,18 +17,18 @@ public class Lobby {
     private volatile GameSession gameSession;
 
     public Lobby(String code, String name, String hostUser) {
-        this.code = code;
-        this.name = name;
-        this.hostUser = hostUser;
-        addUser(hostUser);
+        this.code = Objects.requireNonNull(code, "code");
+        this.name = Objects.requireNonNull(name, "name");
+        this.hostUser = Objects.requireNonNull(hostUser, "hostUser");
+        users.add(hostUser);
     }
 
     public void addUser(String username) {
-        users.add(username);
+        users.add(Objects.requireNonNull(username, "username"));
     }
 
     public void removeUser(String username) {
-        users.remove(username);
+        users.remove(Objects.requireNonNull(username, "username"));
     }
 
     public String getLobbyCode() {
@@ -47,9 +48,7 @@ public class Lobby {
     }
 
     public synchronized void loadGame(GameDefinition definition) {
-        if (definition == null)
-            throw new IllegalArgumentException("GameDefinition cannot be null");
-
+        Objects.requireNonNull(definition, "definition");
         if (gameSession != null) gameSession.close();
         this.gameDefinition = definition;
         this.gameSession = null;

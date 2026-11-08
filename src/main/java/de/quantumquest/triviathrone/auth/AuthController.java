@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,8 +26,8 @@ public class AuthController {
     private final AuthProperties properties;
 
     public AuthController(AuthService auth, AuthProperties properties) {
-        this.auth = auth;
-        this.properties = properties;
+        this.auth = Objects.requireNonNull(auth, "auth");
+        this.properties = Objects.requireNonNull(properties, "properties");
     }
 
     @PostMapping("/login")
@@ -35,7 +36,8 @@ public class AuthController {
             @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
             HttpServletResponse response
     ) {
-        AuthService.Session session = auth.authenticate(request.username(), request.password());
+        LoginRequest loginRequest = Objects.requireNonNull(request, "request");
+        AuthService.Session session = auth.authenticate(loginRequest.username(), loginRequest.password());
         auth.logout(refreshToken);
         return writeSession(session, response);
     }
@@ -65,6 +67,7 @@ public class AuthController {
 
     @PostMapping("/change-password")
     public void changePassword(@RequestBody ChangePasswordRequest request, Authentication authentication) {
+        ChangePasswordRequest passwordRequest = Objects.requireNonNull(request, "request");
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
@@ -75,8 +78,8 @@ public class AuthController {
 
         auth.changePassword(
                 user.getUsername(),
-                request.oldPassword(),
-                request.newPassword()
+                passwordRequest.oldPassword(),
+                passwordRequest.newPassword()
         );
     }
 

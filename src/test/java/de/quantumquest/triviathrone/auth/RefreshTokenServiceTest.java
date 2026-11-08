@@ -7,10 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -34,7 +31,8 @@ class RefreshTokenServiceTest {
         RefreshTokenService.IssuedToken issuedToken = firstInstance.issue("player");
 
         String persistedData = Files.readString(sessionFile);
-        assertTrue(persistedData.contains("<refreshSessions>"));
+        assertTrue(persistedData.contains("<!DOCTYPE refreshSessions SYSTEM \"refresh-tokens.dtd\">"));
+        assertTrue(persistedData.contains("noNamespaceSchemaLocation=\"refresh-tokens.xsd\""));
         assertFalse(persistedData.contains(issuedToken.value()));
 
         RefreshTokenService restartedInstance = newService();
@@ -56,29 +54,50 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void migratesExistingJsonRefreshSessionsToXml() throws Exception {
-        String legacyToken = "legacy-token";
-        String tokenDigest = Base64.getUrlEncoder().withoutPadding().encodeToString(
-                MessageDigest.getInstance("SHA-256").digest(legacyToken.getBytes(StandardCharsets.UTF_8))
-        );
-        long expiry = Instant.now().plusSeconds(3600).getEpochSecond();
-        long absoluteExpiry = Instant.now().plusSeconds(7200).getEpochSecond();
+    void doesNotLoadLegacyJsonRefreshSessions() throws Exception {
         Path legacyFile = tempDir.resolve("refresh-tokens.json");
         Files.writeString(legacyFile, """
-                {"sessions":[{"tokenDigest":"%s","username":"player","expiresAtEpochSecond":%d,
-                "absoluteExpiryEpochSecond":%d}]}
-                """.formatted(tokenDigest, expiry, absoluteExpiry));
+                {"sessions":[]}
+                """);
 
         RefreshTokenService restartedInstance = newService();
 
-        assertEquals("player", restartedInstance.rotate(legacyToken).username());
-        assertFalse(Files.exists(legacyFile));
-        assertTrue(Files.exists(sessionFile));
+        assertThrows(ResponseStatusException.class, () -> restartedInstance.rotate("legacy-token"));
+        assertTrue(Files.exists(legacyFile));
+    }
+
+    @Test
+    void rejectsRefreshXmlWithoutValidationDeclarations() throws Exception {
+        long expiry = Instant.now().plusSeconds(3600).getEpochSecond();
+        long absoluteExpiry = Instant.now().plusSeconds(7200).getEpochSecond();
+        Files.writeString(sessionFile, """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <refreshSessions>
+                    <session tokenDigest="digest" username="player" expiresAtEpochSecond="%d"
+                             absoluteExpiryEpochSecond="%d"/>
+                </refreshSessions>
+                """.formatted(expiry, absoluteExpiry));
+
+        assertThrows(IllegalStateException.class, this::newService);
+    }
+
+    @Test
+    void rejectsRefreshXmlThatDoesNotMatchItsSchemas() throws Exception {
+        Files.writeString(sessionFile, """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!DOCTYPE refreshSessions SYSTEM "refresh-tokens.dtd">
+                <refreshSessions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                 xsi:noNamespaceSchemaLocation="refresh-tokens.xsd">
+                    <session tokenDigest="digest" expiresAtEpochSecond="123" absoluteExpiryEpochSecond="456"/>
+                </refreshSessions>
+                """);
+
+        assertThrows(IllegalStateException.class, this::newService);
     }
 
     private RefreshTokenService newService() {
         AuthProperties properties = new AuthProperties(
-                tempDir.resolve("users.yml"),
+                tempDir.resolve("users.xml"),
                 sessionFile,
                 "01234567890123456789012345678901",
                 900,

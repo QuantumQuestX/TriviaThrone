@@ -10,6 +10,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 
 @Service
 public class TokenService {
@@ -18,11 +19,13 @@ public class TokenService {
     private final long validitySeconds;
 
     public TokenService(AuthProperties props) {
-        this.key = Keys.hmacShaKeyFor(props.jwtSecret().getBytes(StandardCharsets.UTF_8));
-        this.validitySeconds = props.tokenValiditySeconds();
+        AuthProperties properties = Objects.requireNonNull(props, "props");
+        this.key = Keys.hmacShaKeyFor(properties.jwtSecret().getBytes(StandardCharsets.UTF_8));
+        this.validitySeconds = properties.tokenValiditySeconds();
     }
 
     public String issueToken(UserAccount user) {
+        Objects.requireNonNull(user, "user");
         Instant now = Instant.now();
 
         return Jwts.builder()
@@ -35,6 +38,7 @@ public class TokenService {
     }
 
     public Jws<Claims> parse(String token) {
+        Objects.requireNonNull(token, "token");
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

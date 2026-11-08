@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -24,7 +25,7 @@ public class LobbyController {
     private final LobbyService lobbyService;
 
     public LobbyController(LobbyService lobbyService) {
-        this.lobbyService = lobbyService;
+        this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
     }
 
     @GetMapping

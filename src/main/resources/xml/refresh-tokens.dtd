@@ -1,0 +1,10 @@
+<!ELEMENT refreshSessions (session*)>
+<!ATTLIST refreshSessions
+    xmlns:xsi CDATA #FIXED "http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation CDATA #REQUIRED>
+<!ELEMENT session EMPTY>
+<!ATTLIST session
+    tokenDigest CDATA #REQUIRED
+    username CDATA #REQUIRED
+    expiresAtEpochSecond CDATA #REQUIRED
+    absoluteExpiryEpochSecond CDATA #REQUIRED>

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.Objects;
 
 @Service
 public class AuthService {
@@ -20,10 +21,10 @@ public class AuthService {
             RefreshTokenService refreshTokens,
             PasswordEncoder encoder
     ) {
-        this.users = users;
-        this.tokens = tokens;
-        this.refreshTokens = refreshTokens;
-        this.encoder = encoder;
+        this.users = Objects.requireNonNull(users, "users");
+        this.tokens = Objects.requireNonNull(tokens, "tokens");
+        this.refreshTokens = Objects.requireNonNull(refreshTokens, "refreshTokens");
+        this.encoder = Objects.requireNonNull(encoder, "encoder");
     }
 
     public void changePassword(String username, String oldPassword, String newPassword) {
@@ -75,5 +76,10 @@ public class AuthService {
     }
 
     public record Session(String accessToken, String refreshToken, long expiresIn, Instant refreshExpiresAt) {
+        public Session {
+            Objects.requireNonNull(accessToken, "accessToken");
+            Objects.requireNonNull(refreshToken, "refreshToken");
+            Objects.requireNonNull(refreshExpiresAt, "refreshExpiresAt");
+        }
     }
 }

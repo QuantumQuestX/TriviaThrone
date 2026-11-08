@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class RefreshTokenService {
@@ -24,16 +25,15 @@ public class RefreshTokenService {
     private final long maxSessionSeconds;
 
     public RefreshTokenService(AuthProperties properties, RefreshTokenSessionStore sessionStore) {
-        this.sessionStore = sessionStore;
+        Objects.requireNonNull(properties, "properties");
+        this.sessionStore = Objects.requireNonNull(sessionStore, "sessionStore");
         this.validitySeconds = properties.refreshTokenValiditySeconds();
         this.maxSessionSeconds = properties.refreshSessionMaxSeconds();
-        if (validitySeconds <= 0 || maxSessionSeconds <= 0) {
-            throw new IllegalArgumentException("Refresh token lifetimes must be positive.");
-        }
         this.sessions = new HashMap<>(sessionStore.load());
     }
 
     public synchronized IssuedToken issue(String username) {
+        Objects.requireNonNull(username, "username");
         Instant now = Instant.now();
         Instant absoluteExpiry = now.plusSeconds(maxSessionSeconds);
         Instant expiry = min(now.plusSeconds(validitySeconds), absoluteExpiry);
@@ -80,6 +80,7 @@ public class RefreshTokenService {
     }
 
     public synchronized void revokeAll(String username) {
+        Objects.requireNonNull(username, "username");
         Map<String, RefreshTokenSession> updatedSessions = new HashMap<>(sessions);
         if (updatedSessions.entrySet().removeIf(entry -> entry.getValue().username().equals(username))) {
             saveAndReplace(updatedSessions);
@@ -123,5 +124,10 @@ public class RefreshTokenService {
     }
 
     public record IssuedToken(String username, String value, Instant expiresAt) {
+        public IssuedToken {
+            Objects.requireNonNull(username, "username");
+            Objects.requireNonNull(value, "value");
+            Objects.requireNonNull(expiresAt, "expiresAt");
+        }
     }
 }

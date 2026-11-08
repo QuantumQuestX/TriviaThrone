@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -23,8 +24,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserConfigLoader userConfigLoader;
 
     public JwtAuthFilter(TokenService tokens, UserConfigLoader userConfigLoader) {
-        this.tokens = tokens;
-        this.userConfigLoader = userConfigLoader;
+        this.tokens = Objects.requireNonNull(tokens, "tokens");
+        this.userConfigLoader = Objects.requireNonNull(userConfigLoader, "userConfigLoader");
     }
 
     @Override

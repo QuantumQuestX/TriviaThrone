@@ -10,7 +10,10 @@
 
 <body class="editor-page">
     <header class="site-header">
-        <h1>TriviaThrone</h1>
+        <div class="site-brand">
+            <h1>TriviaThrone</h1>
+            <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
+        </div>
         <nav>
             <p id="username-info">Logged in as: <span id="username-display"></span></p>
             <button id="save-draft-btn" class="primary-btn">Save</button>
@@ -163,6 +166,7 @@
         </main>
     </div>
 
+    <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/page-editor/index.js"></script>
 </body>
 

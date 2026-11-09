@@ -7,9 +7,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -83,5 +87,35 @@ public class LobbyGameFiles {
             return Optional.empty();
         }
         return Optional.of(realMediaFile);
+    }
+
+    public void deleteLobbyFiles(String lobbyCode) throws IOException {
+        Objects.requireNonNull(lobbyCode, "lobbyCode");
+
+        Path storageRoot = storageDir.toAbsolutePath().normalize();
+        Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
+        if (!lobbyDir.startsWith(storageRoot) || lobbyDir.equals(storageRoot)) {
+            throw new IllegalArgumentException("Invalid lobby code.");
+        }
+        if (!Files.exists(lobbyDir, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+
+        Files.walkFileTree(lobbyDir, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException exception) throws IOException {
+                if (exception != null) {
+                    throw exception;
+                }
+                Files.delete(directory);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 }

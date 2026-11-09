@@ -10,7 +10,13 @@
 </head>
 <body class="game-page">
     <header class="site-header">
-        <h1 id="game-title">TriviaThrone</h1>
+        <div class="site-brand site-brand--game">
+            <div class="site-brand-main">
+                <h1>TriviaThrone</h1>
+                <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
+            </div>
+            <p id="game-title">TriviaThrone</p>
+        </div>
         <div id="lobby-info">
             Lobby Code: <span id="lobby-code">A123</span>
         </div>
@@ -104,6 +110,7 @@
         </section>
     </main>
 
+    <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/page-game/index.js"></script>
 </body>
 </html>

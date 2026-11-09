@@ -10,7 +10,10 @@
 </head>
 <body class="lobby-page">
     <header class="site-header">
-        <h1>TriviaThrone</h1>
+        <div class="site-brand">
+            <h1>TriviaThrone</h1>
+            <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
+        </div>
         <div id="lobby-info">
             Lobby Code: <span id="lobby-code">A123</span>
         </div>
@@ -50,6 +53,7 @@
         </section>
     </main>
 
+    <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/page-lobby/index.js"></script>
 </body>
 </html>

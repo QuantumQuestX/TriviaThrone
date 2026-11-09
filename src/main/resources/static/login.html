@@ -8,7 +8,10 @@
 </head>
 <body class="login-body">
     <header class="site-header login-header">
-        <h1>TriviaThrone</h1>
+        <div class="site-brand">
+            <h1>TriviaThrone</h1>
+            <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
+        </div>
     </header>
     <main class="login-page">
         <section id="login-container" class="panel">
@@ -25,6 +28,7 @@
         </section>
     </main>
 
+    <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/page-login/index.js"></script>
 </body>
 </html>

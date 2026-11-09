@@ -34,6 +34,7 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/auth/logout",
+                                "/api/version",
                                 "/login",
                                 "/login.html",
                                 "/index.html",

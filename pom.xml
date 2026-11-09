@@ -10,7 +10,7 @@
     </parent>
     <groupId>de.quantumquest</groupId>
     <artifactId>TriviaThrone</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <name>TriviaThrone</name>
     <description>TriviaThrone</description>
     <url/>

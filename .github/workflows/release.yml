@@ -1,0 +1,324 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: versioning
+  cancel-in-progress: false
+
+jobs:
+  resolve-version:
+    name: Resolve release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      update_pom: ${{ steps.release.outputs.update_pom }}
+      commit: ${{ steps.commit.outputs.commit }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Resolve release version
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_REF_TYPE" != "branch" ]]; then
+            echo "Releases must be dispatched from a branch." >&2
+            exit 1
+          fi
+
+          current_version="$(./mvnw --batch-mode --no-transfer-progress -q \
+            -DforceStdout help:evaluate -Dexpression=project.version)"
+          snapshot_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-SNAPSHOT$'
+          release_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+
+          if [[ "$current_version" =~ $snapshot_pattern ]]; then
+            version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+            update_pom=true
+          elif [[ "$current_version" =~ $release_pattern ]]; then
+            version="$current_version"
+            update_pom=false
+          else
+            echo "Expected a semantic version like 1.2.3-SNAPSHOT, got: $current_version" >&2
+            exit 1
+          fi
+
+          tag="v$version"
+          remote_tag="$(git ls-remote --refs origin "refs/tags/$tag")"
+          if [[ "$update_pom" == "true" && -n "$remote_tag" ]]; then
+            echo "Tag $tag already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          if [[ "$update_pom" == "false" && -z "$remote_tag" ]]; then
+            echo "POM version is already released but tag $tag does not exist." >&2
+            exit 1
+          fi
+
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "update_pom=$update_pom"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Record source commit
+        id: commit
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: Run test suites
+    needs: resolve-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-version.outputs.commit }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set release version in POM
+        if: needs.resolve-version.outputs.update_pom == 'true'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./mvnw --batch-mode --no-transfer-progress \
+            org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
+            -DnewVersion="$RELEASE_VERSION" \
+            -DgenerateBackupPoms=false \
+            -DprocessParent=false \
+            -DprocessDependencies=false \
+            -DprocessPlugins=false
+
+      - name: Run Maven tests
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Run frontend tests
+        run: npm test
+
+  package:
+    name: Package ${{ matrix.platform }}
+    needs:
+      - resolve-version
+      - test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: windows
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-version.outputs.commit }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Set release version in POM
+        if: needs.resolve-version.outputs.update_pom == 'true'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./mvnw --batch-mode --no-transfer-progress \
+            org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
+            -DnewVersion="$RELEASE_VERSION" \
+            -DgenerateBackupPoms=false \
+            -DprocessParent=false \
+            -DprocessDependencies=false \
+            -DprocessPlugins=false
+
+      - name: Build server JAR
+        if: matrix.platform == 'linux'
+        run: ./mvnw --batch-mode --no-transfer-progress clean package -DskipTests
+
+      - name: Build server JAR
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          .\mvnw.cmd --batch-mode --no-transfer-progress clean package -DskipTests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Create Linux executable image
+        if: matrix.platform == 'linux'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-input
+          cp "target/TriviaThrone-${RELEASE_VERSION}.jar" release-input/TriviaThrone.jar
+
+          jpackage \
+            --type app-image \
+            --name TriviaThrone \
+            --app-version "$RELEASE_VERSION" \
+            --input release-input \
+            --dest release-output \
+            --main-jar TriviaThrone.jar \
+            --vendor QuantumQuestX \
+            --description "TriviaThrone game server"
+
+          install -m 755 packaging/run-linux.sh release-output/TriviaThrone/run.sh
+          cp "target/TriviaThrone-${RELEASE_VERSION}.jar" .
+          (cd target && sha256sum "TriviaThrone-${RELEASE_VERSION}.jar") \
+            > "TriviaThrone-${RELEASE_VERSION}.jar.sha256"
+          (cd release-output && zip -qr \
+            "$GITHUB_WORKSPACE/TriviaThrone-${RELEASE_VERSION}-linux.zip" \
+            TriviaThrone)
+
+      - name: Create Windows executable image
+        if: matrix.platform == 'windows'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release-input | Out-Null
+          $releaseJar = "target/TriviaThrone-$($env:RELEASE_VERSION).jar"
+          Copy-Item $releaseJar release-input/TriviaThrone.jar
+
+          jpackage `
+            --type app-image `
+            --name TriviaThrone `
+            --app-version $env:RELEASE_VERSION `
+            --input release-input `
+            --dest release-output `
+            --main-jar TriviaThrone.jar `
+            --vendor QuantumQuestX `
+            --description "TriviaThrone game server"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          Copy-Item packaging/run-windows.ps1 release-output/TriviaThrone/run.ps1
+          Copy-Item packaging/run-windows.bat release-output/TriviaThrone/run.bat
+          Compress-Archive `
+            -Path release-output/TriviaThrone `
+            -DestinationPath "TriviaThrone-$env:RELEASE_VERSION-windows.zip"
+
+      - name: Upload Linux release assets
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TriviaThrone-${{ needs.resolve-version.outputs.version }}-linux
+          path: |
+            TriviaThrone-${{ needs.resolve-version.outputs.version }}.jar
+            TriviaThrone-${{ needs.resolve-version.outputs.version }}.jar.sha256
+            TriviaThrone-${{ needs.resolve-version.outputs.version }}-linux.zip
+          if-no-files-found: error
+
+      - name: Upload Windows release assets
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TriviaThrone-${{ needs.resolve-version.outputs.version }}-windows
+          path: TriviaThrone-${{ needs.resolve-version.outputs.version }}-windows.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub release
+    needs:
+      - resolve-version
+      - package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-version.outputs.commit }}
+          fetch-depth: 0
+
+      - name: Set up Java
+        if: needs.resolve-version.outputs.update_pom == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Commit and tag release
+        if: needs.resolve-version.outputs.update_pom == 'true'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+          RELEASE_TAG: ${{ needs.resolve-version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./mvnw --batch-mode --no-transfer-progress \
+            org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
+            -DnewVersion="$RELEASE_VERSION" \
+            -DgenerateBackupPoms=false \
+            -DprocessParent=false \
+            -DprocessDependencies=false \
+            -DprocessPlugins=false
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- pom.xml
+          if git diff --cached --quiet; then
+            echo "No POM version change to commit." >&2
+            exit 1
+          fi
+          git commit -m "Release TriviaThrone $RELEASE_VERSION"
+          git tag --annotate "$RELEASE_TAG" --message "TriviaThrone $RELEASE_VERSION"
+          git push --atomic origin \
+            "HEAD:${GITHUB_REF_NAME}" \
+            "refs/tags/${RELEASE_TAG}"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+          RELEASE_TAG: ${{ needs.resolve-version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* \
+              --verify-tag \
+              --title "TriviaThrone $RELEASE_VERSION" \
+              --generate-notes
+          fi

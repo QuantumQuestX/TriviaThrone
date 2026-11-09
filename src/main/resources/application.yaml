@@ -12,4 +12,4 @@ auth:
   refresh-session-max-seconds: 2592000
   # Enable when serving the application over HTTPS.
   refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:false}
-  initialPassword: testPassword#123
+  initialPassword: ${AUTH_INITIAL_PASSWORD:}

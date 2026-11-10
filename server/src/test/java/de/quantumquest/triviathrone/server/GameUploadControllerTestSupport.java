@@ -1,17 +1,15 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
-import de.quantumquest.triviathrone.game.GameDefinition;
-import de.quantumquest.triviathrone.game.definition.Category;
-import de.quantumquest.triviathrone.game.definition.MediaType;
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
-import de.quantumquest.triviathrone.game.definition.Round;
+import de.quantumquest.triviathrone.api.game.IGameDefinition;
+import de.quantumquest.triviathrone.api.game.IGameProvider;
+import de.quantumquest.triviathrone.api.game.IGameSession;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -32,7 +30,9 @@ final class GameUploadControllerTestSupport {
         GameUploadController controller = new GameUploadController(
                 lobbyService,
                 lobbyEventService,
-                new LobbyGameFiles(storageDir.toString())
+                new LobbyGameFiles(storageDir.toString(), new GameProviderRegistry(
+                        java.util.List.of(uploadedGameProvider())
+                ))
         );
         Lobby lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");
         lobby.addUser("player");
@@ -40,25 +40,76 @@ final class GameUploadControllerTestSupport {
         return new Fixture(lobbyEventService, controller, lobby, storageDir);
     }
 
-    static GameDefinition definition(String mediaPath) {
-        return new GameDefinition(
-                "Test game",
-                "Description",
-                List.of(new Round("Round 1", List.of(
-                        new Category("Category", List.of(new QuestionDefinition(
-                                100,
-                                "Prompt",
-                                mediaPath,
-                                MediaType.UNDEFINED
-                        )))
-                )))
-        );
+    static IGameDefinition definition(String mediaPath) {
+        return new IGameDefinition() {
+            @Override
+            public String gameType() {
+                return "test";
+            }
+
+            @Override
+            public String title() {
+                return "Test game";
+            }
+
+            @Override
+            public boolean referencesMedia(String requestedPath) {
+                return mediaPath.equals(requestedPath);
+            }
+
+            @Override
+            public IGameSession createSession(String lobbyCode, java.util.Set<String> players) {
+                throw new UnsupportedOperationException("Test definition does not create sessions");
+            }
+        };
     }
 
     static UserAccount user(String username) {
         UserAccount user = new UserAccount();
         user.setUsername(username);
         return user;
+    }
+
+    private static IGameProvider uploadedGameProvider() {
+        return new IGameProvider() {
+            @Override
+            public String gameType() {
+                return "jeopardy";
+            }
+
+            @Override
+            public boolean supportsFile(String filename) {
+                return filename != null && filename.endsWith(".game.throne");
+            }
+
+            @Override
+            public Optional<IGameDefinition> load(Path gameDirectory) throws IOException {
+                if (!Files.isRegularFile(gameDirectory.resolve("manifest.xml"))) {
+                    return Optional.empty();
+                }
+                return Optional.of(new IGameDefinition() {
+                    @Override
+                    public String gameType() {
+                        return "jeopardy";
+                    }
+
+                    @Override
+                    public String title() {
+                        return "Uploaded game";
+                    }
+
+                    @Override
+                    public boolean referencesMedia(String mediaPath) {
+                        return "resources/clue.txt".equals(mediaPath);
+                    }
+
+                    @Override
+                    public IGameSession createSession(String lobbyCode, java.util.Set<String> players) {
+                        throw new UnsupportedOperationException("Test definition does not create sessions");
+                    }
+                });
+            }
+        };
     }
 
     static byte[] gameArchive() throws IOException {

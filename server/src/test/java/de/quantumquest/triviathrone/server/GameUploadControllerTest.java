@@ -44,7 +44,8 @@ class GameUploadControllerTest {
         assertTrue(Files.isRegularFile(
                 fixture.storageDir().resolve(LOBBY_CODE).resolve("resources/clue.txt")
         ));
-        assertFalse(fixture.lobby().getGameDefinition().rounds().isEmpty());
+        assertEquals("jeopardy", fixture.lobby().getGameDefinition().gameType());
+        assertEquals("Uploaded game", fixture.lobby().getGameDefinition().title());
         verify(fixture.lobbyEventService()).hostUploadedGame(
                 LOBBY_CODE,
                 "host",

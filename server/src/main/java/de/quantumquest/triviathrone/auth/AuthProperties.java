@@ -7,7 +7,7 @@ import java.util.Objects;
 
 @ConfigurationProperties(prefix = "auth")
 public record AuthProperties(
-        Path userFile,
+        Path userMigrationFile,
         Path refreshTokenFile,
         String jwtSecret,
         long tokenValiditySeconds,
@@ -17,7 +17,7 @@ public record AuthProperties(
         String initialPassword
 ) {
     public AuthProperties {
-        Objects.requireNonNull(userFile, "userFile");
+        Objects.requireNonNull(userMigrationFile, "userMigrationFile");
         Objects.requireNonNull(refreshTokenFile, "refreshTokenFile");
         String signingSecret = Objects.requireNonNull(jwtSecret, "jwtSecret");
         if (signingSecret.isBlank()) {

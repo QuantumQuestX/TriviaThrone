@@ -1,7 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
-import de.quantumquest.triviathrone.game.GameDefinition;
-import de.quantumquest.triviathrone.game.GameSession;
+import de.quantumquest.triviathrone.api.game.IGameDefinition;
+import de.quantumquest.triviathrone.api.game.IGameSession;
 
 import java.util.Objects;
 import java.util.Set;
@@ -13,8 +13,8 @@ public class Lobby {
     private final String hostUser;
     private final Set<String> users = new ConcurrentSkipListSet<>();
 
-    private volatile GameDefinition gameDefinition;
-    private volatile GameSession gameSession;
+    private volatile IGameDefinition gameDefinition;
+    private volatile IGameSession gameSession;
 
     public Lobby(String code, String name, String hostUser) {
         this.code = Objects.requireNonNull(code, "code");
@@ -47,7 +47,7 @@ public class Lobby {
         return Set.copyOf(users);
     }
 
-    public synchronized void loadGame(GameDefinition definition) {
+    public synchronized void loadGame(IGameDefinition definition) {
         Objects.requireNonNull(definition, "definition");
         if (gameSession != null) gameSession.close();
         this.gameDefinition = definition;
@@ -63,7 +63,7 @@ public class Lobby {
             throw new IllegalStateException("Game already started");
         }
 
-        this.gameSession = new GameSession(this, gameDefinition);
+        this.gameSession = gameDefinition.createSession(code, listUsernames());
     }
 
     public synchronized void endGame() {
@@ -79,11 +79,11 @@ public class Lobby {
         return gameDefinition != null;
     }
 
-    public GameDefinition getGameDefinition() {
+    public IGameDefinition getGameDefinition() {
         return gameDefinition;
     }
 
-    public GameSession getGameSession() {
+    public IGameSession getGameSession() {
         return gameSession;
     }
 }

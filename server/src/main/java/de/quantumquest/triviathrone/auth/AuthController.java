@@ -97,7 +97,7 @@ public class AuthController {
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         setNoStore(response);
-        return new TokenResponse(session.accessToken(), session.expiresIn());
+        return new TokenResponse(session.accessToken(), session.expiresIn(), session.userId());
     }
 
     private void clearRefreshCookie(HttpServletResponse response) {

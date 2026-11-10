@@ -1,8 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.auth.UserAccount;
-import de.quantumquest.triviathrone.game.GameDefinition;
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.api.game.IGameDefinition;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -61,12 +59,8 @@ public class GameUploadController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        GameDefinition definition = lobby.getGameDefinition();
-        boolean referencedByGame = definition != null && definition.rounds().stream()
-                .flatMap(round -> round.categories().stream())
-                .flatMap(category -> category.questions().stream())
-                .map(QuestionDefinition::mediaPath)
-                .anyMatch(path -> Objects.equals(path, mediaPath));
+        IGameDefinition definition = lobby.getGameDefinition();
+        boolean referencedByGame = definition != null && definition.referencesMedia(mediaPath);
         if (!referencedByGame) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
@@ -98,8 +92,7 @@ public class GameUploadController {
         }
 
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null
-                || !originalFilename.toLowerCase(Locale.ROOT).endsWith(".game.throne")) {
+        if (originalFilename == null || !lobbyGameFiles.supportsGameFile(originalFilename)) {
             return ResponseEntity.badRequest().body("Invalid file type.");
         }
 
@@ -114,9 +107,10 @@ public class GameUploadController {
         }
 
         try {
-            Optional<GameDefinition> definition = lobbyGameFiles.extractUploadedGame(lobbyCode, file);
+            Optional<IGameDefinition> definition =
+                    lobbyGameFiles.extractUploadedGame(lobbyCode, originalFilename, file);
             if (definition.isEmpty()) {
-                return ResponseEntity.badRequest().body("manifest.xml missing");
+                return ResponseEntity.badRequest().body("Game definition missing.");
             }
 
             lobby.loadGame(definition.orElseThrow());

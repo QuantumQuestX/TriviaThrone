@@ -2,6 +2,7 @@ users.xml
 users.xml.tmp
 refresh-tokens.xml
 refresh-tokens.xml.tmp
+/triviathrone-users.*.db
 upload/
 
 image.jpeg

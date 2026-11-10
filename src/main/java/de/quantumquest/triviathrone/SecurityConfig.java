@@ -35,6 +35,7 @@ public class SecurityConfig {
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/api/version",
+                                "/api/developers",
                                 "/login",
                                 "/login.html",
                                 "/index.html",

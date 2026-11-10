@@ -18,7 +18,26 @@
         <license/>
     </licenses>
     <developers>
-        <developer/>
+        <developer>
+            <name>TiJ</name>
+            <roles>
+                <role>MAINTAINER</role>
+                <role>CONTRIBUTOR</role>
+            </roles>
+            <organization>QuantumQuest</organization>
+            <organizationUrl>https://github.com/QuantumQuestX</organizationUrl>
+            <url>https://github.com/TiJ-code</url>
+        </developer>
+        <developer>
+            <name>reallukeplayer</name>
+            <roles>
+                <role>MAINTAINER</role>
+                <role>CONTRIBUTOR</role>
+            </roles>
+            <organization>QuantumQuest</organization>
+            <organizationUrl>https://github.com/QuantumQuestX</organizationUrl>
+            <url>https://github.com/reallukeplayer</url>
+        </developer>
     </developers>
     <scm>
         <connection/>
@@ -106,6 +125,37 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-developers-metadata</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <arguments>
+                                <argument>${project.basedir}/build-tools/GenerateProjectDevelopers.java</argument>
+                                <argument>${project.basedir}/pom.xml</argument>
+                                <argument>${project.build.outputDirectory}/project-metadata/developers.xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

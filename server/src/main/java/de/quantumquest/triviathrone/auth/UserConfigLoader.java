@@ -4,7 +4,7 @@ import de.quantumquest.triviathrone.dto.UserFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,17 +12,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class UserConfigLoader {
     private final Map<String, UserAccount> users = new ConcurrentHashMap<>();
-    private final UserConfigFileStore userFileStore;
+    private final UserXmlMigrationImporter xmlMigrationImporter;
+    private final IUserAccountRepository accountDatabase;
     private final String initialPassword;
     private final PasswordEncoder passwordEncoder;
 
     public UserConfigLoader(
             AuthProperties props,
             PasswordEncoder passwordEncoder,
-            UserConfigFileStore userFileStore
+            UserXmlMigrationImporter xmlMigrationImporter,
+            IUserAccountRepository accountDatabase
     ) {
         AuthProperties properties = Objects.requireNonNull(props, "props");
-        this.userFileStore = Objects.requireNonNull(userFileStore, "userFileStore");
+        this.xmlMigrationImporter = Objects.requireNonNull(xmlMigrationImporter, "xmlMigrationImporter");
+        this.accountDatabase = Objects.requireNonNull(accountDatabase, "accountDatabase");
         this.initialPassword = properties.initialPassword();
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");
 
@@ -30,31 +33,34 @@ public class UserConfigLoader {
     }
 
     private void load() {
-        UserFile data = userFileStore.load();
-        if (data.getUsers() == null) {
-            throw new IllegalStateException("Users file is empty or malformed");
+        List<UserAccount> accounts = accountDatabase.findAll();
+        boolean importXml = accounts.isEmpty();
+        if (importXml) {
+            UserFile migrationData = xmlMigrationImporter.load();
+            if (migrationData.getUsers() == null || migrationData.getUsers().isEmpty()) {
+                throw new IllegalStateException("User XML migration file is empty or malformed");
+            }
+            accounts = migrationData.getUsers();
         }
 
-        users.clear();
-        boolean modified = false;
-        for (UserAccount user : data.getUsers()) {
+        for (UserAccount user : accounts) {
             if (user == null || user.getUsername() == null || user.getUsername().isBlank()) {
-                throw new IllegalStateException("Users file contains an invalid user");
+                throw new IllegalStateException("User data contains an invalid user");
             }
             if (user.getPasswordHash() == null) {
                 if (initialPassword == null || initialPassword.isBlank()) {
                     throw new IllegalStateException(
-                            "initialPassword is missing in " + userFileStore.fileName()
+                            "initialPassword is missing for " + xmlMigrationImporter.fileName()
                     );
                 }
 
                 user.setPasswordHash(passwordEncoder.encode(initialPassword));
-                modified = true;
             }
-            users.put(user.getUsername(), user);
         }
 
-        if (modified) persist();
+        if (importXml) accountDatabase.insertAll(accounts);
+        users.clear();
+        accounts.forEach(user -> users.put(user.getUsername(), user));
     }
 
     public UserAccount findByUsername(String username) {
@@ -70,13 +76,7 @@ public class UserConfigLoader {
             throw new IllegalArgumentException("User not found");
         }
 
+        accountDatabase.updatePassword(username, newHash);
         user.setPasswordHash(newHash);
-        persist();
-    }
-
-    private void persist() {
-        UserFile data = new UserFile();
-        data.setUsers(new ArrayList<>(users.values()));
-        userFileStore.save(data);
     }
 }

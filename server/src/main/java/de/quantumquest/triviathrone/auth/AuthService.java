@@ -71,15 +71,23 @@ public class AuthService {
                 tokens.issueToken(user),
                 refreshToken.value(),
                 tokens.getValiditySeconds(),
-                refreshToken.expiresAt()
+                refreshToken.expiresAt(),
+                user.getUserId()
         );
     }
 
-    public record Session(String accessToken, String refreshToken, long expiresIn, Instant refreshExpiresAt) {
+    public record Session(
+            String accessToken,
+            String refreshToken,
+            long expiresIn,
+            Instant refreshExpiresAt,
+            String userId
+    ) {
         public Session {
             Objects.requireNonNull(accessToken, "accessToken");
             Objects.requireNonNull(refreshToken, "refreshToken");
             Objects.requireNonNull(refreshExpiresAt, "refreshExpiresAt");
+            Objects.requireNonNull(userId, "userId");
         }
     }
 }

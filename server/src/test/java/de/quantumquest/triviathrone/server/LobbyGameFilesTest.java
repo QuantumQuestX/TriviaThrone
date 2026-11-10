@@ -20,7 +20,7 @@ class LobbyGameFilesTest {
         Path outsideFile = tempDir.resolve("outside.txt");
         Files.writeString(outsideFile, "keep");
 
-        LobbyGameFiles gameFiles = new LobbyGameFiles(storageDir.toString());
+        LobbyGameFiles gameFiles = new LobbyGameFiles(storageDir.toString(), new GameProviderRegistry());
 
         assertThrows(IllegalArgumentException.class, () -> gameFiles.deleteLobbyFiles("../"));
         assertTrue(Files.exists(outsideFile));

@@ -1,7 +1,7 @@
 package de.quantumquest.triviathrone.server;
 
-import de.quantumquest.triviathrone.game.GameDefinition;
-import de.quantumquest.triviathrone.game.GameDefinitionLoader;
+import de.quantumquest.triviathrone.api.game.IGameDefinition;
+import de.quantumquest.triviathrone.api.game.IGameProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,14 +22,33 @@ import java.util.zip.ZipInputStream;
 @Component
 public class LobbyGameFiles {
     private final Path storageDir;
+    private final GameProviderRegistry gameProviders;
 
-    public LobbyGameFiles(@Value("${triviathrone.games.storage-dir:upload/games}") String storageDir) {
+    public LobbyGameFiles(
+            @Value("${triviathrone.games.storage-dir:upload/games}") String storageDir,
+            GameProviderRegistry gameProviders
+    ) {
         this.storageDir = Path.of(Objects.requireNonNull(storageDir, "storageDir"));
+        this.gameProviders = Objects.requireNonNull(gameProviders, "gameProviders");
     }
 
-    public Optional<GameDefinition> extractUploadedGame(String lobbyCode, MultipartFile file) throws IOException {
+    public boolean supportsGameFile(String filename) {
+        if (filename == null) {
+            return false;
+        }
+        return gameProviders.providerForFile(filename).isPresent();
+    }
+
+    public Optional<IGameDefinition> extractUploadedGame(
+            String lobbyCode,
+            String filename,
+            MultipartFile file
+    ) throws IOException {
         Objects.requireNonNull(lobbyCode, "lobbyCode");
+        Objects.requireNonNull(filename, "filename");
         Objects.requireNonNull(file, "file");
+        IGameProvider provider = gameProviders.providerForFile(filename)
+                .orElseThrow(() -> new IllegalArgumentException("Unsupported game file."));
 
         Path storageRoot = storageDir.toAbsolutePath().normalize();
         Files.createDirectories(storageRoot);
@@ -39,7 +58,6 @@ public class LobbyGameFiles {
         }
         Files.createDirectories(lobbyDir);
 
-        boolean manifestFound = false;
         try (ZipInputStream zip = new ZipInputStream(file.getInputStream())) {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
@@ -53,19 +71,12 @@ public class LobbyGameFiles {
                     continue;
                 }
 
-                if (entry.getName().equals("manifest.xml")) {
-                    manifestFound = true;
-                }
-
                 Files.createDirectories(destination.getParent());
                 Files.copy(zip, destination, StandardCopyOption.REPLACE_EXISTING);
             }
         }
 
-        if (!manifestFound) {
-            return Optional.empty();
-        }
-        return Optional.of(GameDefinitionLoader.parse(lobbyDir));
+        return provider.load(lobbyDir);
     }
 
     public Optional<Path> findMediaFile(String lobbyCode, String mediaPath) throws IOException {

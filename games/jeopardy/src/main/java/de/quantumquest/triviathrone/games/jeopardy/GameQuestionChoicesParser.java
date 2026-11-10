@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

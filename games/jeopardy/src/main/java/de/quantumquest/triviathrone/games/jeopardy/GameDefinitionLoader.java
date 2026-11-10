@@ -1,9 +1,9 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
-import de.quantumquest.triviathrone.game.definition.Category;
-import de.quantumquest.triviathrone.game.definition.MediaType;
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
-import de.quantumquest.triviathrone.game.definition.Round;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Category;
+import de.quantumquest.triviathrone.games.jeopardy.dto.MediaType;
+import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Round;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -23,7 +23,7 @@ public final class GameDefinitionLoader {
     private GameDefinitionLoader() {
     }
 
-    public static GameDefinition parse(Path lobbyDir) {
+    public static JeopardyDefinition parse(Path lobbyDir) {
         Objects.requireNonNull(lobbyDir, "lobbyDir");
         try {
             Path manifestXml = lobbyDir.resolve("manifest.xml");
@@ -136,7 +136,7 @@ public final class GameDefinitionLoader {
                 rounds.add(new Round(roundName, categories));
             }
 
-            return new GameDefinition(title, description, rounds);
+            return new JeopardyDefinition(title, description, rounds);
         } catch (IOException | ParserConfigurationException | SAXException e) {
             throw new IllegalStateException("Could not parse game manifest", e);
         }

@@ -1,6 +1,4 @@
-package de.quantumquest.triviathrone.dto.game;
-
-import de.quantumquest.triviathrone.game.definition.MediaType;
+package de.quantumquest.triviathrone.games.jeopardy.dto;
 
 import java.util.List;
 import java.util.Objects;

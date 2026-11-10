@@ -1,6 +1,6 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

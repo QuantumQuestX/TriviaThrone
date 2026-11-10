@@ -1,21 +1,21 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
-import de.quantumquest.triviathrone.game.definition.Category;
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
-import de.quantumquest.triviathrone.game.definition.Round;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Category;
+import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Round;
 
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class GameQuestionBoard {
-    private final GameDefinition definition;
+    private final JeopardyDefinition definition;
     private final Set<String> usedQuestions = ConcurrentHashMap.newKeySet();
     private int currentRoundIdx;
     private int currentCategoryIdx;
     private int currentQuestionIdx;
 
-    GameQuestionBoard(GameDefinition definition) {
+    GameQuestionBoard(JeopardyDefinition definition) {
         this.definition = Objects.requireNonNull(definition, "definition");
     }
 
@@ -67,7 +67,7 @@ final class GameQuestionBoard {
         return usedQuestions.size() < totalQuestions;
     }
 
-    GameDefinition definition() {
+    JeopardyDefinition definition() {
         return definition;
     }
 

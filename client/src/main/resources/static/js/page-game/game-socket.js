@@ -37,7 +37,7 @@ export function sendAction(lobbyCode, action, details = {}) {
     socket.send("/app/game/action", {
         lobbyCode,
         action,
-        ...details
+        parameters: details
     });
 }
 

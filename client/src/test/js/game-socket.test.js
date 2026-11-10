@@ -79,6 +79,7 @@ test("host media action is sent to the game action destination", async () => {
     assert.equal(sentMessages[0].destination, "/app/game/action");
     assert.deepEqual(JSON.parse(sentMessages[0].body), {
         lobbyCode: "ROOM01",
-        action: "PLAY_MEDIA"
+        action: "PLAY_MEDIA",
+        parameters: {}
     });
 });

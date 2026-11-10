@@ -2,12 +2,27 @@ package de.quantumquest.triviathrone.auth;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserAccount {
+    private static final String USER_ID_PATTERN = "[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}";
+    private String userId = UUID.randomUUID().toString().replace("-", "");
     private String username;
     private String displayName;
     private String passwordHash;
     private Set<String> roles = Set.of();
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        String id = Objects.requireNonNull(userId, "userId");
+        if (!id.matches(USER_ID_PATTERN)) {
+            throw new IllegalArgumentException("userId must be a dashless UUID v4");
+        }
+        this.userId = id;
+    }
 
     public String getUsername() {
         return username;

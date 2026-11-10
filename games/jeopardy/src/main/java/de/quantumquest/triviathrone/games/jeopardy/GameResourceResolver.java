@@ -1,10 +1,13 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
-import de.quantumquest.triviathrone.game.definition.MediaType;
+import de.quantumquest.triviathrone.games.jeopardy.dto.MediaType;
+import org.apache.tika.Tika;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +50,24 @@ final class GameResourceResolver {
         if (!mediaFile.startsWith(root)) {
             return MediaType.UNDEFINED;
         }
-        return MediaType.detect(mediaFile);
+        if (!Files.isRegularFile(mediaFile)) {
+            return MediaType.UNDEFINED;
+        }
+
+        String contentType;
+        try (InputStream content = Files.newInputStream(mediaFile)) {
+            contentType = new Tika().detect(content);
+        }
+        if (contentType.startsWith("image/")) {
+            return MediaType.IMAGE;
+        }
+        if (contentType.startsWith("audio/")) {
+            return MediaType.AUDIO;
+        }
+        if (contentType.startsWith("video/")) {
+            return MediaType.VIDEO;
+        }
+        return MediaType.UNDEFINED;
     }
 
     private static Map<String, String> readResourcePaths(Element gameElement) {

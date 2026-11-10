@@ -1,14 +1,19 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
-import de.quantumquest.triviathrone.game.definition.Category;
-import de.quantumquest.triviathrone.game.definition.MediaType;
-import de.quantumquest.triviathrone.game.definition.QuestionDefinition;
-import de.quantumquest.triviathrone.game.definition.Round;
-import de.quantumquest.triviathrone.server.Lobby;
+import de.quantumquest.triviathrone.api.game.GameActionResult;
+import de.quantumquest.triviathrone.api.game.IGameSession;
+import de.quantumquest.triviathrone.dto.game.GameActionMessage;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Category;
+import de.quantumquest.triviathrone.games.jeopardy.dto.MediaType;
+import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
+import de.quantumquest.triviathrone.games.jeopardy.definition.Round;
+import de.quantumquest.triviathrone.games.jeopardy.dto.GameState;
+import de.quantumquest.triviathrone.games.jeopardy.dto.JeopardyStateMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GameSessionTest {
-    private GameSession session;
+    private JeopardySession session;
 
     @AfterEach
     void closeSession() {
@@ -31,7 +36,7 @@ class GameSessionTest {
 
         session.playMedia();
 
-        assertEquals(GameSession.State.BUZZ_OPEN, session.getCurrentState());
+        assertEquals(GameState.BUZZ_OPEN, session.getCurrentState());
         assertNotNull(session.getMediaPlaybackToken());
         assertEquals(
                 "/api/game/ROOM01/media?path=resources%2Fclip+one.mp4",
@@ -51,13 +56,13 @@ class GameSessionTest {
         session.registerBuzz("another-player");
         session.closeBuzz();
 
-        assertEquals(GameSession.State.BUZZ_LOCKED, session.getCurrentState());
+        assertEquals(GameState.BUZZ_LOCKED, session.getCurrentState());
         assertNotNull(session.getMediaPauseToken());
         assertNotNull(playbackToken);
 
         session.resetToIdle();
 
-        assertEquals(GameSession.State.IDLE, session.getCurrentState());
+        assertEquals(GameState.IDLE, session.getCurrentState());
         assertNull(session.getMediaPlaybackToken());
         assertNull(session.getMediaPauseToken());
     }
@@ -69,7 +74,7 @@ class GameSessionTest {
 
         session.playMedia();
 
-        assertEquals(GameSession.State.QUESTION_SELECTED, session.getCurrentState());
+        assertEquals(GameState.QUESTION_SELECTED, session.getCurrentState());
         assertNull(session.getMediaPlaybackToken());
     }
 
@@ -81,7 +86,7 @@ class GameSessionTest {
 
         session.playMedia();
 
-        assertEquals(GameSession.State.BUZZ_OPEN, session.getCurrentState());
+        assertEquals(GameState.BUZZ_OPEN, session.getCurrentState());
         assertNotNull(session.getMediaPlaybackToken());
     }
 
@@ -101,8 +106,6 @@ class GameSessionTest {
 
     @Test
     void multipleChoiceAnswersAreRevealedOnlyAfterHostMarksCorrect() {
-        Lobby lobby = new Lobby("ROOM01", "Test lobby", "host");
-        lobby.addUser("player");
         QuestionDefinition question = new QuestionDefinition(
                 200,
                 "Which ocean is largest?",
@@ -111,11 +114,15 @@ class GameSessionTest {
                 List.of("Atlantic Ocean", "Pacific Ocean"),
                 1
         );
-        session = new GameSession(lobby, new GameDefinition(
-                "Test game",
-                "Description",
-                List.of(new Round("Round 1", List.of(new Category("Geography", List.of(question)))))
-        ));
+        session = new JeopardySession(
+                "ROOM01",
+                java.util.Set.of("host", "player"),
+                new JeopardyDefinition(
+                        "Test game",
+                        "Description",
+                        List.of(new Round("Round 1", List.of(new Category("Geography", List.of(question)))))
+                )
+        );
 
         session.selectQuestion(0, 0, 0);
 
@@ -131,11 +138,36 @@ class GameSessionTest {
         assertEquals(1, session.getCurrentQuestionMessage().correctChoiceIndex());
     }
 
-    private static GameSession createSession(MediaType mediaType, String mediaPath) {
-        Lobby lobby = new Lobby("ROOM01", "Test lobby", "host");
-        lobby.addUser("player");
+    @Test
+    void gameDefinitionExposesActionsAndStateThroughTheSharedGameApi() {
+        JeopardyDefinition definition = new JeopardyDefinition(
+                "Test game",
+                "Description",
+                List.of(new Round("Round 1", List.of(
+                        new Category("Category", List.of(
+                                new QuestionDefinition(100, "Prompt", null, MediaType.UNDEFINED)
+                        ))
+                )))
+        );
+        IGameSession gameSession = definition.createSession("ROOM01", java.util.Set.of("host", "player"));
+        session = (JeopardySession) gameSession;
+        GameActionMessage action = new GameActionMessage(
+                "ROOM01",
+                "SELECT_QUESTION",
+                Map.of("roundIdx", 0, "categoryIdx", 0, "questionIdx", 0)
+        );
+
+        GameActionResult result = gameSession.handleAction(action, "host", true);
+        JeopardyStateMessage state = (JeopardyStateMessage) gameSession.stateMessage();
+
+        assertTrue(result.accepted());
+        assertEquals(GameState.QUESTION_SELECTED, state.state());
+        assertEquals("jeopardy", state.gameType());
+    }
+
+    private static JeopardySession createSession(MediaType mediaType, String mediaPath) {
         QuestionDefinition question = new QuestionDefinition(100, "Prompt", mediaPath, mediaType);
-        GameDefinition definition = new GameDefinition(
+        JeopardyDefinition definition = new JeopardyDefinition(
                 "Test game",
                 "Description",
                 List.of(new Round("Round 1", List.of(
@@ -145,6 +177,6 @@ class GameSessionTest {
                         ))
                 )))
         );
-        return new GameSession(lobby, definition);
+        return new JeopardySession("ROOM01", java.util.Set.of("host", "player"), definition);
     }
 }

@@ -1,4 +1,4 @@
-package de.quantumquest.triviathrone.game;
+package de.quantumquest.triviathrone.games.jeopardy;
 
 import java.util.Map;
 import java.util.Objects;

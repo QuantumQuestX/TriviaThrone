@@ -1,20 +1,21 @@
-package de.quantumquest.triviathrone.dto.game;
+package de.quantumquest.triviathrone.games.jeopardy.dto;
 
-import de.quantumquest.triviathrone.game.GameSession;
+import de.quantumquest.triviathrone.api.game.IGameMessage;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public record GameStateMessage(String lobbyCode, GameSession.State state, String buzzWinner,
-                               Map<String, Integer> scores,
-                               Integer curRoundIdx, Integer curCatIdx, Integer curQuestionIdx,
-                               String gameTitle, List<RoundBoardMessage> rounds, String roundName,
-                               GameQuestionMessage question, Set<String> buzzedPlayers,
-                               String mediaPlaybackToken, String mediaPauseToken) {
-    public GameStateMessage {
+public record JeopardyStateMessage(String lobbyCode, String gameType, GameState state, String buzzWinner,
+                                   Map<String, Integer> scores,
+                                   Integer curRoundIdx, Integer curCatIdx, Integer curQuestionIdx,
+                                   String gameTitle, List<RoundBoardMessage> rounds, String roundName,
+                                   GameQuestionMessage question, Set<String> buzzedPlayers,
+                                   String mediaPlaybackToken, String mediaPauseToken) implements IGameMessage {
+    public JeopardyStateMessage {
         Objects.requireNonNull(lobbyCode, "lobbyCode");
+        Objects.requireNonNull(gameType, "gameType");
         Objects.requireNonNull(state, "state");
         scores = Map.copyOf(Objects.requireNonNull(scores, "scores"));
         Objects.requireNonNull(gameTitle, "gameTitle");

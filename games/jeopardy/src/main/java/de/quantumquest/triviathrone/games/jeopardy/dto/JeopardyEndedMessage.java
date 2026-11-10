@@ -1,15 +1,19 @@
-package de.quantumquest.triviathrone.dto.game;
+package de.quantumquest.triviathrone.games.jeopardy.dto;
+
+import de.quantumquest.triviathrone.api.game.IGameMessage;
 
 import java.util.List;
 import java.util.Objects;
 
-public record GameEndedMessage(
+public record JeopardyEndedMessage(
         String lobbyCode,
+        String gameType,
         boolean gameEnded,
         List<LeaderboardEntry> leaderboard
-) {
-    public GameEndedMessage {
+) implements IGameMessage {
+    public JeopardyEndedMessage {
         Objects.requireNonNull(lobbyCode, "lobbyCode");
+        Objects.requireNonNull(gameType, "gameType");
         leaderboard = List.copyOf(Objects.requireNonNull(leaderboard, "leaderboard"));
     }
 

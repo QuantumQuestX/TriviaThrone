@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.ws;
 
 import de.quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
+import de.quantumquest.triviathrone.server.GameProviderRegistry;
 import de.quantumquest.triviathrone.server.Lobby;
 import de.quantumquest.triviathrone.server.LobbyEventService;
 import de.quantumquest.triviathrone.server.LobbyGameFiles;
@@ -30,7 +31,10 @@ class WebSocketLobbyControllerTest {
     void deletesUploadedGameFilesOnlyAfterLastUserLeaves() throws IOException {
         LobbyService lobbyService = mock(LobbyService.class);
         LobbyEventService lobbyEventService = mock(LobbyEventService.class);
-        LobbyGameFiles lobbyGameFiles = new LobbyGameFiles(tempDir.resolve("games").toString());
+        LobbyGameFiles lobbyGameFiles = new LobbyGameFiles(
+                tempDir.resolve("games").toString(),
+                new GameProviderRegistry()
+        );
         WebSocketLobbyController controller =
                 new WebSocketLobbyController(lobbyService, lobbyEventService, lobbyGameFiles);
         Lobby lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");

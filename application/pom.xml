@@ -47,6 +47,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>de.quantumquest.triviathrone.TriviaThroneApplication</mainClass>
+                    <skip>false</skip>
+                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
                 </configuration>
                 <executions>
                     <execution>

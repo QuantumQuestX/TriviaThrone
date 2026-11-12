@@ -2,6 +2,8 @@ package de.quantumquest.triviathrone.config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -24,6 +26,9 @@ class VersionControllerTest {
     void setUp() {
         BuildProperties buildProperties = mock(BuildProperties.class);
         when(buildProperties.getVersion()).thenReturn("1.2.3");
+        StaticListableBeanFactory beans = new StaticListableBeanFactory();
+        beans.addBean("buildProperties", buildProperties);
+        ObjectProvider<BuildProperties> buildPropertiesProvider = beans.getBeanProvider(BuildProperties.class);
         developers = mock(ProjectDeveloperService.class);
         when(developers.getDevelopers()).thenReturn(List.of(
                 new ProjectDeveloperService.Developer(
@@ -37,7 +42,7 @@ class VersionControllerTest {
                 )
         ));
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new VersionController(buildProperties, developers)
+                new VersionController(buildPropertiesProvider, developers)
         ).build();
     }
 
@@ -46,6 +51,18 @@ class VersionControllerTest {
         mockMvc.perform(get("/api/version"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1.2.3"));
+    }
+
+    @Test
+    void returnsDevelopmentVersionWhenBuildInfoIsUnavailable() throws Exception {
+        StaticListableBeanFactory beans = new StaticListableBeanFactory();
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                new VersionController(beans.getBeanProvider(BuildProperties.class), developers)
+        ).build();
+
+        mockMvc.perform(get("/api/version"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("development"));
     }
 
     @Test

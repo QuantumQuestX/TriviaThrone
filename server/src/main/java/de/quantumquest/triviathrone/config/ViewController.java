@@ -20,14 +20,9 @@ public class ViewController {
         return "forward:/lobby.html";
     }
 
-    @GetMapping("/game")
-    public String game() {
-        return "forward:/game.html";
-    }
-
-    @GetMapping("/editor")
-    public String editor() {
-        return "forward:/editor.html";
+    @GetMapping("/game-creator")
+    public String gameCreator() {
+        return "forward:/game-creator.html";
     }
 
     @GetMapping("/account")

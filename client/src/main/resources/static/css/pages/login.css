@@ -4,13 +4,9 @@
 @import "../components/buttons.css";
 
 .login-body {
-    --login-gap: 15px;
+    --login-gap: var(--tt-space-4);
     display: flex;
     flex-direction: column;
-}
-
-.login-header {
-    flex: 0 0 auto;
 }
 
 .login-page {
@@ -18,10 +14,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    padding-block: 2rem;
 }
 
 #login-container {
-    width: min(100% - 2rem, 28rem);
+    width: min(28rem, calc(100% - 2rem));
 }
 
 #login-inputs {
@@ -36,6 +33,10 @@
     flex-direction: column;
     gap: var(--login-gap);
     justify-content: space-between;
+}
+
+#login-form .primary-btn {
+    width: 100%;
 }
 
 #login-error {

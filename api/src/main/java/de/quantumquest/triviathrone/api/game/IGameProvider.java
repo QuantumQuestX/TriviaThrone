@@ -10,4 +10,13 @@ public interface IGameProvider {
     boolean supportsFile(String filename);
 
     Optional<IGameDefinition> load(Path gameDirectory) throws IOException;
+
+    default Optional<IGameCreator> creator() {
+        return Optional.empty();
+    }
+
+    /** Returns the plugin's browser UI entry points, if it supplies custom pages. */
+    default Optional<GameUiDescriptor> uiDescriptor() {
+        return Optional.empty();
+    }
 }

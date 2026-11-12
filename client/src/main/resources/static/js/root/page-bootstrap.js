@@ -4,7 +4,8 @@ export async function bootAuthenticatedPage(initialize) {
     try {
         if (!await requireSession()) return;
 
-        await import("./topbar.js");
+        const topbar = await import("./topbar.js");
+        topbar.initializeTopbarValues();
         await initialize();
     } catch (error) {
         console.error("Could not initialize the page.", error);

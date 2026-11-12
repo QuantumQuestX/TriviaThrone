@@ -6,27 +6,65 @@
 
 .dashboard-page #lobby-list {
     list-style: none;
-    margin-bottom: 1rem;
+    grid-column: 1 / -1;
+    margin-bottom: 0.25rem;
 }
 
 .dashboard-page #lobby-list li {
-    padding: 0.5rem;
+    padding: 0.7rem 0.8rem;
     transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .dashboard-page #lobby-list li:not(:last-child) {
-    border-bottom: 2px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
 .dashboard-page #lobby-list li:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--tt-color-hover-overlay);
     cursor: pointer;
 }
 
 .dashboard-page #lobby-list li.selected {
-    background: #1e2238;
+    background: var(--tt-color-accent-subtle);
     border-left: 4px solid var(--accent);
     transform: translateX(2px);
+}
+
+.dashboard-page main {
+    width: min(100%, 74rem);
+    margin-inline: auto;
+    gap: 1.5rem;
+}
+
+.dashboard-page #dashboard-section,
+.dashboard-page #account-section {
+    width: min(100%, 58rem);
+    margin-inline: auto;
+}
+
+.dashboard-page #dashboard-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.85rem 1rem;
+}
+
+.dashboard-page #dashboard-section > h2,
+.dashboard-page #dashboard-section > h3,
+.dashboard-page #dashboard-section > .separator {
+    grid-column: 1 / -1;
+}
+
+.dashboard-page #dashboard-section > h2 {
+    margin-bottom: 0;
+}
+
+.dashboard-page #dashboard-section > h3 {
+    margin: 0.4rem 0 0;
+}
+
+.dashboard-page #dashboard-section > input {
+    width: 100%;
 }
 
 .dashboard-page .editor-link {
@@ -35,4 +73,17 @@
     justify-content: center;
     text-align: center;
     text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .dashboard-page #dashboard-section {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dashboard-page #dashboard-section > h2,
+    .dashboard-page #dashboard-section > h3,
+    .dashboard-page #dashboard-section > .separator,
+    .dashboard-page #lobby-list {
+        grid-column: auto;
+    }
 }

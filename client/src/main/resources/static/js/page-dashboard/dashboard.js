@@ -2,13 +2,8 @@ const dashboardSection = document.getElementById("dashboard-section");
 const accountSection = document.getElementById("account-section");
 
 function setSectionVisible(section, visible) {
-    section.style.display = visible ? "block" : "none";
+    section.classList.toggle("is-hidden", !visible);
 }
-
-document.getElementById("dashboard-btn").addEventListener("click", () => {
-    setSectionVisible(dashboardSection, true);
-    setSectionVisible(accountSection, false);
-});
 
 document.getElementById("account-btn").addEventListener("click", () => {
     setSectionVisible(dashboardSection, false);

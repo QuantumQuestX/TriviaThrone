@@ -6,32 +6,24 @@
     <title>Login - TriviaThrone</title>
     <link rel="stylesheet" href="/css/pages/login.css">
 </head>
-<body class="login-body">
-    <header class="site-header login-header">
-        <div class="site-brand">
-            <h1>TriviaThrone</h1>
-            <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
-        </div>
-        <div class="topbar-credits" aria-label="Made by">
-            <span>Made by</span>
-            <ul id="topbar-authors"><li role="status">Loading…</li></ul>
-        </div>
-    </header>
+<body class="login-body tt-shell">
+    <div data-topbar="login"></div>
     <main class="login-page">
-        <section id="login-container" class="panel">
+        <section id="login-container" class="panel tt-card">
             <h2>Login</h2>
             <form id="login-form">
                 <div id="login-inputs">
-                    <input type="text" id="username" placeholder="Username" required>
-                    <input type="password" id="password" placeholder="Password" required>
+                    <input class="tt-control" type="text" id="username" placeholder="Username" required>
+                    <input class="tt-control" type="password" id="password" placeholder="Password" required>
                 </div>
-                <div id="login-error"></div>
+                <div id="login-error" class="tt-status tt-status--error"></div>
                 <div class="separator"></div>
-                <button type="submit" class="primary-btn">Login</button>
+                <button type="submit" class="primary-btn tt-button tt-button--primary">Login</button>
             </form>
         </section>
     </main>
 
+    <script type="module" src="/js/root/topbar.js"></script>
     <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/root/credits.js"></script>
     <script type="module" src="/js/page-login/index.js"></script>

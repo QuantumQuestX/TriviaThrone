@@ -17,6 +17,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>de.quantumquest</groupId>
+            <artifactId>triviathrone-plugin-system</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -76,23 +81,24 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>generate-developers-metadata</id>
                         <phase>generate-resources</phase>
                         <goals>
-                            <goal>exec</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <executable>java</executable>
-                            <arguments>
-                                <argument>${maven.multiModuleProjectDirectory}/build-tools/GenerateProjectDevelopers.java</argument>
-                                <argument>${maven.multiModuleProjectDirectory}/pom.xml</argument>
-                                <argument>${project.build.outputDirectory}/project-metadata/developers.xml</argument>
-                            </arguments>
+                            <target>
+                                <mkdir dir="${project.build.outputDirectory}/project-metadata"/>
+                                <xslt
+                                        in="${maven.multiModuleProjectDirectory}/pom.xml"
+                                        out="${project.build.outputDirectory}/project-metadata/developers.xml"
+                                        style="${maven.multiModuleProjectDirectory}/build-tools/generate_project_developers.xsl"/>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

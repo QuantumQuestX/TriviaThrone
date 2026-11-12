@@ -1,9 +1,10 @@
 package de.quantumquest.triviathrone.games.jeopardy;
 
 import de.quantumquest.triviathrone.api.game.IGameDefinition;
+import de.quantumquest.triviathrone.api.game.IGameCreator;
 import de.quantumquest.triviathrone.api.game.IGameProvider;
+import de.quantumquest.triviathrone.api.game.GameUiDescriptor;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -11,10 +12,21 @@ import java.util.Optional;
 
 public final class JeopardyGameProvider implements IGameProvider {
     private static final String FILE_SUFFIX = ".game.throne";
+    private static final IGameCreator CREATOR = new JeopardyGameCreator();
 
     @Override
     public String gameType() {
         return "jeopardy";
+    }
+
+    @Override
+    public Optional<IGameCreator> creator() {
+        return Optional.of(CREATOR);
+    }
+
+    @Override
+    public Optional<GameUiDescriptor> uiDescriptor() {
+        return Optional.of(new GameUiDescriptor("editor.html", "game.html"));
     }
 
     @Override
@@ -23,7 +35,7 @@ public final class JeopardyGameProvider implements IGameProvider {
     }
 
     @Override
-    public Optional<IGameDefinition> load(Path gameDirectory) throws IOException {
+    public Optional<IGameDefinition> load(Path gameDirectory) {
         if (!Files.isRegularFile(gameDirectory.resolve("manifest.xml"))) {
             return Optional.empty();
         }

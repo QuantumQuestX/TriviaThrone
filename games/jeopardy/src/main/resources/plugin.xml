@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="jeopardy">
+    <name>Jeopardy</name>
+    <version>1.0.0</version>
+    <apiVersion>2.0.0</apiVersion>
+    <description>Jeopardy-style trivia game.</description>
+    <providers>
+        <provider class="de.quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"/>
+    </providers>
+</plugin>

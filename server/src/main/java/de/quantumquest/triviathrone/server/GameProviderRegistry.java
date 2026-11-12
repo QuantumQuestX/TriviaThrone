@@ -1,21 +1,20 @@
 package de.quantumquest.triviathrone.server;
 
+import de.quantumquest.triviathrone.api.game.GameCreatorInfo;
+import de.quantumquest.triviathrone.api.game.IGameCreator;
 import de.quantumquest.triviathrone.api.game.IGameProvider;
-import org.springframework.stereotype.Component;
+import de.quantumquest.triviathrone.plugin.PluginManager;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
-@Component
 public final class GameProviderRegistry {
     private final List<IGameProvider> providers;
 
-    public GameProviderRegistry() {
-        this(ServiceLoader.load(IGameProvider.class).stream()
-                .map(ServiceLoader.Provider::get)
-                .toList());
+    public GameProviderRegistry(PluginManager pluginManager) {
+        this(Objects.requireNonNull(pluginManager, "pluginManager").gameProviders());
     }
 
     GameProviderRegistry(List<IGameProvider> providers) {
@@ -33,5 +32,37 @@ public final class GameProviderRegistry {
             throw new IllegalStateException("Multiple game providers support file: " + filename);
         }
         return matches.stream().findFirst();
+    }
+
+    public Optional<IGameProvider> providerForType(String gameType) {
+        if (gameType == null) {
+            return Optional.empty();
+        }
+
+        return providers.stream()
+                .filter(provider -> provider.gameType().equals(gameType))
+                .findFirst();
+    }
+
+    public Optional<IGameCreator> creatorForType(String gameType) {
+        return providerForType(gameType).flatMap(IGameProvider::creator);
+    }
+
+    public boolean hasCustomEditor(String gameType) {
+        return providerForType(gameType)
+                .flatMap(IGameProvider::uiDescriptor)
+                .isPresent();
+    }
+
+    public List<GameCreatorInfo> creators() {
+        return providers.stream()
+                .flatMap(provider -> provider.creator()
+                        .stream()
+                        .map(creator -> new GameCreatorInfo(
+                                provider.gameType(),
+                                creator.descriptor()
+                        )))
+                .sorted(Comparator.comparing(GameCreatorInfo::gameType))
+                .toList();
     }
 }

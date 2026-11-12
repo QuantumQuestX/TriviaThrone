@@ -1,5 +1,4 @@
 import {apiFetch} from "../root/api.js";
-import {logout} from "../root/auth.js";
 import {saveLobbyDetails} from "../root/lobby-storage.js";
 
 const lobbyList = document.getElementById("lobby-list");
@@ -99,15 +98,6 @@ async function createLobby() {
 
 document.getElementById("join-btn").addEventListener("click", joinLobby);
 document.getElementById("create-btn").addEventListener("click", createLobby);
-document.getElementById("logout-btn").addEventListener("click", async () => {
-    try {
-        await logout();
-        window.location.replace("/login");
-    } catch (error) {
-        window.alert(error.message);
-    }
-});
-
 void loadLobbies();
 const lobbyRefreshTimer = window.setInterval(loadLobbies, 3000);
 window.addEventListener("pagehide", () => window.clearInterval(lobbyRefreshTimer), {once: true});

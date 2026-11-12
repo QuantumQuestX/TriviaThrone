@@ -49,6 +49,7 @@
 
     <modules>
         <module>api</module>
+        <module>plugin-system</module>
         <module>client</module>
         <module>infrastructure</module>
         <module>games</module>

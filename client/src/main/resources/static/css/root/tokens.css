@@ -1,35 +1,35 @@
 :root {
-    --bg: #0f1117;
-    --bg-panel: #1a1d26;
-    --bg-panel-light: #222632;
+    --bg: var(--tt-color-canvas);
+    --bg-panel: var(--tt-color-surface);
+    --bg-panel-light: var(--tt-color-surface-raised);
 
-    --text: #e0e0e0;
-    --muted: #999999;
+    --text: var(--tt-color-text);
+    --muted: var(--tt-color-muted);
 
-    --accent: #6c5ce7;
-    --accent-hover: #7d6cf0;
+    --accent: var(--tt-color-accent);
+    --accent-hover: var(--tt-color-accent-hover);
 
-    --danger: #e74c3c;
-    --danger-hover: #ff6e5e;
-    --danger-active: #b13a2d;
-    --success: #2ecc71;
+    --danger: var(--tt-color-danger);
+    --danger-hover: var(--tt-color-danger-hover);
+    --danger-active: var(--tt-color-danger-active);
+    --success: var(--tt-color-success);
 
-    --btn: #3a3a50;
-    --btn-hover: #505070;
+    --btn: var(--tt-color-surface-raised);
+    --btn-hover: var(--tt-color-surface-hover);
 
-    --border: #2b2f3a;
+    --border: var(--tt-color-border);
 
     --top-bar-height: 80px;
 
-    --space-1: 0.25rem;
-    --space-2: 0.5rem;
-    --space-3: 0.75rem;
-    --space-4: 1rem;
-    --space-6: 1.5rem;
-    --space-8: 2rem;
+    --space-1: var(--tt-space-1);
+    --space-2: var(--tt-space-2);
+    --space-3: var(--tt-space-3);
+    --space-4: var(--tt-space-4);
+    --space-6: var(--tt-space-6);
+    --space-8: var(--tt-space-8);
 
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --shadow-panel: 0 0 10px rgba(0, 0, 0, 0.5);
+    --radius-sm: var(--tt-radius-sm);
+    --radius-md: var(--tt-radius-md);
+    --radius-lg: var(--tt-radius-lg);
+    --shadow-panel: var(--tt-shadow-card);
 }

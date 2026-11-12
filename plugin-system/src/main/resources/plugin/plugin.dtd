@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!ELEMENT plugin (name, version, apiVersion, description, providers)>
+<!ATTLIST plugin id CDATA #REQUIRED>
+
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT version (#PCDATA)>
+<!ELEMENT apiVersion (#PCDATA)>
+<!ELEMENT description (#PCDATA)>
+
+<!ELEMENT providers (provider+)>
+<!ELEMENT provider EMPTY>
+
+<!ATTLIST provider class CDATA #REQUIRED>

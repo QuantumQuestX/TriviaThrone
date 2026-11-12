@@ -8,42 +8,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
-<body class="lobby-page">
-    <header class="site-header">
-        <div class="site-brand">
-            <h1>TriviaThrone</h1>
-            <span id="app-version" class="app-version" aria-live="polite">Version loading…</span>
-        </div>
-        <div class="topbar-credits" aria-label="Made by">
-            <span>Made by</span>
-            <ul id="topbar-authors"><li role="status">Loading…</li></ul>
-        </div>
-        <div id="lobby-info">
-            Lobby Code: <span id="lobby-code">A123</span>
-        </div>
-        <nav>
-            <p id="username-info">Logged in as: <span id="username-display" data-current-user></span></p>
-            <button id="leave-btn" class="danger-btn">Leave Lobby</button>
-        </nav>
-    </header>
+<body class="lobby-page tt-shell">
+    <div data-topbar="lobby"></div>
 
     <main class="lobby-layout">
-        <section class="players-panel panel">
+        <section class="players-panel panel tt-card">
             <h2>Players</h2>
             <ul id="player-list" class="player-list"></ul>
 
             <div class="host-controls" data-admin="true" style="display: none;">
                 <!--<button id="cancel-game-btn" data-admin="true" class="fullwidth-btn danger-btn">Cancel Game</button>-->
-                <button id="start-game-btn" class="fullwidth-btn primary-btn">Start Game</button>
+                <button id="start-game-btn" class="fullwidth-btn primary-btn tt-button tt-button--primary">Start Game</button>
             </div>
         </section>
 
-        <section class="feed-panel panel">
+        <section class="feed-panel panel tt-card">
             <h2>Live Activity</h2>
             <div id="event-feed" class="event-feed"></div>
         </section>
 
-        <section id="host-panel" data-admin="true" class="upload-pane panel" style="display: none;">
+        <section id="host-panel" data-admin="true" class="upload-pane panel tt-card" style="display: none;">
             <h2>Upload Game</h2>
 
             <div class="upload-box">
@@ -53,10 +37,11 @@
 
             <button id="upload-btn" class="fullwidth-btn primary-btn">Upload</button>
 
-            <p id="upload-status" class="upload-status"></p>
+            <p id="upload-status" class="upload-status tt-status"></p>
         </section>
     </main>
 
+    <script type="module" src="/js/root/topbar.js"></script>
     <script type="module" src="/js/root/version.js"></script>
     <script type="module" src="/js/root/credits.js"></script>
     <script type="module" src="/js/page-lobby/index.js"></script>

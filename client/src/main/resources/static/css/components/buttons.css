@@ -1,45 +1,47 @@
 .primary-btn,
 .secondary-btn,
 .danger-btn {
-    border: none;
-    border-radius: var(--radius-sm);
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--tt-radius-md);
     color: white;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    font: inherit;
+    font-weight: 650;
+    transition: background-color 140ms ease, border-color 140ms ease, opacity 140ms ease;
 }
 
 .primary-btn {
-    background: var(--accent);
-    padding: 10px;
-    transition: background-color 0.2s ease-in-out, filter 0.2s ease-in-out;
+    background: var(--tt-color-accent);
 }
 
 .primary-btn:hover:not(:disabled) {
-    background: var(--accent-hover);
+    background: var(--tt-color-accent-hover);
 }
 
 .secondary-btn {
-    background: var(--btn);
-    padding: 10px 15px;
-    transition: background-color 0.2s ease-in-out, filter 0.2s ease-in-out;
+    border-color: var(--tt-color-border);
+    background: var(--tt-color-surface-raised);
 }
 
 .secondary-btn:hover:not(:disabled) {
-    background: var(--btn-hover);
+    border-color: var(--tt-color-border-strong);
 }
 
 .danger-btn {
-    background: var(--danger);
-    padding: 8px 12px;
+    background: var(--tt-color-danger);
 }
 
 .danger-btn:hover:not(:disabled) {
-    background: var(--danger-hover);
+    background: var(--tt-color-danger-hover);
 }
 
 .danger-btn:active:not(:disabled) {
-    background: var(--danger-active);
+    background: var(--tt-color-danger-active);
 }
 
 button:disabled {
-    filter: brightness(75%);
+    cursor: not-allowed;
+    opacity: 0.6;
 }

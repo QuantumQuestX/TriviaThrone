@@ -29,12 +29,9 @@ class ViewControllerTest {
         mockMvc.perform(get("/lobby"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/lobby.html"));
-        mockMvc.perform(get("/game").param("code", "ROOM01"))
+        mockMvc.perform(get("/game-creator"))
                 .andExpect(status().isOk())
-                .andExpect(forwardedUrl("/game.html"));
-        mockMvc.perform(get("/editor"))
-                .andExpect(status().isOk())
-                .andExpect(forwardedUrl("/editor.html"));
+                .andExpect(forwardedUrl("/game-creator.html"));
         mockMvc.perform(get("/account"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/?page=account"));

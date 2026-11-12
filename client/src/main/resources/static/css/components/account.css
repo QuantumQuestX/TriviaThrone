@@ -32,9 +32,9 @@
 }
 
 #password-message.success {
-    color: var(--success);
+    color: var(--tt-color-success);
 }
 
 #password-message.error {
-    color: var(--danger);
+    color: var(--tt-color-danger);
 }

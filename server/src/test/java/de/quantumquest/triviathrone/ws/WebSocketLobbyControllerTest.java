@@ -1,6 +1,7 @@
 package de.quantumquest.triviathrone.ws;
 
 import de.quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
+import de.quantumquest.triviathrone.plugin.PluginManager;
 import de.quantumquest.triviathrone.server.GameProviderRegistry;
 import de.quantumquest.triviathrone.server.Lobby;
 import de.quantumquest.triviathrone.server.LobbyEventService;
@@ -29,30 +30,32 @@ class WebSocketLobbyControllerTest {
 
     @Test
     void deletesUploadedGameFilesOnlyAfterLastUserLeaves() throws IOException {
-        LobbyService lobbyService = mock(LobbyService.class);
-        LobbyEventService lobbyEventService = mock(LobbyEventService.class);
-        LobbyGameFiles lobbyGameFiles = new LobbyGameFiles(
-                tempDir.resolve("games").toString(),
-                new GameProviderRegistry()
-        );
-        WebSocketLobbyController controller =
-                new WebSocketLobbyController(lobbyService, lobbyEventService, lobbyGameFiles);
-        Lobby lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");
-        lobby.addUser("player");
-        when(lobbyService.getLobby(LOBBY_CODE)).thenReturn(Optional.of(lobby));
+        try (PluginManager pluginManager = PluginManager.load(tempDir.resolve("mods"))) {
+            LobbyService lobbyService = mock(LobbyService.class);
+            LobbyEventService lobbyEventService = mock(LobbyEventService.class);
+            LobbyGameFiles lobbyGameFiles = new LobbyGameFiles(
+                    tempDir.resolve("games").toString(),
+                    new GameProviderRegistry(pluginManager)
+            );
+            WebSocketLobbyController controller =
+                    new WebSocketLobbyController(lobbyService, lobbyEventService, lobbyGameFiles);
+            Lobby lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");
+            lobby.addUser("player");
+            when(lobbyService.getLobby(LOBBY_CODE)).thenReturn(Optional.of(lobby));
 
-        Path gameDirectory = tempDir.resolve("games").resolve(LOBBY_CODE);
-        Path uploadedGame = gameDirectory.resolve("resources/clue.txt");
-        Files.createDirectories(uploadedGame.getParent());
-        Files.writeString(uploadedGame, "clue data");
+            Path gameDirectory = tempDir.resolve("games").resolve(LOBBY_CODE);
+            Path uploadedGame = gameDirectory.resolve("resources/clue.txt");
+            Files.createDirectories(uploadedGame.getParent());
+            Files.writeString(uploadedGame, "clue data");
 
-        controller.leave(new LobbyCommonMessage("Test lobby", LOBBY_CODE), principal("player"));
-        assertTrue(Files.exists(gameDirectory));
+            controller.leave(new LobbyCommonMessage("Test lobby", LOBBY_CODE), principal("player"));
+            assertTrue(Files.exists(gameDirectory));
 
-        controller.leave(new LobbyCommonMessage("Test lobby", LOBBY_CODE), principal("host"));
+            controller.leave(new LobbyCommonMessage("Test lobby", LOBBY_CODE), principal("host"));
 
-        assertFalse(Files.exists(gameDirectory));
-        verify(lobbyService).removeLobby(LOBBY_CODE);
+            assertFalse(Files.exists(gameDirectory));
+            verify(lobbyService).removeLobby(LOBBY_CODE);
+        }
     }
 
     private static Principal principal(String username) {

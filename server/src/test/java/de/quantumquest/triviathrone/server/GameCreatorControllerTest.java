@@ -57,7 +57,7 @@ class GameCreatorControllerTest {
     }
 
     @Test
-    void convertsMapRequestBodyIntoPluginJsonData() throws Exception {
+    void convertsMapRequestBodyIntoGameCreatorJsonData() throws Exception {
         GameCreationService service = mock(GameCreationService.class);
         Path archive = Files.createFile(tempDir.resolve("generated.game.throne"));
         when(service.generate(eq("jeopardy"), any(GameCreationRequest.class)))

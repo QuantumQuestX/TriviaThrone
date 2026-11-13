@@ -48,6 +48,7 @@ public class SecurityConfig {
                                 "/game-creator.html",
                                 "/editor",
                                 "/games/**",
+                                "/mods/**",
                                 "/plugins/**",
                                 "/ws/**",
                                 "/",

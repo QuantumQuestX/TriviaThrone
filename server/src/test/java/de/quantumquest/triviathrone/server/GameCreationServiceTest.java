@@ -46,7 +46,7 @@ class GameCreationServiceTest {
             assertEquals("sample.game.throne", generated.filename());
             try (InputStream manifest = archive.getInputStream(archive.getEntry("manifest.xml"))) {
                 String manifestXml = new String(manifest.readAllBytes(), StandardCharsets.UTF_8);
-                assertTrue(manifestXml.contains("manifestVersion=\"1.0\""));
+                assertTrue(manifestXml.contains("manifestVersion=\"2.0\""));
                 assertTrue(manifestXml.contains("dataFile=\"game.xml\""));
                 assertTrue(manifestXml.contains("serverVersion=\"development\""));
             }
@@ -58,7 +58,7 @@ class GameCreationServiceTest {
     }
 
     @Test
-    void rejectsPluginFilePathsThatEscapeTheGameDirectory() throws IOException {
+    void rejectsModFilePathsThatEscapeTheGameDirectory() throws IOException {
         IGameCreator creator = creatorWritingFile("../outside.txt", "invalid");
         GameCreationService service = new GameCreationService(
                 new GameProviderRegistry(List.of(providerWith(creator)))

@@ -9,15 +9,10 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>triviathrone-api</artifactId>
-    <name>TriviaThrone API</name>
-    <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-    </dependencies>
+    <name>TriviaThrone API Parent</name>
+    <packaging>pom</packaging>
+    <modules>
+        <module>game-api</module>
+        <module>system-api</module>
+    </modules>
 </project>

@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 @RestController
 @RequestMapping("/api/game")
 public class GameCreatorController {
-    private static final ObjectMapper PLUGIN_JSON_MAPPER = new ObjectMapper();
+    private static final ObjectMapper GAME_MOD_JSON_MAPPER = new ObjectMapper();
     private static final TypeReference<Map<String, Object>> JSON_OBJECT_TYPE = new TypeReference<>() {
     };
 
@@ -57,7 +57,7 @@ public class GameCreatorController {
                         new CreatorDescriptorResponse(
                                 info.descriptor().title(),
                                 info.descriptor().description(),
-                                PLUGIN_JSON_MAPPER.convertValue(info.descriptor().editorSchema(), JSON_OBJECT_TYPE)
+                                GAME_MOD_JSON_MAPPER.convertValue(info.descriptor().editorSchema(), JSON_OBJECT_TYPE)
                         ),
                         gameCreationService.hasCustomEditor(info.gameType())
                 ))
@@ -152,7 +152,7 @@ public class GameCreatorController {
     ) throws IOException {
         JsonNode jsonData;
         try {
-            jsonData = PLUGIN_JSON_MAPPER.readTree(requestData);
+            jsonData = GAME_MOD_JSON_MAPPER.readTree(requestData);
         } catch (IOException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game creation data.", exception);
         }
@@ -195,7 +195,7 @@ public class GameCreatorController {
         if (!(data instanceof Map<?, ?>)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game creation data must be a JSON object.");
         }
-        JsonNode jsonData = PLUGIN_JSON_MAPPER.valueToTree(data);
+        JsonNode jsonData = GAME_MOD_JSON_MAPPER.valueToTree(data);
         return new GameCreationRequest(jsonData);
     }
 

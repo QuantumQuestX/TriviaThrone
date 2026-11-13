@@ -1,1 +1,1 @@
-console.log("plugin UI asset");
+console.log("mod UI asset");

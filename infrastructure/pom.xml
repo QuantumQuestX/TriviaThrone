@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>de.quantumquest</groupId>
-            <artifactId>triviathrone-api</artifactId>
+            <artifactId>triviathrone-system-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

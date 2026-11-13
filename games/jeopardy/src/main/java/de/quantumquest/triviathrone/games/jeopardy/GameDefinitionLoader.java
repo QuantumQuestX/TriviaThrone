@@ -27,7 +27,7 @@ public final class GameDefinitionLoader {
         Objects.requireNonNull(lobbyDir, "lobbyDir");
         try {
             GamePackageManifest manifest = GamePackageManifest.read(lobbyDir);
-            if (!"jeopardy".equals(manifest.pluginId())
+            if (!"jeopardy".equals(manifest.modId())
                     || !"jeopardy".equals(manifest.gameType())
                     || !JeopardyGameProvider.class.getName().equals(manifest.providerClass())) {
                 throw new IllegalArgumentException("The package manifest does not identify the Jeopardy provider.");

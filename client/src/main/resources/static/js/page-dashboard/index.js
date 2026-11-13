@@ -4,4 +4,5 @@ await bootAuthenticatedPage(async () => {
     await import("./account.js");
     await import("./dashboard.js");
     await import("./lobby-browser.js");
+    await import("./admin-menu.js");
 });

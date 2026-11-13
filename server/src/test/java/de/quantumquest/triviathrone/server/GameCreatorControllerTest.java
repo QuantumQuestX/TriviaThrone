@@ -2,12 +2,18 @@ package de.quantumquest.triviathrone.server;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.quantumquest.triviathrone.api.game.GameCreationAsset;
 import de.quantumquest.triviathrone.api.game.GameCreationRequest;
 import de.quantumquest.triviathrone.api.game.GameCreatorDescriptor;
 import de.quantumquest.triviathrone.api.game.GameCreatorInfo;
 import de.quantumquest.triviathrone.auth.UserAccount;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -17,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,5 +79,38 @@ class GameCreatorControllerTest {
         verify(service).generate(eq("jeopardy"), request.capture());
         assertEquals("Test game", request.getValue().data().get("title").textValue());
         assertEquals(200, request.getValue().data().get("points").intValue());
+    }
+
+    @Test
+    void receivesMultipartEditorDataAndTemporarilyStoresUploadedAssets() throws Exception {
+        GameCreationService service = mock(GameCreationService.class);
+        Path archive = Files.createFile(tempDir.resolve("generated.game.throne"));
+        when(service.generate(eq("jeopardy"), any(GameCreationRequest.class)))
+                .thenReturn(new GameCreationService.GeneratedGame(tempDir, archive, "jeopardy.game.throne"));
+
+        ObjectNode data = JsonNodeFactory.instance.objectNode();
+        data.putObject("meta").put("title", "Test game");
+        data.putArray("resources").addObject().put("id", "resource-id");
+        MultiValueMap<String, MultipartFile> files = new LinkedMultiValueMap<>();
+        files.add("asset_resource-id", new MockMultipartFile(
+                "asset_resource-id",
+                "cover.png",
+                "image/png",
+                new byte[]{1, 2, 3}
+        ));
+
+        new GameCreatorController(service).createMultipart(
+                "jeopardy",
+                new ObjectMapper().writeValueAsString(data),
+                files,
+                new UserAccount()
+        );
+
+        org.mockito.ArgumentCaptor<GameCreationRequest> request =
+                org.mockito.ArgumentCaptor.forClass(GameCreationRequest.class);
+        verify(service).generate(eq("jeopardy"), request.capture());
+        GameCreationAsset asset = request.getValue().assets().get("resource-id");
+        assertEquals("cover.png", asset.filename());
+        assertFalse(Files.exists(asset.path()));
     }
 }

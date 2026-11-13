@@ -2,7 +2,7 @@ import { Round } from "./round.js";
 import { ResourceManager } from "./resource-manager.js";
 import { ResourceHandler } from "./resource-handler.js";
 import { QuestionEditor } from "./question-editor.js";
-import { exportGame } from "./builder.js";
+import { createGameArchive } from "./builder.js";
 
 export class GameController {
     constructor(boardController) {
@@ -70,7 +70,7 @@ export class GameController {
 
         this.boardController.setQuestionEditor(questionEditor);
 
-        this.saveGameButton.addEventListener('click', () => this.exportCurrentGame());
+        this.saveGameButton.addEventListener('click', () => this.createGameArchive());
     }
 
     refreshRoundSelect()  {
@@ -153,12 +153,12 @@ export class GameController {
         this.categoryLabel.textContent = round.categoryCount;
     }
 
-    exportCurrentGame() {
+    createGameArchive() {
         this.game.meta.title = this.gameTitleInp.value;
         this.game.meta.description = this.gameDescriptionInp.value;
 
-        exportGame(this.game).catch(err => {
-            alert("Failed to export game:\n" + err);
+        createGameArchive(this.game).catch(err => {
+            alert("Failed to create game file:\n" + err);
         });
     }
 }

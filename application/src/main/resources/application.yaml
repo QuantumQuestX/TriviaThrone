@@ -2,13 +2,12 @@ spring:
   application:
     name: TriviaThrone
   datasource:
-    url: ${AUTH_USER_DATABASE_URL:jdbc:h2:file:./triviathrone-users;DB_CLOSE_ON_EXIT=FALSE}
+    url: ${AUTH_USER_DATABASE_URL:jdbc:h2:file:./triviathrone-users;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE}
     username: sa
     password:
     driver-class-name: org.h2.Driver
 
 auth:
-  user-migration-file: users.xml
   refresh-token-file: ${AUTH_REFRESH_TOKEN_FILE:refresh-tokens.xml}
   # Override with a private signing key outside local development.
   jwt-secret: ${AUTH_JWT_SECRET:CHANCE_THIS_SECRET_CHANGE_THIS_SECRET}
@@ -17,4 +16,5 @@ auth:
   refresh-session-max-seconds: 2592000
   # Enable when serving the application over HTTPS.
   refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:false}
-  initialPassword: ${AUTH_INITIAL_PASSWORD:}
+  initial-admin-username: ${AUTH_INITIAL_ADMIN_USERNAME:}
+  initial-admin-password: ${AUTH_INITIAL_ADMIN_PASSWORD:}

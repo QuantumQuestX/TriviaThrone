@@ -7,17 +7,16 @@ import java.util.Objects;
 
 @ConfigurationProperties(prefix = "auth")
 public record AuthProperties(
-        Path userMigrationFile,
         Path refreshTokenFile,
         String jwtSecret,
         long tokenValiditySeconds,
         long refreshTokenValiditySeconds,
         long refreshSessionMaxSeconds,
         boolean refreshCookieSecure,
-        String initialPassword
+        String initialAdminUsername,
+        String initialAdminPassword
 ) {
     public AuthProperties {
-        Objects.requireNonNull(userMigrationFile, "userMigrationFile");
         Objects.requireNonNull(refreshTokenFile, "refreshTokenFile");
         String signingSecret = Objects.requireNonNull(jwtSecret, "jwtSecret");
         if (signingSecret.isBlank()) {
@@ -25,6 +24,11 @@ public record AuthProperties(
         }
         if (tokenValiditySeconds <= 0 || refreshTokenValiditySeconds <= 0 || refreshSessionMaxSeconds <= 0) {
             throw new IllegalArgumentException("Token lifetimes must be positive");
+        }
+        boolean hasAdminUsername = initialAdminUsername != null && !initialAdminUsername.isBlank();
+        boolean hasAdminPassword = initialAdminPassword != null && !initialAdminPassword.isBlank();
+        if (hasAdminUsername != hasAdminPassword) {
+            throw new IllegalArgumentException("initialAdminUsername and initialAdminPassword must be configured together");
         }
     }
 }

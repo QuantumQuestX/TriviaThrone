@@ -122,12 +122,12 @@ class JeopardyGameCreatorTest {
     }
 
     @Test
-    void packagesEditorAndGamePagesAsPluginResources() {
-        ClassLoader pluginClassLoader = JeopardyGameProvider.class.getClassLoader();
+    void packagesEditorAndGamePagesAsModResources() {
+        ClassLoader modClassLoader = JeopardyGameProvider.class.getClassLoader();
 
-        org.junit.jupiter.api.Assertions.assertNotNull(pluginClassLoader.getResource("ui/editor.html"));
-        org.junit.jupiter.api.Assertions.assertNotNull(pluginClassLoader.getResource("ui/game.html"));
-        org.junit.jupiter.api.Assertions.assertNotNull(pluginClassLoader.getResource("ui/css/game.css"));
-        org.junit.jupiter.api.Assertions.assertNotNull(pluginClassLoader.getResource("ui/js/game/index.js"));
+        org.junit.jupiter.api.Assertions.assertNotNull(modClassLoader.getResource("ui/editor.html"));
+        org.junit.jupiter.api.Assertions.assertNotNull(modClassLoader.getResource("ui/game.html"));
+        org.junit.jupiter.api.Assertions.assertNotNull(modClassLoader.getResource("ui/css/game.css"));
+        org.junit.jupiter.api.Assertions.assertNotNull(modClassLoader.getResource("ui/js/game/index.js"));
     }
 }

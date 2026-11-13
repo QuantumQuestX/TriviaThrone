@@ -2,8 +2,8 @@
 @import "/css/components/buttons.css";
 @import "/css/components/panel.css";
 @import "/css/components/buzzer.css";
-@import "/plugins/jeopardy/ui/css/jeopardy.css";
-@import "/plugins/jeopardy/ui/css/jeopardy-questions.css";
+@import "/mods/jeopardy/ui/css/jeopardy.css";
+@import "/mods/jeopardy/ui/css/jeopardy-questions.css";
 
 .game-page {
     display: flex;

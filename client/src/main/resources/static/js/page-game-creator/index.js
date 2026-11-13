@@ -19,7 +19,7 @@ await bootAuthenticatedPage(async () => {
 
     const creators = await response.json();
     if (!Array.isArray(creators) || creators.length === 0) {
-        libraryStatus.textContent = "No games are available yet. Install a game plugin to fill your library.";
+        libraryStatus.textContent = "No games are available yet. Install a game mod to fill your library.";
         return;
     }
 

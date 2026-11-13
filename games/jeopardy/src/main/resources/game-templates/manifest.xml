@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<gamePackage manifestVersion="1.0">
-  <plugin id="jeopardy" version="1.0.0" apiVersion="2.0.0"/>
+<gamePackage manifestVersion="2.0">
+  <mod id="jeopardy" version="1.0.0" apiVersion="2.0.0"/>
   <game
       type="jeopardy"
       providerClass="de.quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"

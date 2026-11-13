@@ -39,6 +39,8 @@ public class SecurityConfig {
                                 "/login",
                                 "/login.html",
                                 "/index.html",
+                                "/admin",
+                                "/admin.html",
                                 "/lobby",
                                 "/lobby.html",
                                 "/game",
@@ -52,6 +54,7 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class);

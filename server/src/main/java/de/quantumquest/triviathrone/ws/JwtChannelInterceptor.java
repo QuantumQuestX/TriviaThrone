@@ -45,7 +45,10 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 String username = claims.getBody().getSubject();
                 UserAccount user = userConfigLoader.findByUsername(username);
 
-                if (user == null) throw new IllegalArgumentException("Invalid user");
+                if (user == null || !user.isEnabled()
+                        || !user.getRoles().contains(UserAccount.ROLE_USER)) {
+                    throw new IllegalArgumentException("Invalid user");
+                }
 
                 accessor.setUser(user::getUsername);
             } catch (JwtException e) {

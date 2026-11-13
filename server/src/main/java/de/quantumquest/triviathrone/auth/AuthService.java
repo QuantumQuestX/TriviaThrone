@@ -44,7 +44,8 @@ public class AuthService {
     public Session authenticate(String username, String password) {
         UserAccount user = users.findByUsername(username);
 
-        if (user == null || !encoder.matches(password, user.getPasswordHash())) {
+        if (user == null || !user.isEnabled() || !user.getRoles().contains(UserAccount.ROLE_USER)
+                || !encoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
@@ -54,7 +55,7 @@ public class AuthService {
     public Session refresh(String refreshToken) {
         RefreshTokenService.IssuedToken rotated = refreshTokens.rotate(refreshToken);
         UserAccount user = users.findByUsername(rotated.username());
-        if (user == null) {
+        if (user == null || !user.isEnabled() || !user.getRoles().contains(UserAccount.ROLE_USER)) {
             refreshTokens.revoke(rotated.value());
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }

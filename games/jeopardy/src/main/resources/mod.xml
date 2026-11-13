@@ -5,6 +5,6 @@
     <apiVersion>2.0.0</apiVersion>
     <description>Jeopardy-style trivia game.</description>
     <providers>
-        <provider class="de.quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"/>
+        <provider class="quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"/>
     </providers>
 </mod>

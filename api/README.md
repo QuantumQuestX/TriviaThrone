@@ -20,7 +20,7 @@ own classpath.
 
 System mods are discovered from `mods/system` through Java `ServiceLoader`.
 Each JAR provides one or more `ISystemProvider` implementations in
-`META-INF/services/de.quantumquest.triviathrone.api.system.ISystemProvider`.
+`META-INF/services/quantumquest.triviathrone.api.system.ISystemProvider`.
 Providers declare an ID, version, and system API version, initialize with a
 provider-scoped data directory and configuration, and register services by
 interface type. Service registrations must be unique; providers are started in

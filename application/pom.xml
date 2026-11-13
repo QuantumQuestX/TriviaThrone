@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.quantumquest</groupId>
+        <groupId>quantumquest.triviathrone</groupId>
         <artifactId>triviathrone-parent</artifactId>
         <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -12,18 +12,18 @@
     <name>TriviaThrone Application</name>
     <dependencies>
         <dependency>
-            <groupId>de.quantumquest</groupId>
+            <groupId>quantumquest.triviathrone</groupId>
             <artifactId>triviathrone-server</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.quantumquest</groupId>
+            <groupId>quantumquest.triviathrone</groupId>
             <artifactId>triviathrone-infrastructure</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.quantumquest</groupId>
+            <groupId>quantumquest.triviathrone</groupId>
             <artifactId>triviathrone-client</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>
@@ -44,7 +44,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>de.quantumquest.triviathrone.TriviaThroneApplication</mainClass>
+                    <mainClass>quantumquest.triviathrone.TriviaThroneApplication</mainClass>
                     <skip>false</skip>
                     <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
                 </configuration>

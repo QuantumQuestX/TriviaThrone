@@ -1,25 +1,50 @@
-import JSZip from "https://cdn.skypack.dev/jszip";
+import { apiFetch } from "/js/root/api.js";
 
-export async function exportGame(game) {
-    const zip = new JSZip();
+export async function createGameArchive(game) {
+    const resources = game.resources.getAll();
+    const data = {
+        meta: {
+            title: game.meta.title,
+            description: game.meta.description
+        },
+        rounds: game.rounds.map(round => ({
+            name: round.name,
+            categories: round.categories.map(category => ({ name: category.name })),
+            questions: round.questions.map(row => row.map(question => ({
+                points: question.points,
+                type: question.type,
+                prompt: question.prompt,
+                media: question.media,
+                options: question.options
+            })))
+        })),
+        resources: resources.map(resource => ({
+            id: resource.id,
+            name: resource.name,
+            type: resource.type
+        }))
+    };
 
-    zip.file("manifest.xml", buildManifestXml(game));
-
-    const resourceFolder = zip.folder("resources");
-
-    for (const resource of game.resources.resources.values()) {
-        resourceFolder.file(
-            `${resource.id}${getExtension(resource.name)}`,
-            resource.file
-        );
+    const request = new FormData();
+    request.append("data", JSON.stringify(data));
+    for (const resource of resources) {
+        request.append(`asset_${resource.id}`, resource.file, resource.name);
     }
 
-    const blob = await zip.generateAsync( { type: "blob" } );
+    const response = await apiFetch("/api/game/create/jeopardy", {
+        method: "POST",
+        body: request
+    });
+    if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || `Game creation failed (${response.status}).`);
+    }
 
-    const objectUrl = URL.createObjectURL(blob);
+    const archive = await response.blob();
+    const objectUrl = URL.createObjectURL(archive);
     const link = document.createElement("a");
     link.href = objectUrl;
-    link.download = `${sanitizeFileName(game.meta?.title || "game")}.game.throne`;
+    link.download = `${sanitizeFileName(game.meta.title || "game")}.game.throne`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -28,172 +53,4 @@ export async function exportGame(game) {
 
 function sanitizeFileName(name) {
     return name.replace(/[^a-z0-9_\-]/gi, "_");
-}
-
-function buildManifestXml(game) {
-    const doc = document.implementation.createDocument("", "", null);
-
-    const gameEl = doc.createElement("game");
-    gameEl.setAttribute("version", game.meta?.version || "1.0");
-    gameEl.setAttribute("id", game.meta?.id || crypto.randomUUID());
-    doc.appendChild(gameEl);
-
-
-    const metaEl = doc.createElement("meta");
-
-    const titleEl = doc.createElement("title");
-    titleEl.textContent = game.meta?.title || "";
-
-    const descEl = doc.createElement("description");
-    descEl.textContent = game.meta?.description || "";
-
-    const createdEl = doc.createElement("created");
-    createdEl.textContent = game.meta?.created || new Date().toISOString();
-
-    metaEl.append(titleEl, descEl, createdEl);
-    gameEl.appendChild(metaEl);
-
-    
-    const resourcesEl = doc.createElement("resources");
-    for (const resource of game.resources.resources.values()) {
-        const resEl = doc.createElement("resource");
-
-        resEl.setAttribute("id", resource.id);
-        resEl.setAttribute(
-            "file",
-            `resources/${resource.id}${getExtension(resource.name)}`
-        );
-        resEl.setAttribute("type", resource.type);
-
-        resourcesEl.appendChild(resEl);
-    }
-
-    gameEl.appendChild(resourcesEl);
-
-
-    const roundsEl = doc.createElement("rounds");
-
-    game.rounds.forEach((round, roundIdx) => {
-        const roundEl = doc.createElement("round");
-
-        roundEl.setAttribute("index", String(roundIdx));
-        roundEl.setAttribute("name", round.name);
-        roundEl.setAttribute("questionCount", round.questionCount);
-        roundEl.setAttribute("categoryCount", round.categoryCount);
-        
-        const categoryEl = doc.createElement("categories");
-        if (round.categories) {
-            round.categories.forEach((category, i) => {
-                if (!category) return;
-
-                const cEl = doc.createElement("category");
-                cEl.setAttribute("row", String(i));
-
-                cEl.textContent = category.name;
-
-                categoryEl.appendChild(cEl);
-            });
-        }
-
-        roundEl.appendChild(categoryEl);
-
-        const questionsEl = doc.createElement("questions");
-
-        if (round.questions) {
-            round.questions.forEach((row, rowIdx) => {
-                row.forEach((question, colIdx) => {
-                    if (!question) return;
-
-
-                    const hasContent = (question.prompt && question.prompt.trim() !== '') ||
-                                       (question.options && question.options.length > 0) ||
-                                       (question.media && question.media.trim() !== '');
-                    if (!hasContent) {
-                        throw new Error(
-                            `Round "${round.name}" question at row ${rowIdx + 1}, category ${colIdx + 1} is empty. Add a prompt, options, or media.`
-                        );
-                    }
-
-                    const qEl = doc.createElement("question");
-                    qEl.setAttribute("row", String(rowIdx));
-                    qEl.setAttribute("category", String(colIdx));
-                    qEl.setAttribute("points", String(question.points ?? 0));
-                    qEl.setAttribute("type", question.type || "text");
-
-                    const promptEl = doc.createElement("prompt");
-                    promptEl.textContent = question.prompt || "";
-                    qEl.appendChild(promptEl);
-
-                    if (question.options && Array.isArray(question.options)) {
-                        const optionsEl = doc.createElement("options");
-
-                        question.options.forEach(opt => {
-                            const optEl = doc.createElement("option");
-                            optEl.textContent = opt.text || "";
-
-                            if (opt.correct) {
-                                optEl.setAttribute("correct", "true");
-                            }
-
-                            optionsEl.appendChild(optEl);
-                        })
-
-                        qEl.appendChild(optionsEl);
-                    }
-
-                    if (question.media) {
-                        const mediaEl = doc.createElement("media");
-                        mediaEl.setAttribute("ref", question.media);
-                        qEl.appendChild(mediaEl);
-                    }
-
-                    questionsEl.appendChild(qEl);
-                });
-            });
-        }
-
-        roundEl.appendChild(questionsEl);
-        roundsEl.appendChild(roundEl);
-    });
-
-    if (roundsEl.childElementCount === 0) {
-        throw new Error(`No rounds configured.`);
-    }
-
-    gameEl.appendChild(roundsEl);
-
-    const xmlString = new XMLSerializer().serializeToString(doc);
-    const prettyXml = formatXml(xmlString);
-    return `<?xml version="1.0" encoding="UTF-8"?>\n${prettyXml}`;
-}
-
-function formatXml(xml) {
-    const PADDING = '    ';
-    const reg = /(>)(<)(\/*)/g;
-    let xmlStr = xml.replace(reg, "$1\n$2$3");
-    let pad = 0;
-    return xmlStr
-        .split("\n")
-        .map((node) => {
-            let indent = "";
-            if (node.match(/.+<\/\w[^>]*>$/))
-                indent = PADDING.repeat(pad);
-            else if (node.match(/^<\/\w/)) {
-                pad = pad > 0 ? pad - 1 : 0;
-                indent = PADDING.repeat(pad);
-            } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
-                indent = PADDING.repeat(pad);
-                pad += 1;
-            } else
-                indent = PADDING.repeat(pad);
-            return indent + node;
-        })
-        .join("\n");
-}
-
-function getExtension(filename) {
-    if (!filename) return "";
-
-    const idx = filename.lastIndexOf(".");
-    return idx !== -1 ? filename.slice(idx) : "";
 }

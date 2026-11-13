@@ -84,7 +84,8 @@ final class GameUploadControllerTestSupport {
 
             @Override
             public Optional<IGameDefinition> load(Path gameDirectory) throws IOException {
-                if (!Files.isRegularFile(gameDirectory.resolve("manifest.xml"))) {
+                if (!Files.isRegularFile(gameDirectory.resolve("manifest.xml"))
+                        || !Files.isRegularFile(gameDirectory.resolve("game.xml"))) {
                     return Optional.empty();
                 }
                 return Optional.of(new IGameDefinition() {
@@ -113,8 +114,8 @@ final class GameUploadControllerTestSupport {
     }
 
     static byte[] gameArchive() throws IOException {
-        String manifest = """
-                <game>
+        String gameData = """
+                <game version="1.0">
                     <meta><title>Uploaded game</title><description>Test</description></meta>
                     <resources><resource id="clue" file="resources/clue.txt"/></resources>
                     <rounds>
@@ -132,8 +133,18 @@ final class GameUploadControllerTestSupport {
                 """;
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (ZipOutputStream archive = new ZipOutputStream(bytes)) {
+            String packageManifest = """
+                    <gamePackage manifestVersion="1.0">
+                        <plugin id="jeopardy" version="test" apiVersion="test"/>
+                        <game type="jeopardy" providerClass="%s" dataFile="game.xml" formatVersion="1.0"/>
+                        <createdBy serverVersion="test"/>
+                    </gamePackage>
+                    """.formatted(uploadedGameProvider().getClass().getName());
             archive.putNextEntry(new ZipEntry("manifest.xml"));
-            archive.write(manifest.getBytes(StandardCharsets.UTF_8));
+            archive.write(packageManifest.getBytes(StandardCharsets.UTF_8));
+            archive.closeEntry();
+            archive.putNextEntry(new ZipEntry("game.xml"));
+            archive.write(gameData.getBytes(StandardCharsets.UTF_8));
             archive.closeEntry();
             archive.putNextEntry(new ZipEntry("resources/clue.txt"));
             archive.write("clue data".getBytes(StandardCharsets.UTF_8));

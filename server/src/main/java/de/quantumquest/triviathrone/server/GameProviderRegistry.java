@@ -1,9 +1,12 @@
 package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.api.game.GameCreatorInfo;
+import de.quantumquest.triviathrone.api.game.GamePackageManifest;
 import de.quantumquest.triviathrone.api.game.IGameCreator;
 import de.quantumquest.triviathrone.api.game.IGameProvider;
+import de.quantumquest.triviathrone.plugin.PluginDescriptor;
 import de.quantumquest.triviathrone.plugin.PluginManager;
+import de.quantumquest.triviathrone.plugin.RegisteredGameProvider;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,21 +14,36 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class GameProviderRegistry {
-    private final List<IGameProvider> providers;
+    private final List<RegisteredGameProvider> registrations;
 
     public GameProviderRegistry(PluginManager pluginManager) {
-        this(Objects.requireNonNull(pluginManager, "pluginManager").gameProviders());
+        this.registrations = List.copyOf(
+                Objects.requireNonNull(pluginManager, "pluginManager").registeredGameProviders()
+        );
     }
 
     GameProviderRegistry(List<IGameProvider> providers) {
-        this.providers = List.copyOf(Objects.requireNonNull(providers, "providers"));
+        this.registrations = Objects.requireNonNull(providers, "providers").stream()
+                .map(provider -> new RegisteredGameProvider(
+                        provider,
+                        new PluginDescriptor(
+                                provider.gameType(),
+                                provider.gameType(),
+                                "test",
+                                "test",
+                                "",
+                                List.of(provider.getClass().getName())
+                        )
+                ))
+                .toList();
     }
 
     public Optional<IGameProvider> providerForFile(String filename) {
         if (filename == null) {
             return Optional.empty();
         }
-        List<IGameProvider> matches = providers.stream()
+        List<IGameProvider> matches = registrations.stream()
+                .map(RegisteredGameProvider::provider)
                 .filter(provider -> provider.supportsFile(filename))
                 .toList();
         if (matches.size() > 1) {
@@ -39,9 +57,48 @@ public final class GameProviderRegistry {
             return Optional.empty();
         }
 
-        return providers.stream()
+        return registrations.stream()
+                .map(RegisteredGameProvider::provider)
                 .filter(provider -> provider.gameType().equals(gameType))
                 .findFirst();
+    }
+
+    public Optional<IGameProvider> providerForPackage(GamePackageManifest manifest) {
+        Objects.requireNonNull(manifest, "manifest");
+        return registrations.stream()
+                .filter(registration -> registration.plugin().id().equals(manifest.pluginId()))
+                .filter(registration -> registration.plugin().apiVersion().equals(manifest.apiVersion()))
+                .map(RegisteredGameProvider::provider)
+                .filter(provider -> provider.gameType().equals(manifest.gameType()))
+                .filter(provider -> provider.getClass().getName().equals(manifest.providerClass()))
+                .findFirst();
+    }
+
+    public GamePackageManifest packageManifestForType(
+            String gameType,
+            String serverVersion,
+            GamePackageManifest.PackageMetadata metadata,
+            List<GamePackageManifest.Asset> assets
+    ) {
+        RegisteredGameProvider registration = registrations.stream()
+                .filter(candidate -> candidate.provider().gameType().equals(gameType))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown game type: " + gameType));
+        IGameProvider provider = registration.provider();
+        PluginDescriptor plugin = registration.plugin();
+        return new GamePackageManifest(
+                GamePackageManifest.CURRENT_MANIFEST_VERSION,
+                plugin.id(),
+                plugin.version(),
+                plugin.apiVersion(),
+                provider.gameType(),
+                provider.getClass().getName(),
+                provider.gameDataFile(),
+                provider.gameDataFormatVersion(),
+                serverVersion,
+                metadata,
+                assets
+        );
     }
 
     public Optional<IGameCreator> creatorForType(String gameType) {
@@ -55,7 +112,8 @@ public final class GameProviderRegistry {
     }
 
     public List<GameCreatorInfo> creators() {
-        return providers.stream()
+        return registrations.stream()
+                .map(RegisteredGameProvider::provider)
                 .flatMap(provider -> provider.creator()
                         .stream()
                         .map(creator -> new GameCreatorInfo(

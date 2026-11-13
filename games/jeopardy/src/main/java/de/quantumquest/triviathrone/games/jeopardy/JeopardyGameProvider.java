@@ -20,6 +20,16 @@ public final class JeopardyGameProvider implements IGameProvider {
     }
 
     @Override
+    public String gameDataFile() {
+        return "game.xml";
+    }
+
+    @Override
+    public String gameDataFormatVersion() {
+        return "1.0";
+    }
+
+    @Override
     public Optional<IGameCreator> creator() {
         return Optional.of(CREATOR);
     }

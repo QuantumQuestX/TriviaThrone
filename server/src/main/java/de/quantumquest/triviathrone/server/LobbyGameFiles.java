@@ -2,6 +2,7 @@ package de.quantumquest.triviathrone.server;
 
 import de.quantumquest.triviathrone.api.game.IGameDefinition;
 import de.quantumquest.triviathrone.api.game.IGameProvider;
+import de.quantumquest.triviathrone.api.game.GamePackageManifest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,8 +15,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -47,36 +50,88 @@ public class LobbyGameFiles {
         Objects.requireNonNull(lobbyCode, "lobbyCode");
         Objects.requireNonNull(filename, "filename");
         Objects.requireNonNull(file, "file");
-        IGameProvider provider = gameProviders.providerForFile(filename)
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported game file."));
+        if (gameProviders.providerForFile(filename).isEmpty()) {
+            throw new IllegalArgumentException("Unsupported game file.");
+        }
 
         Path storageRoot = storageDir.toAbsolutePath().normalize();
         Files.createDirectories(storageRoot);
         Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
-        if (!lobbyDir.startsWith(storageRoot)) {
+        if (!lobbyDir.startsWith(storageRoot) || lobbyDir.equals(storageRoot)) {
             throw new IllegalArgumentException("Invalid lobby code.");
         }
-        Files.createDirectories(lobbyDir);
 
-        try (ZipInputStream zip = new ZipInputStream(file.getInputStream())) {
-            ZipEntry entry;
-            while ((entry = zip.getNextEntry()) != null) {
-                Path destination = lobbyDir.resolve(entry.getName()).normalize();
-                if (!destination.startsWith(lobbyDir)) {
-                    throw new IllegalArgumentException("Invalid zip entry.");
+        Path stagingDir = Files.createTempDirectory(storageRoot, ".game-upload-");
+        try {
+            Set<Path> extractedEntries = new HashSet<>();
+            try (ZipInputStream zip = new ZipInputStream(file.getInputStream())) {
+                ZipEntry entry;
+                while ((entry = zip.getNextEntry()) != null) {
+                    Path relativePath = safeZipEntryPath(entry.getName());
+                    if (!extractedEntries.add(relativePath)) {
+                        throw new IllegalArgumentException("Duplicate zip entry.");
+                    }
+                    Path destination = stagingDir.resolve(relativePath).normalize();
+                    if (!destination.startsWith(stagingDir) || destination.equals(stagingDir)) {
+                        throw new IllegalArgumentException("Invalid zip entry.");
+                    }
+
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(destination);
+                        continue;
+                    }
+
+                    Files.createDirectories(destination.getParent());
+                    Files.copy(zip, destination);
                 }
+            }
 
-                if (entry.isDirectory()) {
-                    Files.createDirectories(destination);
-                    continue;
-                }
+            GamePackageManifest manifest = GamePackageManifest.read(stagingDir);
+            IGameProvider provider = gameProviders.providerForPackage(manifest)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No installed provider matches the game package manifest."
+                    ));
+            if (!provider.supportsFile(filename)) {
+                throw new IllegalArgumentException("The game package provider does not support this file type.");
+            }
 
-                Files.createDirectories(destination.getParent());
-                Files.copy(zip, destination, StandardCopyOption.REPLACE_EXISTING);
+            if (Files.exists(lobbyDir, LinkOption.NOFOLLOW_LINKS)) {
+                deleteDirectory(lobbyDir);
+            }
+            Files.move(stagingDir, lobbyDir, StandardCopyOption.ATOMIC_MOVE);
+            return provider.load(lobbyDir);
+        } finally {
+            if (Files.exists(stagingDir, LinkOption.NOFOLLOW_LINKS)) {
+                deleteDirectory(stagingDir);
             }
         }
+    }
 
-        return provider.load(lobbyDir);
+    private static Path safeZipEntryPath(String entryName) {
+        if (entryName == null
+                || entryName.isBlank()
+                || entryName.contains("\\")
+                || entryName.contains("//")
+                || entryName.matches("^[A-Za-z]:.*")) {
+            throw new IllegalArgumentException("Invalid zip entry.");
+        }
+        Path path;
+        try {
+            path = Path.of(entryName);
+        } catch (RuntimeException exception) {
+            throw new IllegalArgumentException("Invalid zip entry.", exception);
+        }
+        if (path.isAbsolute()) {
+            throw new IllegalArgumentException("Invalid zip entry.");
+        }
+        for (Path component : path) {
+            if (component.toString().isBlank()
+                    || component.toString().equals(".")
+                    || component.toString().equals("..")) {
+                throw new IllegalArgumentException("Invalid zip entry.");
+            }
+        }
+        return path;
     }
 
     public Optional<Path> findMediaFile(String lobbyCode, String mediaPath) throws IOException {
@@ -112,7 +167,11 @@ public class LobbyGameFiles {
             return;
         }
 
-        Files.walkFileTree(lobbyDir, new SimpleFileVisitor<>() {
+        deleteDirectory(lobbyDir);
+    }
+
+    private static void deleteDirectory(Path directory) throws IOException {
+        Files.walkFileTree(directory, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
                 Files.delete(file);

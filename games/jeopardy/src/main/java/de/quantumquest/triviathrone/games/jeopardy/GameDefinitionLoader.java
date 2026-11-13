@@ -1,5 +1,6 @@
 package de.quantumquest.triviathrone.games.jeopardy;
 
+import de.quantumquest.triviathrone.api.game.GamePackageManifest;
 import de.quantumquest.triviathrone.games.jeopardy.definition.Category;
 import de.quantumquest.triviathrone.games.jeopardy.dto.MediaType;
 import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
@@ -13,7 +14,6 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +26,11 @@ public final class GameDefinitionLoader {
     public static JeopardyDefinition parse(Path lobbyDir) {
         Objects.requireNonNull(lobbyDir, "lobbyDir");
         try {
-            Path manifestXml = lobbyDir.resolve("manifest.xml");
-
-            if (!Files.isRegularFile(manifestXml)) {
-                throw new IllegalStateException("manifest.xml not found in lobby directory");
+            GamePackageManifest manifest = GamePackageManifest.read(lobbyDir);
+            if (!"jeopardy".equals(manifest.pluginId())
+                    || !"jeopardy".equals(manifest.gameType())
+                    || !JeopardyGameProvider.class.getName().equals(manifest.providerClass())) {
+                throw new IllegalArgumentException("The package manifest does not identify the Jeopardy provider.");
             }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -45,11 +46,16 @@ public final class GameDefinitionLoader {
             factory.setXIncludeAware(false);
             factory.setExpandEntityReferences(false);
 
-            Document doc = factory.newDocumentBuilder().parse(manifestXml.toFile());
+            Path gameDataFile = lobbyDir.resolve(manifest.gameDataFile());
+            Document doc = factory.newDocumentBuilder().parse(gameDataFile.toFile());
 
             doc.getDocumentElement().normalize();
 
             Element gameElement = doc.getDocumentElement();
+            if (!"game".equals(gameElement.getTagName())
+                    || !manifest.gameDataFormatVersion().equals(gameElement.getAttribute("version"))) {
+                throw new IllegalArgumentException("The Jeopardy game-data format version does not match the manifest.");
+            }
             GameResourceResolver resources = new GameResourceResolver(lobbyDir, gameElement);
 
             Element metaElement = getSingleChild(gameElement, "meta");
@@ -138,7 +144,7 @@ public final class GameDefinitionLoader {
 
             return new JeopardyDefinition(title, description, rounds);
         } catch (IOException | ParserConfigurationException | SAXException e) {
-            throw new IllegalStateException("Could not parse game manifest", e);
+            throw new IllegalStateException("Could not parse Jeopardy game data", e);
         }
     }
 

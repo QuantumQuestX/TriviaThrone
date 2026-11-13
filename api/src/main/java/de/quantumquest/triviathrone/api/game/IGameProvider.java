@@ -7,6 +7,14 @@ import java.util.Optional;
 public interface IGameProvider {
     String gameType();
 
+    default String gameDataFile() {
+        return "game.xml";
+    }
+
+    default String gameDataFormatVersion() {
+        return "1.0";
+    }
+
     boolean supportsFile(String filename);
 
     Optional<IGameDefinition> load(Path gameDirectory) throws IOException;

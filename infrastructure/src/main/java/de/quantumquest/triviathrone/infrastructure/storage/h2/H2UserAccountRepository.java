@@ -4,7 +4,6 @@ import de.quantumquest.triviathrone.auth.IUserAccountRepository;
 import de.quantumquest.triviathrone.auth.UserAccount;
 import de.quantumquest.triviathrone.api.storage.migration.IMigrationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -19,7 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-@Repository
 public class H2UserAccountRepository implements IUserAccountRepository {
     private static final String SQL_STATEMENT__FIND_ALL = """
                 SELECT account.user_id, account.username, account.display_name, account.password_hash, account.enabled, account.default_admin, account_role.role_name

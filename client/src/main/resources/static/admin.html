@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriviaThrone — Admin</title>
+    <link rel="stylesheet" href="/css/pages/admin.css">
+</head>
+<body class="admin-page tt-shell">
+    <div data-topbar="admin"></div>
+    <main>
+        <section id="admin-section" class="panel tt-card" aria-labelledby="admin-title">
+            <h2 id="admin-title">User administration</h2>
+            <p class="admin-description">Manage accounts, roles, and access. USER is required to sign in;
+                ADMIN grants administrative access. The default admin account and its roles are protected.</p>
+
+            <form id="admin-create-user-form">
+                <h3>Add user</h3>
+                <label>
+                    Username
+                    <input class="tt-control" name="username" type="text" maxlength="255" required>
+                </label>
+                <label>
+                    Display name
+                    <input class="tt-control" name="displayName" type="text" maxlength="255">
+                </label>
+                <label>
+                    Temporary password
+                    <input class="tt-control" name="password" type="password" minlength="12" required
+                           autocomplete="new-password">
+                </label>
+                <div class="role-field">
+                    <span>Roles</span>
+                    <div id="create-role-dropdown"></div>
+                </div>
+                <p class="admin-description">Passwords need uppercase, lowercase, a number, and a special character.</p>
+                <button class="primary-btn tt-button tt-button--primary" type="submit">Add user</button>
+            </form>
+
+            <p id="admin-message" class="tt-status" role="status" aria-live="polite"></p>
+
+            <div class="admin-users-wrap">
+                <table class="admin-users">
+                    <thead>
+                    <tr>
+                        <th scope="col">Username</th>
+                        <th scope="col">Display name</th>
+                        <th scope="col">Roles</th>
+                        <th scope="col">Access</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="admin-user-list">
+                    <tr><td colspan="5" role="status">Loading users…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="/js/root/topbar.js"></script>
+    <script type="module" src="/js/root/version.js"></script>
+    <script type="module" src="/js/root/credits.js"></script>
+    <script type="module" src="/js/page-admin/index.js"></script>
+</body>
+</html>

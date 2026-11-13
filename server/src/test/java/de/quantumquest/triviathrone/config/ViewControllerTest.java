@@ -23,6 +23,9 @@ class ViewControllerTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/index.html"));
+        mockMvc.perform(get("/admin"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/admin.html"));
         mockMvc.perform(get("/login"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/login.html"));

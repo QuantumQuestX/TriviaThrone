@@ -1,0 +1,138 @@
+@import "../root.css";
+@import "../components/panel.css";
+@import "../components/inputs.css";
+@import "../components/buttons.css";
+
+.admin-page main {
+    width: min(100%, 74rem);
+    margin-inline: auto;
+}
+
+.admin-page #admin-section {
+    width: min(100%, 70rem);
+    margin-inline: auto;
+}
+
+.admin-page #admin-create-user-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+    gap: 0.85rem 1rem;
+    padding-block: 0.5rem 1.25rem;
+    border-bottom: 1px solid var(--tt-color-border);
+}
+
+.admin-page #admin-create-user-form h3,
+.admin-page #admin-create-user-form > p {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.admin-page #admin-create-user-form > label,
+.admin-page .role-field {
+    display: grid;
+    gap: 0.35rem;
+    color: var(--tt-color-muted);
+    font-size: 0.9rem;
+}
+
+.admin-page .admin-description {
+    color: var(--tt-color-muted);
+    font-size: 0.9rem;
+}
+
+.admin-page .role-dropdown {
+    position: relative;
+    width: fit-content;
+    min-width: 8rem;
+    color: var(--tt-color-text);
+}
+
+.admin-page .role-dropdown summary {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--tt-color-border);
+    border-radius: 0.45rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.admin-page .role-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.admin-page .role-dropdown summary::after {
+    content: " ▾";
+}
+
+.admin-page .role-dropdown[open] summary::after {
+    content: " ▴";
+}
+
+.admin-page .role-dropdown__options {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    gap: 0.4rem;
+    min-width: 100%;
+    padding: 0.55rem;
+    border: 1px solid var(--tt-color-border);
+    border-radius: 0.45rem;
+    background: var(--tt-color-surface);
+    box-shadow: var(--tt-shadow-card);
+}
+
+.admin-page .role-dropdown__options label,
+.admin-page .admin-enabled-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.admin-page .admin-users-wrap {
+    overflow-x: auto;
+    margin-top: 1rem;
+}
+
+.admin-page .admin-users {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-page .admin-users th,
+.admin-page .admin-users td {
+    padding: 0.75rem 0.65rem;
+    border-bottom: 1px solid var(--tt-color-border);
+    vertical-align: middle;
+}
+
+.admin-page .admin-users th {
+    color: var(--tt-color-muted);
+    font-size: 0.8rem;
+    font-weight: 650;
+}
+
+.admin-page .admin-users td:last-child {
+    white-space: nowrap;
+}
+
+.admin-page .admin-users .tt-button {
+    min-height: 2.3rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.admin-page .admin-users .role-dropdown {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 600px) {
+    .admin-page #admin-create-user-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-page #admin-create-user-form h3,
+    .admin-page #admin-create-user-form > p {
+        grid-column: auto;
+    }
+}

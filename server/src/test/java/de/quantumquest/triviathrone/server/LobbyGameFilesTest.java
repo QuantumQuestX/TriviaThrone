@@ -1,6 +1,6 @@
 package de.quantumquest.triviathrone.server;
 
-import de.quantumquest.triviathrone.plugin.PluginManager;
+import de.quantumquest.triviathrone.mod.GameModManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -21,10 +21,10 @@ class LobbyGameFilesTest {
         Path outsideFile = tempDir.resolve("outside.txt");
         Files.writeString(outsideFile, "keep");
 
-        try (PluginManager pluginManager = PluginManager.load(tempDir.resolve("mods"))) {
+        try (GameModManager gameModManager = GameModManager.load(tempDir.resolve("mods/games"))) {
             LobbyGameFiles gameFiles = new LobbyGameFiles(
                     storageDir.toString(),
-                    new GameProviderRegistry(pluginManager)
+                    new GameProviderRegistry(gameModManager)
             );
 
             assertThrows(IllegalArgumentException.class, () -> gameFiles.deleteLobbyFiles("../"));

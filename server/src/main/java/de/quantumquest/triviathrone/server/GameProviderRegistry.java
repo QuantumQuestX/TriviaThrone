@@ -4,9 +4,9 @@ import de.quantumquest.triviathrone.api.game.GameCreatorInfo;
 import de.quantumquest.triviathrone.api.game.GamePackageManifest;
 import de.quantumquest.triviathrone.api.game.IGameCreator;
 import de.quantumquest.triviathrone.api.game.IGameProvider;
-import de.quantumquest.triviathrone.plugin.PluginDescriptor;
-import de.quantumquest.triviathrone.plugin.PluginManager;
-import de.quantumquest.triviathrone.plugin.RegisteredGameProvider;
+import de.quantumquest.triviathrone.mod.GameModManager;
+import de.quantumquest.triviathrone.mod.ModDescriptor;
+import de.quantumquest.triviathrone.mod.RegisteredGameProvider;
 
 import java.util.Comparator;
 import java.util.List;
@@ -16,9 +16,9 @@ import java.util.Optional;
 public final class GameProviderRegistry {
     private final List<RegisteredGameProvider> registrations;
 
-    public GameProviderRegistry(PluginManager pluginManager) {
+    public GameProviderRegistry(GameModManager gameModManager) {
         this.registrations = List.copyOf(
-                Objects.requireNonNull(pluginManager, "pluginManager").registeredGameProviders()
+                Objects.requireNonNull(gameModManager, "gameModManager").registeredGameProviders()
         );
     }
 
@@ -26,7 +26,7 @@ public final class GameProviderRegistry {
         this.registrations = Objects.requireNonNull(providers, "providers").stream()
                 .map(provider -> new RegisteredGameProvider(
                         provider,
-                        new PluginDescriptor(
+                        new ModDescriptor(
                                 provider.gameType(),
                                 provider.gameType(),
                                 "test",
@@ -66,8 +66,8 @@ public final class GameProviderRegistry {
     public Optional<IGameProvider> providerForPackage(GamePackageManifest manifest) {
         Objects.requireNonNull(manifest, "manifest");
         return registrations.stream()
-                .filter(registration -> registration.plugin().id().equals(manifest.pluginId()))
-                .filter(registration -> registration.plugin().apiVersion().equals(manifest.apiVersion()))
+                .filter(registration -> registration.mod().id().equals(manifest.modId()))
+                .filter(registration -> registration.mod().apiVersion().equals(manifest.apiVersion()))
                 .map(RegisteredGameProvider::provider)
                 .filter(provider -> provider.gameType().equals(manifest.gameType()))
                 .filter(provider -> provider.getClass().getName().equals(manifest.providerClass()))
@@ -85,12 +85,12 @@ public final class GameProviderRegistry {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown game type: " + gameType));
         IGameProvider provider = registration.provider();
-        PluginDescriptor plugin = registration.plugin();
+        ModDescriptor mod = registration.mod();
         return new GamePackageManifest(
                 GamePackageManifest.CURRENT_MANIFEST_VERSION,
-                plugin.id(),
-                plugin.version(),
-                plugin.apiVersion(),
+                mod.id(),
+                mod.version(),
+                mod.apiVersion(),
                 provider.gameType(),
                 provider.getClass().getName(),
                 provider.gameDataFile(),

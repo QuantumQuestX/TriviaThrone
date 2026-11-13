@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>de.quantumquest</groupId>
-            <artifactId>triviathrone-api</artifactId>
+            <artifactId>triviathrone-game-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -35,17 +35,17 @@
                 <version>3.1.0</version>
                 <executions>
                     <execution>
-                        <id>copy-game-plugin-to-mods</id>
+                        <id>copy-game-mod-to-mods</id>
                         <phase>package</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <mkdir dir="${maven.multiModuleProjectDirectory}/mods"/>
+                                <mkdir dir="${maven.multiModuleProjectDirectory}/mods/games"/>
                                 <copy
                                         file="${project.build.directory}/${project.build.finalName}.jar"
-                                        todir="${maven.multiModuleProjectDirectory}/mods"
+                                        todir="${maven.multiModuleProjectDirectory}/mods/games"
                                         overwrite="true"/>
                             </target>
                         </configuration>

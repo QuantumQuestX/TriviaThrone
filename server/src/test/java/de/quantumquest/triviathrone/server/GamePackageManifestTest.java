@@ -44,13 +44,31 @@ class GamePackageManifestTest {
 
         GamePackageManifest parsed = GamePackageManifest.read(tempDir);
 
-        assertEquals("1.0", parsed.manifestVersion());
+        assertEquals("2.0", parsed.manifestVersion());
         assertEquals("format-7", parsed.gameDataFormatVersion());
-        assertEquals("3.2.1", parsed.pluginVersion());
+        assertEquals("3.2.1", parsed.modVersion());
         assertEquals("Sample", parsed.metadata().title());
 
         Files.writeString(tempDir.resolve("cover.png"), "tampered");
         assertThrows(IllegalArgumentException.class, () -> GamePackageManifest.read(tempDir));
+    }
+
+    @Test
+    void readsLegacyPluginManifestVersions() throws IOException {
+        Files.writeString(tempDir.resolve("game.xml"), "<game/>");
+        Files.writeString(tempDir.resolve(GamePackageManifest.FILE_NAME), """
+                <gamePackage manifestVersion="1.0">
+                  <plugin id="legacy-game" version="1.2.3" apiVersion="2.0.0"/>
+                  <game type="legacy" providerClass="example.LegacyProvider"
+                        dataFile="game.xml" formatVersion="1.0"/>
+                </gamePackage>
+                """);
+
+        GamePackageManifest manifest = GamePackageManifest.read(tempDir);
+
+        assertEquals("1.0", manifest.manifestVersion());
+        assertEquals("legacy-game", manifest.modId());
+        assertEquals("1.2.3", manifest.modVersion());
     }
 
     @Test

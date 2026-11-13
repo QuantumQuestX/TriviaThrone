@@ -134,8 +134,8 @@ final class GameUploadControllerTestSupport {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         try (ZipOutputStream archive = new ZipOutputStream(bytes)) {
             String packageManifest = """
-                    <gamePackage manifestVersion="1.0">
-                        <plugin id="jeopardy" version="test" apiVersion="test"/>
+                    <gamePackage manifestVersion="2.0">
+                        <mod id="jeopardy" version="test" apiVersion="test"/>
                         <game type="jeopardy" providerClass="%s" dataFile="game.xml" formatVersion="1.0"/>
                         <createdBy serverVersion="test"/>
                     </gamePackage>

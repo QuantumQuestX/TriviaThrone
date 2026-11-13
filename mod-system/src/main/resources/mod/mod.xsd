@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:simpleType name="nonEmptyText">
+        <xs:restriction base="xs:token">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="modType">
+        <xs:sequence>
+            <xs:element name="name" type="nonEmptyText"/>
+            <xs:element name="version" type="nonEmptyText"/>
+            <xs:element name="apiVersion" type="nonEmptyText"/>
+            <xs:element name="description" type="nonEmptyText"/>
+            <xs:element name="providers">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="provider" maxOccurs="unbounded">
+                            <xs:complexType>
+                                <xs:attribute name="class" type="nonEmptyText" use="required"/>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="id" use="required">
+            <xs:simpleType>
+                <xs:restriction base="xs:token">
+                    <xs:pattern value="[a-z][a-z0-9._-]*"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:element name="mod" type="modType"/>
+    <xs:element name="plugin" type="modType"/>
+</xs:schema>

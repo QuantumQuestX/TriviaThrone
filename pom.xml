@@ -32,7 +32,6 @@
         <developer>
             <name>reallukeplayer</name>
             <roles>
-                <role>MAINTAINER</role>
                 <role>CONTRIBUTOR</role>
             </roles>
             <organization>QuantumQuest</organization>
@@ -49,7 +48,7 @@
 
     <modules>
         <module>api</module>
-        <module>plugin-system</module>
+        <module>mod-system</module>
         <module>client</module>
         <module>infrastructure</module>
         <module>games</module>

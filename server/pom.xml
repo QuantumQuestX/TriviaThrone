@@ -13,12 +13,17 @@
     <dependencies>
         <dependency>
             <groupId>de.quantumquest</groupId>
-            <artifactId>triviathrone-api</artifactId>
+            <artifactId>triviathrone-game-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>de.quantumquest</groupId>
-            <artifactId>triviathrone-plugin-system</artifactId>
+            <artifactId>triviathrone-system-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.quantumquest</groupId>
+            <artifactId>triviathrone-mod-system</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -10,7 +10,7 @@ file named by the manifest, not in `manifest.xml`.
   <mod id="jeopardy" version="1.0.0" apiVersion="2.0.0"/>
   <game
       type="jeopardy"
-      providerClass="de.quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"
+      providerClass="quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"
       dataFile="game.xml"
       formatVersion="1.0"/>
   <createdBy serverVersion="2.0.0"/>

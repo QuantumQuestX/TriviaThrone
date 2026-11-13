@@ -42,22 +42,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 Claims claims = tokens.parse(token).getBody();
 
                 String username = claims.getSubject();
-                Object roleClaim = claims.get("roles");
-                if (!(roleClaim instanceof List<?> roles)
-                        || roles.stream().anyMatch(role -> !(role instanceof String))) {
-                    throw new IllegalArgumentException("Invalid roles claim");
-                }
-
-                List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(String.class::cast)
-                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                        .toList();
-
                 UserAccount account = userConfigLoader.findByUsername(username);
-                if (account == null) {
+                if (account == null || !account.isEnabled()
+                        || !account.getRoles().contains(UserAccount.ROLE_USER)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
                     return;
                 }
+
+                List<SimpleGrantedAuthority> authorities = account.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .toList();
                 Authentication auth = new UsernamePasswordAuthenticationToken(
                         account, null, authorities
                 );

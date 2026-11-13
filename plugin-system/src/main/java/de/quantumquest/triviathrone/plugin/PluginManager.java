@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public final class PluginManager implements AutoCloseable {
     private final List<URLClassLoader> classLoaders = new ArrayList<>();
     private final List<IGameProvider> gameProviders = new ArrayList<>();
+    private final List<RegisteredGameProvider> registeredGameProviders = new ArrayList<>();
 
     private PluginManager() {
     }
@@ -56,6 +57,10 @@ public final class PluginManager implements AutoCloseable {
 
     public List<IGameProvider> gameProviders() {
         return List.copyOf(gameProviders);
+    }
+
+    public List<RegisteredGameProvider> registeredGameProviders() {
+        return List.copyOf(registeredGameProviders);
     }
 
     private void loadJar(Path jar, Set<String> gameTypes, Set<String> pluginIds) throws IOException {
@@ -107,6 +112,9 @@ public final class PluginManager implements AutoCloseable {
             pluginIds.add(descriptor.id());
             gameTypes.addAll(jarGameTypes);
             gameProviders.addAll(discovered);
+            discovered.stream()
+                    .map(provider -> new RegisteredGameProvider(provider, descriptor))
+                    .forEach(registeredGameProviders::add);
             classLoaders.add(classLoader);
         } catch (RuntimeException | ServiceConfigurationError exception) {
             try {
@@ -136,6 +144,7 @@ public final class PluginManager implements AutoCloseable {
 
         classLoaders.clear();
         gameProviders.clear();
+        registeredGameProviders.clear();
 
         if (failure != null) {
             throw failure;

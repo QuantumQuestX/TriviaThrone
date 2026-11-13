@@ -1,5 +1,6 @@
 package de.quantumquest.triviathrone.games.jeopardy;
 
+import de.quantumquest.triviathrone.api.game.GamePackageManifest;
 import de.quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -46,8 +47,8 @@ class GameDefinitionLoaderTest {
     }
 
     private void writeManifest(String options) throws IOException {
-        Files.writeString(tempDir.resolve("manifest.xml"), """
-                <game>
+        Files.writeString(tempDir.resolve("game.xml"), """
+                <game version="1.0">
                     <meta><title>Test</title><description>Test game</description></meta>
                     <rounds>
                         <round name="Round 1" categoryCount="1" questionCount="1">
@@ -62,5 +63,18 @@ class GameDefinitionLoaderTest {
                     </rounds>
                 </game>
                 """.formatted(options));
+        new GamePackageManifest(
+                GamePackageManifest.CURRENT_MANIFEST_VERSION,
+                "jeopardy",
+                "1.0.0",
+                "2.0.0",
+                "jeopardy",
+                JeopardyGameProvider.class.getName(),
+                "game.xml",
+                "1.0",
+                "test",
+                null,
+                List.of()
+        ).write(tempDir);
     }
 }

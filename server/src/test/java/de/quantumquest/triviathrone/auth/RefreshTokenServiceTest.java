@@ -97,14 +97,14 @@ class RefreshTokenServiceTest {
 
     private RefreshTokenService newService() {
         AuthProperties properties = new AuthProperties(
-                tempDir.resolve("users.xml"),
                 sessionFile,
                 "01234567890123456789012345678901",
                 900,
                 3600,
                 7200,
                 false,
-                null
+                "",
+                ""
         );
         return new RefreshTokenService(properties, new RefreshTokenSessionStore(properties));
     }

@@ -16,8 +16,14 @@ class H2MigrationProviderTest {
 
         List<IMigration> migrations = new H2MigrationProvider().getMigrations();
 
-        assertEquals(1, migrations.size());
+        assertEquals(4, migrations.size());
         assertEquals(1, migrations.get(0).version());
         assertEquals("p001__create-account-tables.sql", migrations.get(0).source());
+        assertEquals(2, migrations.get(1).version());
+        assertEquals("p002__enable-user-accounts.sql", migrations.get(1).source());
+        assertEquals(3, migrations.get(2).version());
+        assertEquals("p003__mark-default-admin.sql", migrations.get(2).source());
+        assertEquals(4, migrations.get(3).version());
+        assertEquals("p004__seed-default-admin.sql", migrations.get(3).source());
     }
 }

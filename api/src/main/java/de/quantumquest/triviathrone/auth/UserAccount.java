@@ -1,16 +1,22 @@
 package de.quantumquest.triviathrone.auth;
 
 import java.util.Objects;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public class UserAccount {
+    public static final String ROLE_USER = "USER";
+    public static final String ROLE_ADMIN = "ADMIN";
+
     private static final String USER_ID_PATTERN = "[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}";
     private String userId = UUID.randomUUID().toString().replace("-", "");
     private String username;
     private String displayName;
     private String passwordHash;
-    private Set<String> roles = Set.of();
+    private volatile Set<String> roles = Set.of(ROLE_USER);
+    private volatile boolean enabled = true;
+    private volatile boolean defaultAdmin;
 
     public String getUserId() {
         return userId;
@@ -53,7 +59,24 @@ public class UserAccount {
     }
 
     public void setRoles(Set<String> roles) {
-        this.roles = roles == null ? Set.of() : Set.copyOf(roles);
+        Set<String> assignedRoles = roles == null ? new HashSet<>() : new HashSet<>(roles);
+        this.roles = Set.copyOf(assignedRoles);
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean isDefaultAdmin() {
+        return defaultAdmin;
+    }
+
+    public void setDefaultAdmin(boolean defaultAdmin) {
+        this.defaultAdmin = defaultAdmin;
     }
 
     @Override

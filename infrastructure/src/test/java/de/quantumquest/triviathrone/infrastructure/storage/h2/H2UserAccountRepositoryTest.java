@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class H2UserAccountRepositoryTest {
@@ -32,7 +33,10 @@ class H2UserAccountRepositoryTest {
         account.setRoles(Set.of("HOST"));
         repository.insertAll(List.of(account));
 
-        UserAccount persistedAccount = newRepository(jdbcTemplate, dataSource).findAll().getFirst();
+        UserAccount persistedAccount = newRepository(jdbcTemplate, dataSource).findAll().stream()
+                .filter(candidate -> "player".equals(candidate.getUsername()))
+                .findFirst()
+                .orElseThrow();
 
         assertNotNull(persistedAccount.getUserId());
         assertTrue(persistedAccount.getUserId().matches("[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}"));
@@ -40,12 +44,58 @@ class H2UserAccountRepositoryTest {
         assertEquals(Set.of("HOST"), persistedAccount.getRoles());
         assertUserIdIsPrimaryKey(dataSource);
         assertEquals(
-                List.of("p001__create-account-tables.sql"),
+                List.of(
+                        "p001__create-account-tables.sql",
+                        "p002__enable-user-accounts.sql",
+                        "p003__mark-default-admin.sql",
+                        "p004__seed-default-admin.sql"
+                ),
                 jdbcTemplate.queryForList(
                         "SELECT migration_src FROM triviathrone_schema_migrations ORDER BY migration_src",
                         String.class
                 )
         );
+    }
+
+    @Test
+    void updatesRolesAndDeletesUsersFromTheDatabase() {
+        DataSource dataSource = newDataSource();
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        H2UserAccountRepository repository = newRepository(jdbcTemplate, dataSource);
+        UserAccount account = new UserAccount();
+        account.setUsername("player");
+        account.setPasswordHash("hash");
+        account.setRoles(Set.of("USER"));
+        repository.insert(account);
+
+        repository.updateRoles("player", Set.of("USER", "ADMIN"));
+        UserAccount player = repository.findAll().stream()
+                .filter(user -> "player".equals(user.getUsername()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(Set.of("USER", "ADMIN"), player.getRoles());
+        assertFalse(player.isDefaultAdmin());
+        repository.updateRoles("player", Set.of());
+        player = repository.findAll().stream()
+                .filter(user -> "player".equals(user.getUsername()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(player.getRoles().isEmpty());
+        repository.updateEnabled("player", false);
+        player = repository.findAll().stream()
+                .filter(user -> "player".equals(user.getUsername()))
+                .findFirst()
+                .orElseThrow();
+        assertFalse(player.isEnabled());
+
+        UserAccount admin = repository.findAll().stream()
+                .filter(user -> "admin".equals(user.getUsername()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(admin.isDefaultAdmin());
+        assertThrows(IllegalStateException.class, () -> repository.delete("admin"));
+        repository.delete("player");
+        assertEquals(List.of("admin"), repository.findAll().stream().map(UserAccount::getUsername).toList());
     }
 
     @Test

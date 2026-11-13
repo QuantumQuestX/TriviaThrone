@@ -176,6 +176,16 @@ jobs:
           .\mvnw.cmd --batch-mode --no-transfer-progress clean package -DskipTests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Stage API JARs for release
+        if: matrix.platform == 'linux'
+        env:
+          RELEASE_VERSION: ${{ needs.resolve-version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp "triviathrone-api/game-api/target/triviathrone-game-api-${RELEASE_VERSION}.jar" .
+          cp "triviathrone-api/system-api/target/triviathrone-system-api-${RELEASE_VERSION}.jar" .
+
       - name: Create Linux executable image
         if: matrix.platform == 'linux'
         env:
@@ -240,6 +250,16 @@ jobs:
             TriviaThrone-${{ needs.resolve-version.outputs.version }}.jar
             TriviaThrone-${{ needs.resolve-version.outputs.version }}.jar.sha256
             TriviaThrone-${{ needs.resolve-version.outputs.version }}-linux.zip
+          if-no-files-found: error
+
+      - name: Upload API release assets
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: TriviaThrone-${{ needs.resolve-version.outputs.version }}-api
+          path: |
+            triviathrone-game-api-${{ needs.resolve-version.outputs.version }}.jar
+            triviathrone-system-api-${{ needs.resolve-version.outputs.version }}.jar
           if-no-files-found: error
 
       - name: Upload Windows release assets

@@ -4,14 +4,12 @@ import de.quantumquest.triviathrone.api.storage.migration.IMigration;
 import de.quantumquest.triviathrone.api.storage.migration.IMigrationProvider;
 import de.quantumquest.triviathrone.api.storage.migration.IMigrationRunner;
 import de.quantumquest.triviathrone.api.storage.migration.IMigrationStateStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -21,7 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-@Component
 public final class H2MigrationRunner implements IMigrationRunner {
     private static final String MIGRATION_DIRECTORY = "storage/h2/migrations";
 
@@ -30,7 +27,6 @@ public final class H2MigrationRunner implements IMigrationRunner {
     private final IMigrationProvider migrationProvider;
     private final IMigrationStateStore migrationStateStore;
 
-    @Autowired
     public H2MigrationRunner(
             JdbcTemplate jdbcTemplate,
             PlatformTransactionManager transactionManager
@@ -103,7 +99,10 @@ public final class H2MigrationRunner implements IMigrationRunner {
 
     private void executeScript(String source) {
         H2MigrationProvider.validateSource(source);
-        Resource script = new ClassPathResource(MIGRATION_DIRECTORY + "/" + source);
+        Resource script = new ClassPathResource(
+                MIGRATION_DIRECTORY + "/" + source,
+                H2MigrationRunner.class.getClassLoader()
+        );
         if (!script.exists()) {
             throw new IllegalStateException("H2 migration resource does not exist: " + source);
         }

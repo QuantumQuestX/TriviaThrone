@@ -35,7 +35,10 @@ final class H2MigrationProvider implements IMigrationProvider {
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
-            try (InputStream input = new ClassPathResource(INDEX_RESOURCE).getInputStream()) {
+            try (InputStream input = new ClassPathResource(
+                    INDEX_RESOURCE,
+                    H2MigrationProvider.class.getClassLoader()
+            ).getInputStream()) {
                 Element root = factory.newDocumentBuilder().parse(input).getDocumentElement();
                 if (!"migrations".equals(root.getTagName())) {
                     throw new IllegalStateException("Invalid H2 migration index root element");

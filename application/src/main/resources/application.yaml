@@ -1,12 +1,6 @@
 spring:
   application:
     name: TriviaThrone
-  datasource:
-    url: ${AUTH_USER_DATABASE_URL:jdbc:h2:file:./triviathrone-users;AUTO_SERVER=TRUE}
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
 auth:
   refresh-token-file: ${AUTH_REFRESH_TOKEN_FILE:refresh-tokens.xml}
   # Override with a private signing key outside local development.
@@ -18,3 +12,13 @@ auth:
   refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:false}
   initial-admin-username: ${AUTH_INITIAL_ADMIN_USERNAME:}
   initial-admin-password: ${AUTH_INITIAL_ADMIN_PASSWORD:}
+
+triviathrone:
+  mods:
+    system-directory: ${TRIVIATHRONE_SYSTEM_MODS_DIRECTORY:mods/system}
+  system:
+    data-directory: ${TRIVIATHRONE_SYSTEM_DATA_DIRECTORY:data/system}
+    h2:
+      jdbc-url: ${AUTH_USER_DATABASE_URL:jdbc:h2:file:./triviathrone-users;AUTO_SERVER=TRUE}
+      username: ${AUTH_USER_DATABASE_USERNAME:sa}
+      password: ${AUTH_USER_DATABASE_PASSWORD:}

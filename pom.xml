@@ -47,13 +47,13 @@
     </scm>
 
     <modules>
-        <module>api</module>
-        <module>mod-system</module>
-        <module>client</module>
-        <module>infrastructure</module>
-        <module>games</module>
-        <module>server</module>
-        <module>application</module>
+        <module>triviathrone-api</module>
+        <module>triviathrone-mod-system</module>
+        <module>triviathrone-client</module>
+        <module>triviathrone-infrastructure</module>
+        <module>triviathrone-games</module>
+        <module>triviathrone-server</module>
+        <module>triviathrone-application</module>
     </modules>
 
     <properties>

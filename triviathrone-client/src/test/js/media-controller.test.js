@@ -85,10 +85,10 @@ globalThis.document = {
 
 const {clearSession} = await import("../../main/resources/static/js/root/auth.js");
 const {MediaController, MediaType} = await import(
-    "../../main/resources/static/js/page-game/jeopardy/media-controller.js"
+    "../../../../triviathrone-games/jeopardy/src/main/resources/ui/js/game/jeopardy/media-controller.js"
 );
 const {QuestionManager} = await import(
-    "../../main/resources/static/js/page-game/jeopardy/question-manager.js"
+    "../../../../triviathrone-games/jeopardy/src/main/resources/ui/js/game/jeopardy/question-manager.js"
 );
 
 beforeEach(() => {

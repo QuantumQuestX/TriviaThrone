@@ -59,7 +59,9 @@ globalThis.fetch = async url => {
 };
 
 const {clearSession} = await import("../../main/resources/static/js/root/auth.js");
-const gameSocket = await import("../../main/resources/static/js/page-game/game-socket.js");
+const gameSocket = await import(
+    "../../../../triviathrone-games/jeopardy/src/main/resources/ui/js/game/game-socket.js"
+);
 
 afterEach(() => {
     gameSocket.disconnect();

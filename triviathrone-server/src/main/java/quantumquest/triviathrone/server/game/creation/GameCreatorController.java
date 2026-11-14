@@ -77,7 +77,7 @@ public class GameCreatorController {
      * @return the archive download response
      */
     private static ResponseEntity<StreamingResponseBody> archiveResponse(
-        GameCreationService.GeneratedGame game
+            GameCreationService.GeneratedGame game
     ) {
         StreamingResponseBody body = output -> {
             try (game) {
@@ -118,7 +118,7 @@ public class GameCreatorController {
         return gameCreationService.creators().stream()
             .map(info -> new CreatorResponse(
                 info.gameType(),
-                new CreatorDescriptorResponse(
+                    new CreatorDescriptorResponse(
                     info.descriptor().title(),
                     info.descriptor().description(),
                     GAME_MOD_JSON_MAPPER.convertValue(info.descriptor().editorSchema(), JSON_OBJECT_TYPE)
@@ -139,9 +139,9 @@ public class GameCreatorController {
      */
     @PostMapping(path = "/create/{gameType}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<StreamingResponseBody> create(
-        @PathVariable String gameType,
-        @RequestBody Map<String, Object> requestBody,
-        @AuthenticationPrincipal UserAccount user
+            @PathVariable String gameType,
+            @RequestBody Map<String, Object> requestBody,
+            @AuthenticationPrincipal UserAccount user
     ) throws IOException {
         Objects.requireNonNull(user, "user");
         return createArchive(gameType, requestParser.parse(requestBody));
@@ -159,10 +159,10 @@ public class GameCreatorController {
      */
     @PostMapping(path = "/create/{gameType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StreamingResponseBody> createMultipart(
-        @PathVariable String gameType,
-        @RequestParam("data") String requestData,
-        @RequestParam MultiValueMap<String, MultipartFile> uploadedFiles,
-        @AuthenticationPrincipal UserAccount user
+            @PathVariable String gameType,
+            @RequestParam("data") String requestData,
+            @RequestParam MultiValueMap<String, MultipartFile> uploadedFiles,
+            @AuthenticationPrincipal UserAccount user
     ) throws IOException {
         Objects.requireNonNull(user, "user");
         Path uploadDirectory = Files.createTempDirectory("triviathrone-game-assets-");
@@ -200,8 +200,8 @@ public class GameCreatorController {
      * @throws IOException if archive generation fails
      */
     private ResponseEntity<StreamingResponseBody> createArchive(
-        String gameType,
-        GameCreationRequest request
+            String gameType,
+            GameCreationRequest request
     ) throws IOException {
         return archiveResponse(generate(gameType, request));
     }
@@ -231,9 +231,9 @@ public class GameCreatorController {
      * @since 2.0.0
      */
     public record CreatorResponse(
-        String gameType,
-        CreatorDescriptorResponse descriptor,
-        boolean hasCustomEditor
+            String gameType,
+            CreatorDescriptorResponse descriptor,
+            boolean hasCustomEditor
     ) {
     }
 
@@ -247,9 +247,9 @@ public class GameCreatorController {
      * @since 2.0.0
      */
     public record CreatorDescriptorResponse(
-        String title,
-        String description,
-        Map<String, Object> editorSchema
+            String title,
+            String description,
+            Map<String, Object> editorSchema
     ) {
     }
 }

@@ -45,7 +45,7 @@ public final class GameProviderRegistry {
         this.registrations = Objects.requireNonNull(providers, "providers").stream()
             .map(provider -> new RegisteredGameProvider(
                 provider,
-                new ModDescriptor(
+                    new ModDescriptor(
                     provider.gameType(),
                     provider.gameType(),
                     "test",
@@ -68,9 +68,9 @@ public final class GameProviderRegistry {
             return Optional.empty();
         }
         List<IGameProvider> matches = registrations.stream()
-            .map(RegisteredGameProvider::provider)
-            .filter(provider -> provider.supportsFile(filename))
-            .toList();
+                .map(RegisteredGameProvider::provider)
+                .filter(provider -> provider.supportsFile(filename))
+                .toList();
         if (matches.size() > 1) {
             throw new IllegalStateException("Multiple game providers support file: " + filename);
         }
@@ -121,15 +121,15 @@ public final class GameProviderRegistry {
      * @return the built a package manifest for a registered game type
      */
     public GamePackageManifest packageManifestForType(
-        String gameType,
-        String serverVersion,
-        GamePackageManifest.PackageMetadata metadata,
-        List<GamePackageManifest.Asset> assets
+            String gameType,
+            String serverVersion,
+            GamePackageManifest.PackageMetadata metadata,
+            List<GamePackageManifest.Asset> assets
     ) {
         RegisteredGameProvider registration = registrations.stream()
-            .filter(candidate -> candidate.provider().gameType().equals(gameType))
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Unknown game type: " + gameType));
+                .filter(candidate -> candidate.provider().gameType().equals(gameType))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown game type: " + gameType));
         IGameProvider provider = registration.provider();
         ModDescriptor mod = registration.mod();
         return new GamePackageManifest(

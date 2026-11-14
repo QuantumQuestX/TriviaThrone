@@ -41,7 +41,7 @@ public class GameModUiController {
      * Holds the safe_resource_path used by this component.
      */
     private static final Pattern SAFE_RESOURCE_PATH =
-        Pattern.compile("[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*");
+            Pattern.compile("[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*");
 
     /**
      * Holds the gam roviders used by this component.
@@ -82,7 +82,7 @@ public class GameModUiController {
 
         String path = requestPath.startsWith("/") ? requestPath.substring(1) : requestPath;
         if (path.isBlank() || path.startsWith("/") || path.contains("//")
-            || !SAFE_RESOURCE_PATH.matcher(path).matches()) {
+                || !SAFE_RESOURCE_PATH.matcher(path).matches()) {
             return null;
         }
         for (String segment : path.split("/")) {
@@ -112,7 +112,7 @@ public class GameModUiController {
     @GetMapping("/game")
     public ResponseEntity<Void> lobbyGame(@RequestParam("code") String lobbyCode) {
         Lobby lobby = lobbyService.getLobby(lobbyCode)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Lobby not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Lobby not found."));
         IGameDefinition definition = lobby.getGameDefinition();
         if (definition == null) {
             throw new ResponseStatusException(NOT_FOUND, "No game is loaded in this lobby.");
@@ -120,7 +120,7 @@ public class GameModUiController {
         String gameType = definition.gameType();
         requireUiProvider(gameType);
         String location = "/games/" + UriUtils.encodePathSegment(gameType, StandardCharsets.UTF_8)
-            + "/play?code=" + UriUtils.encodeQueryParam(lobbyCode, StandardCharsets.UTF_8);
+                + "/play?code=" + UriUtils.encodeQueryParam(lobbyCode, StandardCharsets.UTF_8);
         return redirect(location);
     }
 
@@ -155,13 +155,13 @@ public class GameModUiController {
      */
     @GetMapping({"/mods/{gameType}/ui/{*assetPath}", "/plugins/{gameType}/ui/{*assetPath}"})
     public ResponseEntity<Resource> asset(
-        @PathVariable String gameType,
-        @PathVariable String assetPath
+            @PathVariable String gameType,
+            @PathVariable String assetPath
     ) {
         Resource resource = modResource(gameType, assetPath)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod asset not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod asset not found."));
         MediaType contentType = MediaTypeFactory.getMediaType(resource)
-            .orElse(MediaType.APPLICATION_OCTET_STREAM);
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
         return ResponseEntity.ok()
             .contentType(contentType)
             .cacheControl(CacheControl.noCache())
@@ -176,7 +176,7 @@ public class GameModUiController {
         GameUiDescriptor descriptor = provider.uiDescriptor().orElseThrow();
         String pagePath = editor ? descriptor.editorPage() : descriptor.gamePage();
         Resource page = modResource(provider, pagePath)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod page not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod page not found."));
         return ResponseEntity.ok()
             .contentType(MediaType.TEXT_HTML)
             .cacheControl(CacheControl.noCache())
@@ -188,7 +188,7 @@ public class GameModUiController {
      */
     private IGameProvider requireUiProvider(String gameType) {
         IGameProvider provider = gameProviders.providerForType(gameType)
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game mod not found."));
         if (provider.uiDescriptor().isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "Game mod has no UI.");
         }

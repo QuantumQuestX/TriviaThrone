@@ -51,9 +51,9 @@ public class SystemModConfiguration {
      */
     @Bean(destroyMethod = "close")
     public SystemModManager systemModManager(
-        @Value("${triviathrone.mods.system-directory:mods/system}") String modsDirectory,
-        @Value("${triviathrone.system.data-directory:data/system}") String dataDirectory,
-        ConfigurableEnvironment environment
+            @Value("${triviathrone.mods.system-directory:mods/system}") String modsDirectory,
+            @Value("${triviathrone.system.data-directory:data/system}") String dataDirectory,
+            ConfigurableEnvironment environment
     ) throws IOException {
         return SystemModManager.load(
             Path.of(modsDirectory),

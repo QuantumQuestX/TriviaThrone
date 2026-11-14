@@ -38,7 +38,7 @@ public class LobbyEventService {
      */
     public void userJoined(String lobbyCode, String lobbyHost, String username) {
         messagingTemplate.convertAndSend(
-            "/topic/lobby." + lobbyCode,
+                "/topic/lobby." + lobbyCode,
             new LobbyDeltaMessage(lobbyCode, lobbyHost, username, LobbyDeltaMessage.Action.JOIN)
         );
     }
@@ -52,7 +52,7 @@ public class LobbyEventService {
      */
     public void userLeft(String lobbyCode, String lobbyHost, String username) {
         messagingTemplate.convertAndSend(
-            "/topic/lobby." + lobbyCode,
+                "/topic/lobby." + lobbyCode,
             new LobbyDeltaMessage(lobbyCode, lobbyHost, username, LobbyDeltaMessage.Action.LEAVE)
         );
     }
@@ -66,7 +66,7 @@ public class LobbyEventService {
      */
     public void hostUploadedGame(String lobbyCode, String hostName, String gameName) {
         messagingTemplate.convertAndSend(
-            "/topic/lobby." + lobbyCode,
+                "/topic/lobby." + lobbyCode,
             new LobbyHostUploadMessage(lobbyCode, hostName, gameName)
         );
     }

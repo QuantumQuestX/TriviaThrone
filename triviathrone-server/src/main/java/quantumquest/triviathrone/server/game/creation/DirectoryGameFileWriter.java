@@ -65,9 +65,9 @@ final class DirectoryGameFileWriter implements GameFileWriter, Closeable {
 
         Files.createDirectories(target.getParent());
         OutputStream delegate = Files.newOutputStream(
-            target,
-            StandardOpenOption.CREATE_NEW,
-            StandardOpenOption.WRITE
+                target,
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE
         );
 
         OutputStream tracked = new FilterOutputStream(delegate) {

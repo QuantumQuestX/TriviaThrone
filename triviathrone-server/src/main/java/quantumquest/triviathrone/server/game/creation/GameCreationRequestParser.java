@@ -63,9 +63,9 @@ final class GameCreationRequestParser {
      * @throws IOException if an uploaded asset cannot be stored
      */
     GameCreationRequest parseMultipart(
-        String requestData,
-        MultiValueMap<String, MultipartFile> uploadedFiles,
-        Path uploadDirectory
+            String requestData,
+            MultiValueMap<String, MultipartFile> uploadedFiles,
+            Path uploadDirectory
     ) throws IOException {
         JsonNode jsonData;
         try {

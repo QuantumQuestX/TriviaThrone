@@ -57,10 +57,10 @@ public class WebSocketLobbyController {
      * @param systemMods        the system-mod manager
      */
     public WebSocketLobbyController(
-        LobbyService lobbyService,
-        LobbyEventService lobbyEventService,
-        LobbyGameFiles lobbyGameFiles,
-        SystemModManager systemMods
+            LobbyService lobbyService,
+            LobbyEventService lobbyEventService,
+            LobbyGameFiles lobbyGameFiles,
+            SystemModManager systemMods
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");

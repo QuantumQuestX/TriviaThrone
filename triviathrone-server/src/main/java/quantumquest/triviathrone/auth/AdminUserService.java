@@ -40,9 +40,9 @@ public class AdminUserService {
      * @param refreshTokens   the refresh-token service
      */
     public AdminUserService(
-        UserConfigLoader users,
-        PasswordEncoder passwordEncoder,
-        RefreshTokenService refreshTokens
+            UserConfigLoader users,
+            PasswordEncoder passwordEncoder,
+            RefreshTokenService refreshTokens
     ) {
         this.users = Objects.requireNonNull(users, "users");
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");
@@ -83,7 +83,7 @@ public class AdminUserService {
     private static Set<String> normalizeRoles(Set<String> requestedRoles) {
         Set<String> roles = requestedRoles == null ? new HashSet<>() : new HashSet<>(requestedRoles);
         if (roles.stream().anyMatch(role -> !UserAccount.ROLE_USER.equals(role)
-            && !UserAccount.ROLE_ADMIN.equals(role))) {
+                && !UserAccount.ROLE_ADMIN.equals(role))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Roles may only contain USER or ADMIN");
         }
         return Set.copyOf(roles);
@@ -181,7 +181,7 @@ public class AdminUserService {
      */
     private void protectDefaultAdmin(UserAccount user, Set<String> updatedRoles) {
         if (user.isDefaultAdmin() && (!updatedRoles.contains(UserAccount.ROLE_USER)
-            || !updatedRoles.contains(UserAccount.ROLE_ADMIN))) {
+                || !updatedRoles.contains(UserAccount.ROLE_ADMIN))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "The default admin roles are managed automatically");
         }
@@ -249,12 +249,12 @@ public class AdminUserService {
      * @since 2.0.0
      */
     public record UserSummary(
-        String userId,
-        String username,
-        String displayName,
-        Set<String> roles,
-        boolean enabled,
-        boolean defaultAdmin
+            String userId,
+            String username,
+            String displayName,
+            Set<String> roles,
+            boolean enabled,
+            boolean defaultAdmin
     ) {
         /**
          * Builds a summary from a user account.

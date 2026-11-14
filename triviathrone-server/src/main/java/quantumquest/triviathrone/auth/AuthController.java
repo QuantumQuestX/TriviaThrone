@@ -66,9 +66,9 @@ public class AuthController {
      */
     @PostMapping("/login")
     public TokenResponse login(
-        @RequestBody LoginRequest request,
-        @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
-        HttpServletResponse response
+            @RequestBody LoginRequest request,
+            @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response
     ) {
         LoginRequest loginRequest = Objects.requireNonNull(request, "request");
         AuthService.Session session = auth.authenticate(loginRequest.username(), loginRequest.password());
@@ -85,8 +85,8 @@ public class AuthController {
      */
     @PostMapping("/refresh")
     public TokenResponse refresh(
-        @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
-        HttpServletResponse response
+            @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response
     ) {
         try {
             return writeSession(auth.refresh(refreshToken), response);
@@ -104,8 +104,8 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public void logout(
-        @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
-        HttpServletResponse response
+            @CookieValue(name = RefreshTokenService.COOKIE_NAME, required = false) String refreshToken,
+            HttpServletResponse response
     ) {
         auth.logout(refreshToken);
         clearRefreshCookie(response);
@@ -130,9 +130,9 @@ public class AuthController {
         }
 
         auth.changePassword(
-            user.getUsername(),
-            passwordRequest.oldPassword(),
-            passwordRequest.newPassword()
+                user.getUsername(),
+                passwordRequest.oldPassword(),
+                passwordRequest.newPassword()
         );
     }
 
@@ -141,16 +141,16 @@ public class AuthController {
      */
     private TokenResponse writeSession(AuthService.Session session, HttpServletResponse response) {
         long remainingSeconds = Math.max(
-            0,
-            Duration.between(Instant.now(), session.refreshExpiresAt()).getSeconds()
+                0,
+                Duration.between(Instant.now(), session.refreshExpiresAt()).getSeconds()
         );
         ResponseCookie cookie = ResponseCookie.from(RefreshTokenService.COOKIE_NAME, session.refreshToken())
-            .httpOnly(true)
-            .secure(properties.refreshCookieSecure())
-            .sameSite("Strict")
-            .path("/auth")
-            .maxAge(Duration.ofSeconds(remainingSeconds))
-            .build();
+                .httpOnly(true)
+                .secure(properties.refreshCookieSecure())
+                .sameSite("Strict")
+                .path("/auth")
+                .maxAge(Duration.ofSeconds(remainingSeconds))
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         setNoStore(response);
         return new TokenResponse(session.accessToken(), session.expiresIn(), session.userId());
@@ -161,12 +161,12 @@ public class AuthController {
      */
     private void clearRefreshCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from(RefreshTokenService.COOKIE_NAME, "")
-            .httpOnly(true)
-            .secure(properties.refreshCookieSecure())
-            .sameSite("Strict")
-            .path("/auth")
-            .maxAge(Duration.ZERO)
-            .build();
+                .httpOnly(true)
+                .secure(properties.refreshCookieSecure())
+                .sameSite("Strict")
+                .path("/auth")
+                .maxAge(Duration.ZERO)
+                .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         setNoStore(response);
     }

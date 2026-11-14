@@ -71,7 +71,7 @@ public class RefreshTokenService {
      */
     private static void purgeExpired(Map<String, RefreshTokenSession> sessions, Instant now) {
         sessions.entrySet().removeIf(entry -> !now.isBefore(entry.getValue().expiresAt())
-            || !now.isBefore(entry.getValue().absoluteExpiry()));
+                || !now.isBefore(entry.getValue().absoluteExpiry()));
     }
 
     /**
@@ -80,7 +80,7 @@ public class RefreshTokenService {
     private static String digest(String token) {
         try {
             byte[] hash = MessageDigest.getInstance("SHA-256")
-                .digest(token.getBytes(StandardCharsets.UTF_8));
+                    .digest(token.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is unavailable", exception);
@@ -136,7 +136,7 @@ public class RefreshTokenService {
         RefreshTokenSession session = sessions.get(presentedDigest);
         Instant now = Instant.now();
         if (session == null || !now.isBefore(session.expiresAt())
-            || !now.isBefore(session.absoluteExpiry())) {
+                || !now.isBefore(session.absoluteExpiry())) {
             throw invalidToken();
         }
 

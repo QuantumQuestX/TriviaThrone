@@ -62,9 +62,9 @@ public class GameUploadController {
      * @param lobbyGameFiles    the lobby game files
      */
     public GameUploadController(
-        LobbyService lobbyService,
-        LobbyEventService lobbyEventService,
-        LobbyGameFiles lobbyGameFiles
+            LobbyService lobbyService,
+            LobbyEventService lobbyEventService,
+            LobbyGameFiles lobbyGameFiles
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
@@ -82,13 +82,13 @@ public class GameUploadController {
      */
     @GetMapping("/{lobbyCode}/media")
     public ResponseEntity<Resource> getGameMedia(
-        @PathVariable String lobbyCode,
-        @RequestParam("path") String mediaPath,
-        @AuthenticationPrincipal UserAccount user
+            @PathVariable String lobbyCode,
+            @RequestParam("path") String mediaPath,
+            @AuthenticationPrincipal UserAccount user
     ) throws IOException {
         Objects.requireNonNull(user, "user");
         Lobby lobby = lobbyService.getLobby(lobbyCode)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!lobby.listUsernames().contains(user.getUsername())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
@@ -100,7 +100,7 @@ public class GameUploadController {
         }
 
         Path realMediaFile = lobbyGameFiles.findMediaFile(lobbyCode, mediaPath)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         String contentType;
         try (InputStream media = Files.newInputStream(realMediaFile)) {
@@ -122,9 +122,9 @@ public class GameUploadController {
      */
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadGame(
-        @RequestParam("file") MultipartFile file,
-        @RequestParam("lobbyCode") String lobbyCode,
-        @AuthenticationPrincipal UserAccount user
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("lobbyCode") String lobbyCode,
+            @AuthenticationPrincipal UserAccount user
     ) {
         Objects.requireNonNull(file, "file");
         Objects.requireNonNull(lobbyCode, "lobbyCode");
@@ -150,7 +150,7 @@ public class GameUploadController {
 
         try {
             Optional<IGameDefinition> definition =
-                lobbyGameFiles.extractUploadedGame(lobbyCode, originalFilename, file);
+                    lobbyGameFiles.extractUploadedGame(lobbyCode, originalFilename, file);
             if (definition.isEmpty()) {
                 return ResponseEntity.badRequest().body("Game definition missing.");
             }

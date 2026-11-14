@@ -164,9 +164,9 @@ public class GameCreationService {
      */
     public GeneratedGame generate(String gameType, GameCreationRequest request) throws IOException {
         IGameProvider provider = providers.providerForType(gameType)
-            .orElseThrow(() -> new NoSuchElementException("Unknown game type: " + gameType));
+                .orElseThrow(() -> new NoSuchElementException("Unknown game type: " + gameType));
         IGameCreator creator = provider.creator()
-            .orElseThrow(() -> new NoSuchElementException("Game type does not provide a creator: " + gameType));
+                .orElseThrow(() -> new NoSuchElementException("Game type does not provide a creator: " + gameType));
 
         Path temporaryDirectory = Files.createTempDirectory("triviathrone-game-");
 
@@ -179,7 +179,7 @@ public class GameCreationService {
 
             List<GamePackageManifest.Asset> assets = packageAssets(gameFiles, provider.gameDataFile());
             providers.packageManifestForType(gameType, serverVersion(), packageMetadata(request), assets)
-                .write(gameFiles);
+                    .write(gameFiles);
             GamePackageManifest manifest = GamePackageManifest.read(gameFiles);
             if (providers.providerForPackage(manifest).orElse(null) != provider) {
                 throw new IllegalArgumentException("The generated package does not match its registered provider.");
@@ -204,8 +204,8 @@ public class GameCreationService {
             try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(archive))) {
                 for (Path file : files) {
                     String entryName = gameFiles.relativize(file)
-                        .toString()
-                        .replace(file.getFileSystem().getSeparator(), "/");
+                            .toString()
+                            .replace(file.getFileSystem().getSeparator(), "/");
                     zip.putNextEntry(new ZipEntry(entryName));
                     Files.copy(file, zip);
                     zip.closeEntry();

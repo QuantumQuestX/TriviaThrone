@@ -70,8 +70,8 @@ public class AdminUserController {
      */
     @PutMapping("/{username}/roles")
     public AdminUserService.UserSummary updateRoles(
-        @PathVariable String username,
-        @RequestBody UpdateRolesRequest request
+            @PathVariable String username,
+            @RequestBody UpdateRolesRequest request
     ) {
         UpdateRolesRequest roleRequest = Objects.requireNonNull(request, "request");
         if (roleRequest.roles() == null) {
@@ -89,8 +89,8 @@ public class AdminUserController {
      */
     @PutMapping("/{username}/enabled")
     public AdminUserService.UserSummary updateEnabled(
-        @PathVariable String username,
-        @RequestBody UpdateEnabledRequest request
+            @PathVariable String username,
+            @RequestBody UpdateEnabledRequest request
     ) {
         UpdateEnabledRequest enabledRequest = Objects.requireNonNull(request, "request");
         if (enabledRequest.enabled() == null) {

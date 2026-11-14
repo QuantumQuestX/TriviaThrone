@@ -29,7 +29,7 @@ public class RefreshTokenService {
         this.sessionStore = Objects.requireNonNull(sessionStore, "sessionStore");
         this.validitySeconds = properties.refreshTokenValiditySeconds();
         this.maxSessionSeconds = properties.refreshSessionMaxSeconds();
-        this.sessions = new HashMap<>(sessionStore.load());
+        this.sessions = new java.util.HashMap<>(sessionStore.load());
     }
 
     public synchronized IssuedToken issue(String username) {

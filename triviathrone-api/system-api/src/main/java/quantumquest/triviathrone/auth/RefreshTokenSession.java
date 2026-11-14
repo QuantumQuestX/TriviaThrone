@@ -3,8 +3,8 @@ package quantumquest.triviathrone.auth;
 import java.time.Instant;
 import java.util.Objects;
 
-record RefreshTokenSession(String username, Instant expiresAt, Instant absoluteExpiry) {
-    RefreshTokenSession {
+public record RefreshTokenSession(String username, Instant expiresAt, Instant absoluteExpiry) {
+    public RefreshTokenSession {
         Objects.requireNonNull(username, "username");
         Objects.requireNonNull(expiresAt, "expiresAt");
         Objects.requireNonNull(absoluteExpiry, "absoluteExpiry");

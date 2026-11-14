@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.server;
 
 import quantumquest.triviathrone.auth.IUserAccountRepository;
+import quantumquest.triviathrone.auth.IRefreshTokenSessionRepository;
 import quantumquest.triviathrone.api.system.SystemProviderContext;
 import quantumquest.triviathrone.mod.SystemModManager;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,14 @@ public class SystemModConfiguration {
         return systemMods.find(IUserAccountRepository.class)
                 .orElseThrow(() -> new IllegalStateException(
                         "No system mod registered an IUserAccountRepository."
+                ));
+    }
+
+    @Bean
+    public IRefreshTokenSessionRepository refreshTokenSessionRepository(SystemModManager systemMods) {
+        return systemMods.find(IRefreshTokenSessionRepository.class)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No system mod registered an IRefreshTokenSessionRepository."
                 ));
     }
 

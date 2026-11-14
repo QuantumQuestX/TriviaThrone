@@ -2,12 +2,10 @@ package quantumquest.triviathrone.auth;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.nio.file.Path;
 import java.util.Objects;
 
 @ConfigurationProperties(prefix = "auth")
 public record AuthProperties(
-        Path refreshTokenFile,
         String jwtSecret,
         long tokenValiditySeconds,
         long refreshTokenValiditySeconds,
@@ -17,7 +15,6 @@ public record AuthProperties(
         String initialAdminPassword
 ) {
     public AuthProperties {
-        Objects.requireNonNull(refreshTokenFile, "refreshTokenFile");
         String signingSecret = Objects.requireNonNull(jwtSecret, "jwtSecret");
         if (signingSecret.isBlank()) {
             throw new IllegalArgumentException("jwtSecret must not be blank");

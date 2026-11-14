@@ -48,7 +48,8 @@ class H2UserAccountRepositoryTest {
                         "p001__create-account-tables.sql",
                         "p002__enable-user-accounts.sql",
                         "p003__mark-default-admin.sql",
-                        "p004__seed-default-admin.sql"
+                        "p004__seed-default-admin.sql",
+                        "p005__create-refresh-token-sessions.sql"
                 ),
                 jdbcTemplate.queryForList(
                         "SELECT migration_src FROM triviathrone_schema_migrations ORDER BY migration_src",

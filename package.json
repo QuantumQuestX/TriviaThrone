@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test triviathrone-client/src/test/js/*.test.js"
+    "test": "node --import ./triviathrone-client/src/test/js/browser-module-aliases.js --test triviathrone-client/src/test/js/*.test.js"
   }
 }

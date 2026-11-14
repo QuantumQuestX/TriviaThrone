@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {renderLeaderboard} from "../../main/resources/static/js/page-game/leaderboard.js";
+import {renderLeaderboard} from "../../../../triviathrone-games/jeopardy/src/main/resources/ui/js/game/leaderboard.js";
 
 function createElement(tagName) {
     return {

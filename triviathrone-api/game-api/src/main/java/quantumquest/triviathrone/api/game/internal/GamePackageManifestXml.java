@@ -1,12 +1,12 @@
 package quantumquest.triviathrone.api.game.internal;
 
-import quantumquest.triviathrone.api.game.GamePackageManifest;
-import quantumquest.triviathrone.api.game.GamePackageManifest.Asset;
-import quantumquest.triviathrone.api.game.GamePackageManifest.PackageMetadata;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import quantumquest.triviathrone.api.game.GamePackageManifest;
+import quantumquest.triviathrone.api.game.GamePackageManifest.Asset;
+import quantumquest.triviathrone.api.game.GamePackageManifest.PackageMetadata;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -25,13 +25,39 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Serializes and parses the XML representation of game package manifests.
+ *
+ * <p>This internal utility is stateless. Parsing disables external entities and validates package
+ * files before returning a manifest.</p>
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 public final class GamePackageManifestXml {
+    /**
+     * Legacy manifest format version recognized by the XML parser.
+     */
     private static final String LEGACY_MANIFEST_VERSION = "1.0";
+    /**
+     * Maximum accepted manifest size in bytes.
+     */
     private static final int MAX_MANIFEST_SIZE = 1024 * 1024;
 
+    /**
+     * Prevents instantiation of this utility class.
+     */
     private GamePackageManifestXml() {
     }
 
+    /**
+     * Reads an XML manifest from a package root and validates its declared files.
+     *
+     * @param packageRoot non-null package root
+     * @return a non-null validated manifest
+     * @throws IOException              if the manifest or its declared files cannot be read
+     * @throws IllegalArgumentException if the manifest is malformed, unsafe, or invalid
+     */
     public static GamePackageManifest read(Path packageRoot) throws IOException {
         Objects.requireNonNull(packageRoot, "packageRoot");
         Path packageDirectory = packageRoot.toAbsolutePath().normalize();
@@ -89,17 +115,17 @@ public final class GamePackageManifestXml {
             List<Asset> assets = readAssets(assetsElement);
             PackageMetadata metadata = readMetadata(metadataElement);
             GamePackageManifest manifest = new GamePackageManifest(
-                    manifestVersion,
-                    requiredAttribute(mod, "id"),
-                    requiredAttribute(mod, "version"),
-                    requiredAttribute(mod, "apiVersion"),
-                    requiredAttribute(game, "type"),
-                    requiredAttribute(game, "providerClass"),
-                    requiredAttribute(game, "dataFile"),
-                    requiredAttribute(game, "formatVersion"),
-                    createdBy == null ? null : optionalAttribute(createdBy, "serverVersion"),
-                    metadata,
-                    assets
+                manifestVersion,
+                requiredAttribute(mod, "id"),
+                requiredAttribute(mod, "version"),
+                requiredAttribute(mod, "apiVersion"),
+                requiredAttribute(game, "type"),
+                requiredAttribute(game, "providerClass"),
+                requiredAttribute(game, "dataFile"),
+                requiredAttribute(game, "formatVersion"),
+                createdBy == null ? null : optionalAttribute(createdBy, "serverVersion"),
+                metadata,
+                assets
             );
             manifest.validateFiles(packageRoot);
 
@@ -109,6 +135,13 @@ public final class GamePackageManifestXml {
         }
     }
 
+    /**
+     * Writes a manifest in XML format without closing the supplied stream.
+     *
+     * @param manifest non-null manifest to serialize
+     * @param output   non-null destination stream owned by the caller
+     * @throws IOException if XML serialization fails
+     */
     public static void write(GamePackageManifest manifest, OutputStream output) throws IOException {
         Objects.requireNonNull(manifest, "manifest");
         Objects.requireNonNull(output, "output");
@@ -119,7 +152,7 @@ public final class GamePackageManifestXml {
             xml.writeStartElement("gamePackage");
             xml.writeAttribute("manifestVersion", manifest.manifestVersion());
             xml.writeEmptyElement(
-                    GamePackageManifest.CURRENT_MANIFEST_VERSION.equals(manifest.manifestVersion()) ? "mod" : "plugin"
+                GamePackageManifest.CURRENT_MANIFEST_VERSION.equals(manifest.manifestVersion()) ? "mod" : "plugin"
             );
             xml.writeAttribute("id", manifest.modId());
             xml.writeAttribute("version", manifest.modVersion());
@@ -160,6 +193,13 @@ public final class GamePackageManifestXml {
         }
     }
 
+    /**
+     * Reads asset entries from an optional assets element.
+     *
+     * @param assetsElement assets element, or {@code null}
+     * @return a mutable list of validated assets
+     * @throws IllegalArgumentException if an unexpected child element is present
+     */
     private static List<Asset> readAssets(Element assetsElement) {
         List<Asset> assets = new ArrayList<>();
         if (assetsElement == null) {
@@ -180,18 +220,32 @@ public final class GamePackageManifestXml {
         return assets;
     }
 
+    /**
+     * Reads optional metadata from a metadata element.
+     *
+     * @param metadataElement metadata element, or {@code null}
+     * @return parsed metadata, or {@code null} when no element is supplied
+     */
     private static PackageMetadata readMetadata(Element metadataElement) {
         if (metadataElement == null) {
             return null;
         }
 
         return new PackageMetadata(
-                optionalAttribute(metadataElement, "title"),
-                optionalAttribute(metadataElement, "author"),
-                optionalAttribute(metadataElement, "language")
+            optionalAttribute(metadataElement, "title"),
+            optionalAttribute(metadataElement, "author"),
+            optionalAttribute(metadataElement, "language")
         );
     }
 
+    /**
+     * Obtains a required direct child element.
+     *
+     * @param parent  parent element
+     * @param tagName required child tag name
+     * @return the non-null matching child
+     * @throws IllegalArgumentException if no matching child exists
+     */
     private static Element requiredChild(Element parent, String tagName) {
         Element child = optionalChild(parent, tagName);
         if (child == null) {
@@ -200,6 +254,14 @@ public final class GamePackageManifestXml {
         return child;
     }
 
+    /**
+     * Obtains at most one direct child element with a tag name.
+     *
+     * @param parent  parent element
+     * @param tagName child tag name
+     * @return the matching child, or {@code null} when absent
+     * @throws IllegalArgumentException if multiple matching children exist
+     */
     private static Element optionalChild(Element parent, String tagName) {
         Element found = null;
         NodeList children = parent.getChildNodes();
@@ -207,7 +269,7 @@ public final class GamePackageManifestXml {
             if (children.item(i) instanceof Element element && tagName.equals(element.getTagName())) {
                 if (found != null) {
                     throw new IllegalArgumentException(
-                            "Duplicate <" + tagName + "> in " + GamePackageManifest.FILE_NAME + "."
+                        "Duplicate <" + tagName + "> in " + GamePackageManifest.FILE_NAME + "."
                     );
                 }
                 found = element;
@@ -217,6 +279,14 @@ public final class GamePackageManifestXml {
         return found;
     }
 
+    /**
+     * Obtains a required, trimmed attribute value.
+     *
+     * @param element source element
+     * @param name    attribute name
+     * @return non-blank trimmed attribute value
+     * @throws IllegalArgumentException if the attribute is blank or absent
+     */
     private static String requiredAttribute(Element element, String name) {
         String value = element.getAttribute(name);
         if (value.isBlank()) {
@@ -225,13 +295,28 @@ public final class GamePackageManifestXml {
         return value.trim();
     }
 
+    /**
+     * Obtains an optional, trimmed attribute value.
+     *
+     * @param element source element
+     * @param name    attribute name
+     * @return trimmed attribute value, or {@code null} when blank or absent
+     */
     private static String optionalAttribute(Element element, String name) {
         String value = element.getAttribute(name).trim();
         return value.isEmpty() ? null : value;
     }
 
+    /**
+     * Writes a non-blank optional XML attribute.
+     *
+     * @param xml   XML destination
+     * @param name  attribute name
+     * @param value value to write, or {@code null}
+     * @throws XMLStreamException if the attribute cannot be written
+     */
     private static void writeOptionalAttribute(XMLStreamWriter xml, String name, String value)
-            throws XMLStreamException {
+        throws XMLStreamException {
         if (value != null && !value.isBlank()) {
             xml.writeAttribute(name, value);
         }

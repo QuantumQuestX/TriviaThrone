@@ -1,6 +1,11 @@
 package quantumquest.triviathrone.ws;
 
+import quantumquest.triviathrone.api.system.events.GameEndedEvent;
+import quantumquest.triviathrone.api.system.events.ISystemEvent;
+import quantumquest.triviathrone.api.system.events.PlayerJoinedLobbyEvent;
+import quantumquest.triviathrone.api.system.events.PlayerLeftLobbyEvent;
 import quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
+import quantumquest.triviathrone.mod.SystemModManager;
 import quantumquest.triviathrone.server.LobbyEventService;
 import quantumquest.triviathrone.server.LobbyGameFiles;
 import quantumquest.triviathrone.server.LobbyService;
@@ -12,6 +17,7 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.time.Instant;
 import java.util.Objects;
 
 @Controller
@@ -20,15 +26,18 @@ public class WebSocketLobbyController {
     private final LobbyService lobbyService;
     private final LobbyEventService lobbyEventService;
     private final LobbyGameFiles lobbyGameFiles;
+    private final SystemModManager systemMods;
 
     public WebSocketLobbyController(
             LobbyService lobbyService,
             LobbyEventService lobbyEventService,
-            LobbyGameFiles lobbyGameFiles
+            LobbyGameFiles lobbyGameFiles,
+            SystemModManager systemMods
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
         this.lobbyGameFiles = Objects.requireNonNull(lobbyGameFiles, "lobbyGameFiles");
+        this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
     }
 
     @MessageMapping("/join")
@@ -39,7 +48,10 @@ public class WebSocketLobbyController {
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
-            lobby.addUser(username);
+            boolean joined = lobby.addUser(username);
+            if (joined) {
+                systemMods.publishEvent(new PlayerJoinedLobbyEvent(Instant.now(), msg.lobbyCode(), username));
+            }
             lobbyEventService.userJoined(msg.lobbyCode(), lobby.getHostUsername(), username);
         });
     }
@@ -52,11 +64,19 @@ public class WebSocketLobbyController {
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
-            lobby.removeUser(username);
+            boolean left = lobby.removeUser(username);
+            if (left) {
+                systemMods.publishEvent(new PlayerLeftLobbyEvent(Instant.now(), msg.lobbyCode(), username));
+            }
             lobbyEventService.userLeft(msg.lobbyCode(), lobby.getHostUsername(), username);
             if (lobby.listUsernames().isEmpty()) {
                 logger.info("Lobby with code {} is empty. Deleting...", msg.lobbyCode());
-                lobby.endGame();
+                if (lobby.hasActiveGame()) {
+                    String gameType = lobby.getGameDefinition().gameType();
+                    if (lobby.endGameIfActive()) {
+                        systemMods.publishEvent(new GameEndedEvent(Instant.now(), msg.lobbyCode(), gameType));
+                    }
+                }
                 lobbyService.removeLobby(lobby.getLobbyCode());
                 try {
                     lobbyGameFiles.deleteLobbyFiles(lobby.getLobbyCode());

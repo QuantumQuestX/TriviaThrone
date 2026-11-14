@@ -1,11 +1,16 @@
 package quantumquest.triviathrone.server;
 
+import quantumquest.triviathrone.api.system.events.LobbyClosedEvent;
+import quantumquest.triviathrone.api.system.events.LobbyCreatedEvent;
 import quantumquest.triviathrone.auth.UserAccount;
+import quantumquest.triviathrone.api.system.events.ISystemEvent;
+import quantumquest.triviathrone.mod.SystemModManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +24,11 @@ public class LobbyService {
     private static final int CODE_LENGTH = 6;
     private final Map<String, Lobby> lobbies = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
+    private final SystemModManager systemMods;
+
+    public LobbyService(SystemModManager systemMods) {
+        this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
+    }
 
     public Lobby createLobby(String name, UserAccount hostAccount) {
         Objects.requireNonNull(name, "name");
@@ -32,11 +42,15 @@ public class LobbyService {
         } while (lobbies.putIfAbsent(code, lobby) != null);
 
         logger.info("Creating lobby with code {} by {}", code, hostUsername);
+        systemMods.publishEvent(new LobbyCreatedEvent(Instant.now(), code, hostUsername));
         return lobby;
     }
 
     public void removeLobby(String code) {
-        lobbies.remove(Objects.requireNonNull(code, "code"));
+        Lobby removed = lobbies.remove(Objects.requireNonNull(code, "code"));
+        if (removed != null) {
+            systemMods.publishEvent(new LobbyClosedEvent(Instant.now(), removed.getLobbyCode()));
+        }
     }
 
     public Optional<Lobby> getLobby(String code) {

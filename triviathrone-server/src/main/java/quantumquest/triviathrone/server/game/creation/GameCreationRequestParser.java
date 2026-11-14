@@ -16,13 +16,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Defines the GameCreationRequestParser contract.
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 final class GameCreationRequestParser {
+    /**
+     * Holds the mapper used by this component.
+     */
     private final ObjectMapper mapper;
 
+    /**
+     * Creates a parser backed by the supplied JSON mapper.
+     *
+     * @param mapper the JSON mapper
+     */
     GameCreationRequestParser(ObjectMapper mapper) {
         this.mapper = Objects.requireNonNull(mapper, "mapper");
     }
 
+    /**
+     * Parses a JSON request body into a game creation request.
+     *
+     * @param requestBody the request body
+     * @return the parsed game creation request
+     */
     GameCreationRequest parse(Map<String, Object> requestBody) {
         Object data = requestBody.get("data");
         if (!(data instanceof Map<?, ?>)) {
@@ -33,10 +53,19 @@ final class GameCreationRequestParser {
         return new GameCreationRequest(jsonData);
     }
 
+    /**
+     * Parses a multipart request and persists its uploaded assets.
+     *
+     * @param requestData     the JSON request data
+     * @param uploadedFiles   the uploaded asset files
+     * @param uploadDirectory the directory in which to store uploaded assets
+     * @return the parsed game creation request
+     * @throws IOException if an uploaded asset cannot be stored
+     */
     GameCreationRequest parseMultipart(
-            String requestData,
-            MultiValueMap<String, MultipartFile> uploadedFiles,
-            Path uploadDirectory
+        String requestData,
+        MultiValueMap<String, MultipartFile> uploadedFiles,
+        Path uploadDirectory
     ) throws IOException {
         JsonNode jsonData;
         try {

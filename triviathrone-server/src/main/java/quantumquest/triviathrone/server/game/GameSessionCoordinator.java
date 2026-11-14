@@ -1,5 +1,6 @@
 package quantumquest.triviathrone.server.game;
 
+import org.springframework.stereotype.Service;
 import quantumquest.triviathrone.api.game.GameActionResult;
 import quantumquest.triviathrone.api.game.GameControlAction;
 import quantumquest.triviathrone.api.game.IGameSession;
@@ -8,21 +9,45 @@ import quantumquest.triviathrone.api.system.events.GameStartedEvent;
 import quantumquest.triviathrone.dto.game.GameActionMessage;
 import quantumquest.triviathrone.mod.SystemModManager;
 import quantumquest.triviathrone.server.Lobby;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Objects;
 
+/**
+ * Coordinates authorized game control and gameplay actions for a lobby.
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 @Service
 public class GameSessionCoordinator {
+    /**
+     * Holds the gam ven ervice used by this component.
+     */
     private final GameEventService gameEventService;
+    /**
+     * Holds the syste ods used by this component.
+     */
     private final SystemModManager systemMods;
 
+    /**
+     * Creates a GameSessionCoordinator.
+     *
+     * @param gameEventService the game event publisher
+     * @param systemMods       the system-mod manager
+     */
     public GameSessionCoordinator(GameEventService gameEventService, SystemModManager systemMods) {
         this.gameEventService = Objects.requireNonNull(gameEventService, "gameEventService");
         this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
     }
 
+    /**
+     * Routes a STOMP game action to the matching lobby session.
+     *
+     * @param message  the STOMP message
+     * @param lobby    the target lobby
+     * @param username the account username
+     */
     public void handleAction(GameActionMessage message, Lobby lobby, String username) {
         Objects.requireNonNull(message, "message");
         Objects.requireNonNull(lobby, "lobby");
@@ -41,11 +66,19 @@ public class GameSessionCoordinator {
         handleGameAction(message, lobby, username);
     }
 
+    /**
+     * Dispatches a start, end, or synchronization action for a lobby game.
+     *
+     * @param action   the parsed control action
+     * @param message  the requested game action
+     * @param lobby    the lobby whose game is controlled
+     * @param username the requesting username
+     */
     private void handleControlAction(
-            GameControlAction action,
-            GameActionMessage message,
-            Lobby lobby,
-            String username
+        GameControlAction action,
+        GameActionMessage message,
+        Lobby lobby,
+        String username
     ) {
         switch (action) {
             case START_GAME -> startGame(message, lobby, username);
@@ -54,6 +87,9 @@ public class GameSessionCoordinator {
         }
     }
 
+    /**
+     * Starts the selected game session when the caller is allowed.
+     */
     private void startGame(GameActionMessage message, Lobby lobby, String username) {
         if (!username.equals(lobby.getHostUsername())) {
             return;
@@ -62,13 +98,16 @@ public class GameSessionCoordinator {
         IGameSession session = lobby.getGameSession();
         if (started) {
             systemMods.publishEvent(new GameStartedEvent(
-                    Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
+                Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
             ));
         }
         session.setStateChangeListener(() -> broadcastStateIfCurrent(lobby, session));
         broadcastStateIfCurrent(lobby, session);
     }
 
+    /**
+     * Ends the current game session when the caller is allowed.
+     */
     private void endGame(GameActionMessage message, Lobby lobby, String username) {
         if (!username.equals(lobby.getHostUsername()) || !lobby.hasActiveGame()) {
             return;
@@ -85,6 +124,9 @@ public class GameSessionCoordinator {
         }
     }
 
+    /**
+     * Publishes the current game state to its lobby.
+     */
     private void syncGame(Lobby lobby) {
         IGameSession session = lobby.getGameSession();
         if (session != null) {
@@ -92,6 +134,9 @@ public class GameSessionCoordinator {
         }
     }
 
+    /**
+     * Applies a game action when the caller is allowed.
+     */
     private void handleGameAction(GameActionMessage message, Lobby lobby, String username) {
         IGameSession session = lobby.getGameSession();
         if (session == null) {
@@ -117,6 +162,9 @@ public class GameSessionCoordinator {
         broadcastStateIfCurrent(lobby, session);
     }
 
+    /**
+     * Publishes state only while the session remains current.
+     */
     private void broadcastStateIfCurrent(Lobby lobby, IGameSession session) {
         if (lobby.getGameSession() == session) {
             gameEventService.broadcastState(lobby.getLobbyCode(), session);

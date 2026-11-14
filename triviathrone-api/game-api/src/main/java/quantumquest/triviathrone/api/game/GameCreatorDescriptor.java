@@ -16,9 +16,9 @@ import java.util.Objects;
  * @since 2.0.0
  */
 public record GameCreatorDescriptor(
-    String title,
-    String description,
-    JsonNode editorSchema
+        String title,
+        String description,
+        JsonNode editorSchema
 ) {
     /**
      * Validates and snapshots the editor schema.

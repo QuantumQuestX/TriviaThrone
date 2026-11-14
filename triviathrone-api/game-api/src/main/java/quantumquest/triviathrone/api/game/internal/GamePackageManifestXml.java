@@ -115,17 +115,17 @@ public final class GamePackageManifestXml {
             List<Asset> assets = readAssets(assetsElement);
             PackageMetadata metadata = readMetadata(metadataElement);
             GamePackageManifest manifest = new GamePackageManifest(
-                manifestVersion,
-                requiredAttribute(mod, "id"),
-                requiredAttribute(mod, "version"),
-                requiredAttribute(mod, "apiVersion"),
-                requiredAttribute(game, "type"),
-                requiredAttribute(game, "providerClass"),
-                requiredAttribute(game, "dataFile"),
-                requiredAttribute(game, "formatVersion"),
-                createdBy == null ? null : optionalAttribute(createdBy, "serverVersion"),
-                metadata,
-                assets
+                    manifestVersion,
+                    requiredAttribute(mod, "id"),
+                    requiredAttribute(mod, "version"),
+                    requiredAttribute(mod, "apiVersion"),
+                    requiredAttribute(game, "type"),
+                    requiredAttribute(game, "providerClass"),
+                    requiredAttribute(game, "dataFile"),
+                    requiredAttribute(game, "formatVersion"),
+                    createdBy == null ? null : optionalAttribute(createdBy, "serverVersion"),
+                    metadata,
+                    assets
             );
             manifest.validateFiles(packageRoot);
 
@@ -152,7 +152,7 @@ public final class GamePackageManifestXml {
             xml.writeStartElement("gamePackage");
             xml.writeAttribute("manifestVersion", manifest.manifestVersion());
             xml.writeEmptyElement(
-                GamePackageManifest.CURRENT_MANIFEST_VERSION.equals(manifest.manifestVersion()) ? "mod" : "plugin"
+                    GamePackageManifest.CURRENT_MANIFEST_VERSION.equals(manifest.manifestVersion()) ? "mod" : "plugin"
             );
             xml.writeAttribute("id", manifest.modId());
             xml.writeAttribute("version", manifest.modVersion());

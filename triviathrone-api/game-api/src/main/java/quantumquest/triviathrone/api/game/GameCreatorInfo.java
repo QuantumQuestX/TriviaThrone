@@ -11,8 +11,8 @@ import java.util.Objects;
  * @since 2.0.0
  */
 public record GameCreatorInfo(
-    String gameType,
-    GameCreatorDescriptor descriptor
+        String gameType,
+        GameCreatorDescriptor descriptor
 ) {
     /**
      * Validates the creator information.

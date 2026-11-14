@@ -33,10 +33,10 @@ public record GameUiDescriptor(String editorPage, String gamePage) {
      */
     private static void validatePage(String page, String name) {
         if (page.isBlank()
-            || page.startsWith("/")
-            || page.contains("\\")
-            || page.contains("..")
-            || !page.endsWith(".html")) {
+                || page.startsWith("/")
+                || page.contains("\\")
+                || page.contains("..")
+                || !page.endsWith(".html")) {
             throw new IllegalArgumentException(name + " must be a relative HTML resource path.");
         }
     }

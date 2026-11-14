@@ -2,18 +2,42 @@ package quantumquest.triviathrone.api.system;
 
 import quantumquest.triviathrone.api.system.events.ISystemEvent;
 
-/** A system-mod lifecycle entry point declared through Java ServiceLoader. */
+/**
+ * A system-mod lifecycle entry point discovered through {@link java.util.ServiceLoader}.
+ * Implementations must expose a public no-argument constructor, use an API-compatible
+ * descriptor, and make concurrent event handling safe.
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 public interface ISystemProvider extends AutoCloseable {
+    /**
+     * Returns the stable descriptor used to identify and validate this provider.
+     */
     SystemProviderDescriptor descriptor();
 
-    /** Called once during server startup; registered services become read-only after initialization. */
+    /**
+     * Initializes this provider once during startup; registrations become read-only afterward.
+     *
+     * @param context  provider-scoped immutable configuration and data location
+     * @param services registry to which initialization may register services
+     * @throws Exception if initialization cannot complete
+     */
     void initialize(SystemProviderContext context, SystemServiceRegistry services) throws Exception;
 
-    /** Called synchronously after a server lifecycle event; calls may be concurrent. */
+    /**
+     * Handles a server lifecycle event synchronously; invocations may be concurrent.
+     *
+     * @param event immutable event payload
+     */
     default void onEvent(ISystemEvent event) {
     }
 
-    /** Called in reverse initialization order during shutdown or after a startup failure. */
+    /**
+     * Releases resources in reverse initialization order during shutdown or startup rollback.
+     *
+     * @throws Exception if cleanup fails
+     */
     @Override
     default void close() throws Exception {
     }

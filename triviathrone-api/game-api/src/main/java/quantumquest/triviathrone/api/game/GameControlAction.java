@@ -27,9 +27,9 @@ public enum GameControlAction {
      * Maps protocol wire names to their corresponding actions.
      */
     private static final Map<String, GameControlAction> BY_WIRE_NAME = Map.of(
-        START_GAME.wireName, START_GAME,
-        END_GAME.wireName, END_GAME,
-        SYNC.wireName, SYNC
+            START_GAME.wireName, START_GAME,
+            END_GAME.wireName, END_GAME,
+            SYNC.wireName, SYNC
     );
 
     /**

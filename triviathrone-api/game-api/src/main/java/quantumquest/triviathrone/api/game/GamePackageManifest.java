@@ -39,17 +39,17 @@ import java.util.Set;
  * @since 2.0.0
  */
 public record GamePackageManifest(
-    String manifestVersion,
-    String modId,
-    String modVersion,
-    String apiVersion,
-    String gameType,
-    String providerClass,
-    String gameDataFile,
-    String gameDataFormatVersion,
-    String serverVersion,
-    PackageMetadata metadata,
-    List<Asset> assets
+        String manifestVersion,
+        String modId,
+        String modVersion,
+        String apiVersion,
+        String gameType,
+        String providerClass,
+        String gameDataFile,
+        String gameDataFormatVersion,
+        String serverVersion,
+        PackageMetadata metadata,
+        List<Asset> assets
 ) {
     /**
      * Standard filename of a package manifest.
@@ -78,7 +78,7 @@ public record GamePackageManifest(
     public GamePackageManifest {
         requireText(manifestVersion, "manifestVersion");
         if (!CURRENT_MANIFEST_VERSION.equals(manifestVersion)
-            && !LEGACY_MANIFEST_VERSION.equals(manifestVersion)) {
+                && !LEGACY_MANIFEST_VERSION.equals(manifestVersion)) {
             throw new IllegalArgumentException("Unsupported manifest version: " + manifestVersion);
         }
         requireText(modId, "modId");
@@ -179,10 +179,10 @@ public record GamePackageManifest(
     private static void requireRelativePath(String path) {
         requireText(path, "package path");
         if (path.contains("\\")
-            || path.contains("//")
-            || path.startsWith("/")
-            || path.endsWith("/")
-            || path.matches("^[A-Za-z]:.*")) {
+                || path.contains("//")
+                || path.startsWith("/")
+                || path.endsWith("/")
+                || path.matches("^[A-Za-z]:.*")) {
             throw new IllegalArgumentException("Package paths must be relative and use forward slashes.");
         }
         Path parsed;
@@ -196,8 +196,8 @@ public record GamePackageManifest(
         }
         for (Path component : parsed) {
             if (component.toString().isBlank()
-                || component.toString().equals(".")
-                || component.toString().equals("..")) {
+                    || component.toString().equals(".")
+                    || component.toString().equals("..")) {
                 throw new IllegalArgumentException("Invalid package path: " + path);
             }
         }
@@ -227,9 +227,9 @@ public record GamePackageManifest(
         Objects.requireNonNull(packageRoot, "packageRoot");
         Path manifestFile = packageRoot.resolve(FILE_NAME);
         try (OutputStream output = Files.newOutputStream(
-            manifestFile,
-            StandardOpenOption.CREATE_NEW,
-            StandardOpenOption.WRITE
+                manifestFile,
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE
         )) {
             write(output);
         }

@@ -8,6 +8,7 @@ import quantumquest.triviathrone.api.system.SystemProviderContext;
 import quantumquest.triviathrone.api.system.SystemProviderDescriptor;
 import quantumquest.triviathrone.api.system.SystemServiceRegistry;
 import quantumquest.triviathrone.auth.IUserAccountRepository;
+import quantumquest.triviathrone.auth.IRefreshTokenSessionRepository;
 import org.h2.jdbcx.JdbcConnectionPool;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -52,9 +53,14 @@ public final class H2SystemProvider implements ISystemProvider {
                 transactionManager,
                 migrationRunner
         );
+        IRefreshTokenSessionRepository refreshTokenSessionRepository = new H2RefreshTokenSessionRepository(
+                jdbcTemplate,
+                transactionManager
+        );
 
         services.register(IMigrationRunner.class, migrationRunner);
         services.register(IUserAccountRepository.class, accountRepository);
+        services.register(IRefreshTokenSessionRepository.class, refreshTokenSessionRepository);
     }
 
     @Override

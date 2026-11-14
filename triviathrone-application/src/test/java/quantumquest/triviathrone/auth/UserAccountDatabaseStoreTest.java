@@ -98,7 +98,6 @@ class UserAccountDatabaseStoreTest {
 
     private AuthProperties properties() {
         return new AuthProperties(
-                tempDir.resolve("refresh-tokens.xml"),
                 "01234567890123456789012345678901",
                 900,
                 3600,

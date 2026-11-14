@@ -5,6 +5,7 @@ import quantumquest.triviathrone.api.system.ISystemProvider;
 import quantumquest.triviathrone.api.system.SystemProviderContext;
 import quantumquest.triviathrone.api.system.SystemServiceRegistry;
 import quantumquest.triviathrone.auth.IUserAccountRepository;
+import quantumquest.triviathrone.auth.IRefreshTokenSessionRepository;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -43,8 +44,11 @@ class H2SystemProviderTest {
 
             IMigrationRunner migrationRunner = services.find(IMigrationRunner.class).orElseThrow();
             IUserAccountRepository accountRepository = services.find(IUserAccountRepository.class).orElseThrow();
+            IRefreshTokenSessionRepository refreshTokenSessionRepository =
+                    services.find(IRefreshTokenSessionRepository.class).orElseThrow();
             assertTrue(migrationRunner instanceof H2MigrationRunner);
             assertEquals("admin", accountRepository.findAll().getFirst().getUsername());
+            assertTrue(refreshTokenSessionRepository.load().isEmpty());
         } finally {
             provider.close();
         }
@@ -55,6 +59,9 @@ class H2SystemProviderTest {
 
         @Override
         public <T> void register(Class<T> serviceType, T service) {
+            if (!serviceType.isInterface()) {
+                throw new IllegalArgumentException("System services must be registered by interface type.");
+            }
             if (services.putIfAbsent(serviceType, service) != null) {
                 throw new IllegalStateException("Service already registered: " + serviceType.getName());
             }

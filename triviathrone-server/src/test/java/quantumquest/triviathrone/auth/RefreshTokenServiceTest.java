@@ -1,39 +1,24 @@
 package quantumquest.triviathrone.auth;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RefreshTokenServiceTest {
-    @TempDir
-    Path tempDir;
-
-    private Path sessionFile;
-
-    @BeforeEach
-    void setUp() {
-        sessionFile = tempDir.resolve("refresh-tokens.xml");
-    }
+    private final MemorySessionRepository repository = new MemorySessionRepository();
 
     @Test
-    void refreshSessionSurvivesServiceRestart() throws Exception {
+    void refreshSessionSurvivesServiceRestartAndStoresOnlyDigest() {
         RefreshTokenService firstInstance = newService();
         RefreshTokenService.IssuedToken issuedToken = firstInstance.issue("player");
 
-        String persistedData = Files.readString(sessionFile);
-        assertTrue(persistedData.contains("<!DOCTYPE refreshSessions SYSTEM \"refresh-tokens.dtd\">"));
-        assertTrue(persistedData.contains("noNamespaceSchemaLocation=\"refresh-tokens.xsd\""));
-        assertFalse(persistedData.contains(issuedToken.value()));
+        String storedDigest = repository.sessions.keySet().iterator().next();
+        org.junit.jupiter.api.Assertions.assertNotEquals(issuedToken.value(), storedDigest);
 
         RefreshTokenService restartedInstance = newService();
         RefreshTokenService.IssuedToken rotatedToken = restartedInstance.rotate(issuedToken.value());
@@ -53,51 +38,8 @@ class RefreshTokenServiceTest {
         assertThrows(ResponseStatusException.class, () -> restartedInstance.rotate(issuedToken.value()));
     }
 
-    @Test
-    void doesNotLoadLegacyJsonRefreshSessions() throws Exception {
-        Path legacyFile = tempDir.resolve("refresh-tokens.json");
-        Files.writeString(legacyFile, """
-                {"sessions":[]}
-                """);
-
-        RefreshTokenService restartedInstance = newService();
-
-        assertThrows(ResponseStatusException.class, () -> restartedInstance.rotate("legacy-token"));
-        assertTrue(Files.exists(legacyFile));
-    }
-
-    @Test
-    void rejectsRefreshXmlWithoutValidationDeclarations() throws Exception {
-        long expiry = Instant.now().plusSeconds(3600).getEpochSecond();
-        long absoluteExpiry = Instant.now().plusSeconds(7200).getEpochSecond();
-        Files.writeString(sessionFile, """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <refreshSessions>
-                    <session tokenDigest="digest" username="player" expiresAtEpochSecond="%d"
-                             absoluteExpiryEpochSecond="%d"/>
-                </refreshSessions>
-                """.formatted(expiry, absoluteExpiry));
-
-        assertThrows(IllegalStateException.class, this::newService);
-    }
-
-    @Test
-    void rejectsRefreshXmlThatDoesNotMatchItsSchemas() throws Exception {
-        Files.writeString(sessionFile, """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <!DOCTYPE refreshSessions SYSTEM "refresh-tokens.dtd">
-                <refreshSessions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                                 xsi:noNamespaceSchemaLocation="refresh-tokens.xsd">
-                    <session tokenDigest="digest" expiresAtEpochSecond="123" absoluteExpiryEpochSecond="456"/>
-                </refreshSessions>
-                """);
-
-        assertThrows(IllegalStateException.class, this::newService);
-    }
-
     private RefreshTokenService newService() {
         AuthProperties properties = new AuthProperties(
-                sessionFile,
                 "01234567890123456789012345678901",
                 900,
                 3600,
@@ -106,6 +48,21 @@ class RefreshTokenServiceTest {
                 "",
                 ""
         );
-        return new RefreshTokenService(properties, new RefreshTokenSessionStore(properties));
+        return new RefreshTokenService(properties, new RefreshTokenSessionStore(repository));
+    }
+
+    private static final class MemorySessionRepository implements IRefreshTokenSessionRepository {
+        private final Map<String, RefreshTokenSession> sessions = new HashMap<>();
+
+        @Override
+        public Map<String, RefreshTokenSession> load() {
+            return new HashMap<>(sessions);
+        }
+
+        @Override
+        public void save(Map<String, RefreshTokenSession> updatedSessions) {
+            sessions.clear();
+            sessions.putAll(updatedSessions);
+        }
     }
 }

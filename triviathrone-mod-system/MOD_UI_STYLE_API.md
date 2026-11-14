@@ -1,18 +1,18 @@
-# Mod UI style API
+# Mod UI styles
 
-Game mods can use TriviaThrone's shared styles instead of bundling their own controls and layout primitives. The stylesheet is served by the host at:
+Game mods can use the host's shared stylesheet for common layout and controls. Include it with:
 
 ```html
 <link rel="stylesheet" href="/css/mod-api.css">
 ```
 
-The built-in pages use the same stylesheet through `root.css`, so mod interfaces share the host palette and core control styles. The API is opt-in and namespaced with `tt-`; it does not apply site-wide element styles. Game-specific layout, colors, and presentation remain under the mod's control. Override the `--tt-*` custom properties in a mod stylesheet to theme the shared classes.
+Built-in pages load the stylesheet through `root.css`. The API is opt-in and uses the `tt-` prefix; it does not style HTML elements globally. Mods can keep their own layouts and override `--tt-*` properties in their stylesheet.
 
-The documented class names and `--tt-*` properties are the public interface. New classes and tokens may be added over time; existing names are intended to remain compatible.
+The classes and properties listed below are the public interface. More may be added; existing names are intended to remain compatible.
 
 ## Theme tokens
 
-The default palette and sizing can be customized with these properties:
+Use these properties to adjust the default colors and sizing:
 
 | Property                                                                                               | Purpose                               |
 |--------------------------------------------------------------------------------------------------------|---------------------------------------|
@@ -68,4 +68,4 @@ The default palette and sizing can be customized with these properties:
 </body>
 ```
 
-The shared stylesheet provides building blocks only; it does not impose a page structure or game-specific visual design.
+The stylesheet provides reusable styles, not a required page layout or game-specific design.

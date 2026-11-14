@@ -1,57 +1,27 @@
 # TriviaThrone APIs
 
-The API reactor is split into two independently consumable artifacts:
+The API module builds two artifacts. Use the game API when writing a game mod; use the system API for server-side integrations such as storage providers.
 
-- `triviathrone-game-api` contains the contracts used by game mods. Game mod
-  JARs are loaded from `mods/games` and should depend on this artifact only.
-  Set `triviathrone.mods.games-directory` to override that location; the former
-  `triviathrone.plugin.directory` setting remains a fallback for existing
-  deployments.
-- `triviathrone-system-api` contains server-wide contracts, including account
-  repositories and storage migrations. Database and other system
-  implementations should depend on these contracts rather than server classes
-  or Spring APIs.
+## Game mods
 
-The server depends on both APIs. The H2 implementation is packaged by the
-`infrastructure` module as a system mod with its H2 runtime dependency bundled.
-Building the full project from the repository root copies that mod into
-`mods/system`; the application does not load the infrastructure module on its
-own classpath.
+Game mods are loaded from `mods/games` and should depend on `triviathrone-game-api`. Set `triviathrone.mods.games-directory` to use another directory. The older `triviathrone.plugin.directory` setting is still read as a fallback.
 
-The release workflow publishes both API artifacts to Maven Central under
-`io.github.quantumquestx` and attaches their JARs to the GitHub release. Add
-`io.github.quantumquestx:triviathrone-game-api` or
-`io.github.quantumquestx:triviathrone-system-api` as a `provided` dependency
-when building a mod.
+When building a mod, declare `io.github.quantumquestx:triviathrone-game-api` as a `provided` dependency. The release workflow publishes it to Maven Central and attaches the JAR to GitHub releases.
 
-System mods are discovered from `mods/system` through Java `ServiceLoader`.
-Each JAR provides one or more `ISystemProvider` implementations in
-`META-INF/services/quantumquest.triviathrone.api.system.ISystemProvider`.
-Providers declare an ID, version, and system API version, initialize with a
-provider-scoped data directory and configuration, and register services by
-interface type. Service registrations must be unique; providers are started in
-JAR-name order and closed in reverse order. System configuration uses the
-`triviathrone.system.<provider-id>.*` namespace.
+## System mods
 
-Provider classes may declare their required system API compatibility major with
-`@SystemCompatibility(major = 2)`. The system loader rejects annotated
-providers whose major is incompatible with the server; the API version in the
-provider descriptor is also checked.
+System mods are trusted server code, not uploaded game content. The server discovers them from `mods/system` with Java `ServiceLoader`. Each JAR lists its `ISystemProvider` implementations in:
 
-Providers can observe immutable lobby and game lifecycle events through the
-default `ISystemProvider.onEvent` callback. Events are delivered synchronously
-and may be delivered concurrently; providers should keep handlers fast and
-thread-safe. A provider failure is logged and does not interrupt the server
-operation or delivery to other providers. The current events cover lobby
-creation/closure, player join/leave, and game start/end.
+```text
+META-INF/services/quantumquest.triviathrone.api.system.ISystemProvider
+```
 
-System providers are trusted server code, not uploaded content. A mod should
-use the system API as a provided dependency, bundle any non-platform runtime
-dependencies, and declare its service file. Its configuration keys are exposed
-without the `triviathrone.system.<provider-id>.` prefix. For example, the H2
-mod reads `jdbc-url` from `triviathrone.system.h2.jdbc-url`; its default points
-at the existing `./triviathrone-users` database file. API compatibility is
-major-version based. A provider registers the services it implements, such as
-`IUserAccountRepository` and `IMigrationRunner`. To replace the built-in H2
-account storage, remove its JAR from `mods/system` before adding another
-provider for `IUserAccountRepository`.
+Depend on `io.github.quantumquestx:triviathrone-system-api` as `provided`, bundle other runtime dependencies, and register the services your provider implements. Provider registrations must be unique. Providers start in JAR-name order and close in reverse order.
+
+The provider declares an ID, version, and API version, and receives its own data directory and configuration. Configuration properties use `triviathrone.system.<provider-id>.*`; the prefix is removed before properties reach the provider. For example, the H2 provider reads `jdbc-url` from `triviathrone.system.h2.jdbc-url`. Its default database is `./triviathrone-users`.
+
+The server checks the API version in the provider descriptor. A provider can also declare its required major version with `@SystemCompatibility(major = 2)`; incompatible providers are rejected.
+
+System providers may receive immutable lobby and game lifecycle events through `ISystemProvider.onEvent`. Delivery is synchronous and may happen concurrently, so handlers should be quick and thread-safe. Failures are logged without interrupting server operations or delivery to other providers. Events currently cover lobby creation and closure, player joins and leaves, and game starts and ends.
+
+The `infrastructure` module packages the built-in H2 implementation and its runtime dependency as a system mod. A full build copies it to `mods/system`; the application does not load the infrastructure module directly. To replace H2 account storage, remove its JAR from that directory before installing another provider for `IUserAccountRepository`.

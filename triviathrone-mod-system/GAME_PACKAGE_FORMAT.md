@@ -1,8 +1,6 @@
 # Game package format
 
-Every `.game.throne` archive has a root-level `manifest.xml`. It is the
-mod-independent package entry point; game-specific data belongs in the
-file named by the manifest, not in `manifest.xml`.
+A `.game.throne` archive must contain a `manifest.xml` at its root. The manifest identifies the game and points to its data file; game-specific data does not belong in the manifest.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -21,32 +19,14 @@ file named by the manifest, not in `manifest.xml`.
 </gamePackage>
 ```
 
-`manifestVersion` versions this package contract independently from the
-game-data `formatVersion`. The mod ID, game type, and provider class are
-matched against already registered providers; the class name is never loaded
-from the uploaded XML. The package API version must match the installed
-mod's declared API version. Mod and server versions are diagnostic
-metadata; the server build is not used as a compatibility gate.
-New packages use manifest version `2.0` and a `<mod>` element. The server
-continues to read version `1.0` manifests that use the former `<plugin>`
-element.
+`manifestVersion` is the package format version. It is separate from the game data's `formatVersion`. New packages use version `2.0` and a `<mod>` element. The server also reads version `1.0` manifests that use the older `<plugin>` element.
 
-`dataFile` and asset paths are package-relative paths. The referenced game
-data file must exist. Asset entries are optional; when an asset has a SHA-256
-value, the bundled file must match it.
+The mod ID, game type, and provider class must match a registered provider. The server does not load a class named by uploaded XML. The package API version must match the installed mod's declared API version. Mod and server versions are informational; the server version is not used to decide compatibility.
 
-The server-side game creator writes the package manifest after the provider
-creates its game data. Every additional file in the generated package is listed
-as an asset and receives a SHA-256 hash. The Jeopardy editor submits its game
-structure and media files to the server; the Jeopardy provider writes
-`game.xml` and the bundled resource files.
+`dataFile` and asset paths are relative to the package root. The game data file must exist. Assets are optional. If an asset entry includes a SHA-256 hash, it must match the bundled file.
 
-Creators that need uploaded files can use `POST /api/game/create/{gameType}`
-with `multipart/form-data`: the `data` part contains the JSON object and each
-binary part is named `asset_<resourceId>`. The server exposes those files to the
-creator as request assets and removes the temporary uploads after generation.
+After a provider creates the game data, the server writes the manifest. Each additional file in the package is listed as an asset and given a SHA-256 hash. The Jeopardy editor sends the game structure and media files to the server; its provider writes `game.xml` and the resource files.
 
-Game mod JARs depend on `triviathrone-game-api` and are loaded from
-`mods/games` at server startup. System implementations target
-`triviathrone-system-api`; the built-in H2 implementation is supplied by the
-`infrastructure` module.
+To include uploaded files, send `POST /api/game/create/{gameType}` as `multipart/form-data`. Put the JSON object in the `data` part and name each file part `asset_<resourceId>`. The server makes the files available to the creator and removes temporary uploads after generation.
+
+Game mod JARs use `triviathrone-game-api` and load from `mods/games` at server startup. System implementations use `triviathrone-system-api`; the built-in H2 implementation comes from `triviathrone-infrastructure`.

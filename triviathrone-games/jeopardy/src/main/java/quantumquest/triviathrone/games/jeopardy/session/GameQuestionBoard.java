@@ -1,6 +1,7 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.session;
 
 import quantumquest.triviathrone.games.jeopardy.definition.Category;
+import quantumquest.triviathrone.games.jeopardy.definition.JeopardyDefinition;
 import quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
 import quantumquest.triviathrone.games.jeopardy.definition.Round;
 

@@ -9,6 +9,9 @@ public interface IGameSession extends AutoCloseable {
 
     IGameMessage endedMessage(String hostUsername);
 
+    /**
+     * Registers notifications for state changes that happen asynchronously outside handleAction.
+     */
     void setStateChangeListener(Runnable listener);
 
     @Override

@@ -3,6 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --import ./triviathrone-client/src/test/js/browser-module-aliases.js --test triviathrone-client/src/test/js/*.test.js"
+    "test": "node --import ./triviathrone-client/src/test/js/browser-module-aliases.js --test triviathrone-client/src/test/js/*.test.js",
+    "pretest": "npm run format:check && npm run lint",
+    "format": "prettier --write \"triviathrone-client/src/main/resources/static/**/*.{js,html,css}\" \"triviathrone-games/jeopardy/src/main/resources/ui/**/*.{js,html,css}\" package.json package-lock.json .prettierrc.json eslint.config.js",
+    "format:check": "prettier --check \"triviathrone-client/src/main/resources/static/**/*.{js,html,css}\" \"triviathrone-games/jeopardy/src/main/resources/ui/**/*.{js,html,css}\" package.json package-lock.json .prettierrc.json eslint.config.js",
+    "lint": "eslint \"triviathrone-client/src/main/resources/static/js/**/*.js\" \"triviathrone-games/jeopardy/src/main/resources/ui/js/**/*.js\""
+  },
+  "devDependencies": {
+    "eslint": "^10.15.0",
+    "prettier": "^3.5.3"
   }
 }

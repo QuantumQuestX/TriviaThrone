@@ -49,9 +49,15 @@ public class Lobby {
 
     public synchronized void loadGame(IGameDefinition definition) {
         Objects.requireNonNull(definition, "definition");
-        if (gameSession != null) gameSession.close();
+
+        IGameSession previousSession = gameSession;
+        gameSession = null;
+
+        if (previousSession != null) {
+            previousSession.close();
+        }
+
         this.gameDefinition = definition;
-        this.gameSession = null;
     }
 
     public synchronized void startGame() {
@@ -79,11 +85,15 @@ public class Lobby {
     }
 
     public synchronized boolean endGameIfActive() {
-        if (gameSession == null) {
+        return endGameIfActive(gameSession);
+    }
+
+    public synchronized boolean endGameIfActive(IGameSession expectedSession) {
+        if (expectedSession == null || gameSession != expectedSession) {
             return false;
         }
-        gameSession.close();
-        this.gameSession = null;
+        gameSession = null;
+        expectedSession.close();
         return true;
     }
 

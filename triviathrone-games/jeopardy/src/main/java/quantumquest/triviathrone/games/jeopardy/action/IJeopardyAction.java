@@ -1,6 +1,6 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.action;
 
-sealed interface IJeopardyAction permits IJeopardyAction.Command,
+public sealed interface IJeopardyAction permits IJeopardyAction.Command,
         IJeopardyAction.SelectQuestion,
         IJeopardyAction.SelectRound {
 
@@ -19,16 +19,16 @@ sealed interface IJeopardyAction permits IJeopardyAction.Command,
             this.wireName = wireName;
         }
 
-        String wireName() {
+        public String wireName() {
             return wireName;
         }
     }
 
     record SelectRound(int roundIndex) implements IJeopardyAction {
-        static final String WIRE_NAME = "SELECT_ROUND";
+        public static final String WIRE_NAME = "SELECT_ROUND";
     }
 
     record SelectQuestion(int roundIndex, int categoryIndex, int questionIndex) implements IJeopardyAction {
-        static final String WIRE_NAME = "SELECT_QUESTION";
+        public static final String WIRE_NAME = "SELECT_QUESTION";
     }
 }

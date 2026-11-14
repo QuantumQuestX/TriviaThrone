@@ -5,9 +5,7 @@ export class PlayerView {
         this.isSelf = isSelf;
 
         this.element = this.createElement();
-        this.buzzerElement = this.isSelf
-            ? this.element
-            : this.element.querySelector(".player-buzzer");
+        this.buzzerElement = this.isSelf ? this.element : this.element.querySelector(".player-buzzer");
         this.scoreElement = this.isSelf
             ? document.getElementById("main-score")
             : this.element.querySelector(".player-score");
@@ -19,17 +17,21 @@ export class PlayerView {
         }
 
         const wrapper = document.createElement("div");
+
         wrapper.classList.add("player");
 
         const playerName = document.createElement("div");
+
         playerName.classList.add("player-name");
         playerName.textContent = this.username;
 
         const playerBuzzer = document.createElement("button");
+
         playerBuzzer.classList.add("player-buzzer", "secondary-btn");
         playerBuzzer.textContent = "Buzz";
 
         const playerScore = document.createElement("div");
+
         playerScore.classList.add("player-score");
         playerScore.textContent = "0";
 

@@ -33,12 +33,9 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
     private final List<URLClassLoader> classLoaders = new ArrayList<>();
     private final List<ISystemProvider> providers = new ArrayList<>();
-    private final Map<Class<?>, Object> services = new LinkedHashMap<>();
-    private final Map<Class<?>, String> serviceOwners = new LinkedHashMap<>();
+    private final ProviderServiceRegistry serviceRegistry = new ProviderServiceRegistry();
     private final Set<String> providerIds = new HashSet<>();
-    private boolean acceptingRegistrations = true;
     private volatile boolean closed;
-    private String registeringProviderId;
 
     private SystemModManager() {
     }
@@ -60,6 +57,7 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
         try {
             Files.createDirectories(modsDirectory);
             Files.createDirectories(context.dataDirectory());
+
             try (Stream<Path> entries = Files.list(modsDirectory)) {
                 List<Path> jars = entries
                         .filter(Files::isRegularFile)
@@ -70,7 +68,7 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
                     manager.loadJar(jar, context, parentClassLoader);
                 }
             }
-            manager.acceptingRegistrations = false;
+            manager.serviceRegistry.finishLoading();
             return manager;
         } catch (IOException | RuntimeException | ServiceConfigurationError | LinkageError exception) {
             manager.closeAfterFailure(exception);
@@ -98,6 +96,7 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
         for (ISystemProvider provider : discovered) {
             SystemProviderDescriptor descriptor = Objects.requireNonNull(provider.descriptor(), "provider descriptor");
+
             SystemCompatibility compatibility = provider.getClass().getAnnotation(SystemCompatibility.class);
             if (compatibility != null && !SystemApi.isCompatibleMajor(compatibility.major())) {
                 throw new IllegalStateException(
@@ -105,12 +104,14 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
                                 + compatibility.major() + "; server provides " + SystemApi.CURRENT_VERSION
                 );
             }
+
             if (!SystemApi.isCompatible(descriptor.apiVersion())) {
                 throw new IllegalStateException(
                         "System mod " + descriptor.id() + " requires API " + descriptor.apiVersion()
                                 + "; server provides " + SystemApi.CURRENT_VERSION
                 );
             }
+
             if (!providerIds.add(descriptor.id())) {
                 throw new IllegalStateException("Duplicate system provider id: " + descriptor.id());
             }
@@ -120,39 +121,25 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
                     providerConfiguration(context.configuration(), descriptor.id())
             );
             Files.createDirectories(providerContext.dataDirectory());
+
             providers.add(provider);
-            registeringProviderId = descriptor.id();
+            serviceRegistry.beginProviderInitialization(descriptor.id());
             try {
                 provider.initialize(providerContext, this);
             } finally {
-                registeringProviderId = null;
+                serviceRegistry.endProviderInitialization();
             }
         }
     }
 
     @Override
     public synchronized <T> void register(Class<T> serviceType, T service) {
-        if (!acceptingRegistrations || closed) {
-            throw new IllegalStateException("System services can only be registered during provider initialization.");
-        }
-        Class<T> contract = Objects.requireNonNull(serviceType, "serviceType");
-        if (!contract.isInterface()) {
-            throw new IllegalArgumentException("System services must be registered by interface type.");
-        }
-        Object implementation = contract.cast(Objects.requireNonNull(service, "service"));
-        String existingOwner = serviceOwners.get(contract);
-        if (services.putIfAbsent(contract, implementation) != null) {
-            throw new IllegalStateException(
-                    "System service " + contract.getName() + " is already registered by " + existingOwner
-            );
-        }
-        serviceOwners.put(contract, registeringProviderId == null ? "unknown" : registeringProviderId);
+        serviceRegistry.register(serviceType, service);
     }
 
     @Override
     public synchronized <T> Optional<T> find(Class<T> serviceType) {
-        Class<T> contract = Objects.requireNonNull(serviceType, "serviceType");
-        return Optional.ofNullable(services.get(contract)).map(contract::cast);
+        return serviceRegistry.find(serviceType);
     }
 
     public List<SystemProviderDescriptor> providers() {
@@ -185,7 +172,8 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
             return;
         }
         closed = true;
-        acceptingRegistrations = false;
+        serviceRegistry.stopRegistration();
+
         IOException failure = null;
 
         for (int i = providers.size() - 1; i >= 0; i--) {
@@ -206,9 +194,9 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
         providers.clear();
         classLoaders.clear();
-        services.clear();
-        serviceOwners.clear();
+        serviceRegistry.clear();
         providerIds.clear();
+
         if (failure != null) {
             throw failure;
         }

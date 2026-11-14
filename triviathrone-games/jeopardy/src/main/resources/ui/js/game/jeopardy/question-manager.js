@@ -12,6 +12,7 @@ export class QuestionManager {
 
     showQuestion(question) {
         this.reset();
+
         let mediaLoadPromise = Promise.resolve();
 
         this.categoryEl.textContent = question.category;
@@ -25,6 +26,7 @@ export class QuestionManager {
         if (question.choices?.length) {
             this.renderChoices(question.choices);
         }
+
         return mediaLoadPromise;
     }
 
@@ -42,6 +44,7 @@ export class QuestionManager {
 
         choices.slice(0, 4).forEach((choiceText, index) => {
             const choiceEl = document.createElement("div");
+
             choiceEl.className = "question-choice";
             choiceEl.textContent = `${String.fromCharCode(65 + index)}. ${choiceText}`;
             this.choicesContainer.appendChild(choiceEl);

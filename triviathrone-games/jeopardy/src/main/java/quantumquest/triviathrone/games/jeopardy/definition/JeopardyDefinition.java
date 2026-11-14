@@ -1,8 +1,8 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.definition;
 
 import quantumquest.triviathrone.api.game.IGameDefinition;
 import quantumquest.triviathrone.api.game.IGameSession;
-import quantumquest.triviathrone.games.jeopardy.definition.Round;
+import quantumquest.triviathrone.games.jeopardy.session.JeopardySession;
 
 import java.util.List;
 import java.util.Objects;

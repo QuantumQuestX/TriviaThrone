@@ -102,6 +102,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install frontend tools
+        run: npm ci
+
       - name: Set release version in POM
         if: needs.resolve-version.outputs.update_pom == 'true'
         env:

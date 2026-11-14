@@ -1,9 +1,4 @@
-import {
-    AuthenticationError,
-    getAccessToken,
-    redirectToLogin,
-    refreshAccessToken
-} from "./auth.js";
+import { AuthenticationError, getAccessToken, redirectToLogin, refreshAccessToken } from "./auth.js";
 
 export async function apiFetch(resource, options = {}) {
     let token = await getAccessToken();
@@ -14,10 +9,14 @@ export async function apiFetch(resource, options = {}) {
     }
 
     const currentToken = await getAccessToken();
+
     if (currentToken !== token) {
         token = currentToken;
         response = await sendAuthenticatedRequest(resource, options, token);
-        if (response.status !== 401) return response;
+
+        if (response.status !== 401) {
+            return response;
+        }
     }
 
     try {
@@ -26,20 +25,23 @@ export async function apiFetch(resource, options = {}) {
         if (error instanceof AuthenticationError) {
             redirectToLogin();
         }
+
         throw error;
     }
 
     response = await sendAuthenticatedRequest(resource, options, token);
+
     return response;
 }
 
 function sendAuthenticatedRequest(resource, options, token) {
     const headers = new Headers(options.headers);
+
     headers.set("Authorization", `Bearer ${token}`);
 
     return fetch(resource, {
         ...options,
         headers,
-        credentials: options.credentials ?? "same-origin"
+        credentials: options.credentials ?? "same-origin",
     });
 }

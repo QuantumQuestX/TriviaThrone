@@ -12,7 +12,9 @@
 
 .dashboard-page #lobby-list li {
     padding: 0.7rem 0.8rem;
-    transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+        background-color 0.2s ease-in-out,
+        transform 0.2s ease-in-out;
 }
 
 .dashboard-page #lobby-list li:not(:last-child) {
@@ -86,5 +88,4 @@
     .dashboard-page #lobby-list {
         grid-column: auto;
     }
-
 }

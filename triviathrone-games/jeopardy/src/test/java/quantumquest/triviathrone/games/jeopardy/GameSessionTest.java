@@ -3,12 +3,15 @@ package quantumquest.triviathrone.games.jeopardy;
 import quantumquest.triviathrone.api.game.GameActionResult;
 import quantumquest.triviathrone.api.game.IGameSession;
 import quantumquest.triviathrone.dto.game.GameActionMessage;
+import quantumquest.triviathrone.games.jeopardy.action.IJeopardyAction;
 import quantumquest.triviathrone.games.jeopardy.definition.Category;
+import quantumquest.triviathrone.games.jeopardy.definition.JeopardyDefinition;
 import quantumquest.triviathrone.games.jeopardy.dto.MediaType;
 import quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
 import quantumquest.triviathrone.games.jeopardy.definition.Round;
 import quantumquest.triviathrone.games.jeopardy.dto.GameState;
 import quantumquest.triviathrone.games.jeopardy.dto.JeopardyStateMessage;
+import quantumquest.triviathrone.games.jeopardy.session.JeopardySession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

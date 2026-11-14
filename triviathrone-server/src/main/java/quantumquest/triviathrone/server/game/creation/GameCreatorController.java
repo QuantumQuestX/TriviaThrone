@@ -1,11 +1,9 @@
-package quantumquest.triviathrone.server;
+package quantumquest.triviathrone.server.game.creation;
 
 import quantumquest.triviathrone.api.game.GameCreationRequest;
-import quantumquest.triviathrone.api.game.GameCreationAsset;
 import quantumquest.triviathrone.api.game.GameCreatorInfo;
 import quantumquest.triviathrone.auth.UserAccount;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -29,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -44,9 +41,11 @@ public class GameCreatorController {
     };
 
     private final GameCreationService gameCreationService;
+    private final GameCreationRequestParser requestParser;
 
     public GameCreatorController(GameCreationService gameCreationService) {
         this.gameCreationService = Objects.requireNonNull(gameCreationService, "gameCreationService");
+        this.requestParser = new GameCreationRequestParser(GAME_MOD_JSON_MAPPER);
     }
 
     @GetMapping("/creators")
@@ -71,7 +70,7 @@ public class GameCreatorController {
             @AuthenticationPrincipal UserAccount user
     ) throws IOException {
         Objects.requireNonNull(user, "user");
-        return createArchive(gameType, parseRequest(requestBody));
+        return createArchive(gameType, requestParser.parse(requestBody));
     }
 
     @PostMapping(path = "/create/{gameType}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -85,7 +84,7 @@ public class GameCreatorController {
         Path uploadDirectory = Files.createTempDirectory("triviathrone-game-assets-");
         GameCreationService.GeneratedGame game;
         try {
-            GameCreationRequest request = parseMultipartRequest(requestData, uploadedFiles, uploadDirectory);
+            GameCreationRequest request = requestParser.parseMultipart(requestData, uploadedFiles, uploadDirectory);
             game = generate(gameType, request);
         } catch (IOException | RuntimeException exception) {
             try {
@@ -143,60 +142,6 @@ public class GameCreatorController {
                         ContentDisposition.attachment().filename(game.filename()).build().toString()
                 )
                 .body(body);
-    }
-
-    private static GameCreationRequest parseMultipartRequest(
-            String requestData,
-            MultiValueMap<String, MultipartFile> uploadedFiles,
-            Path uploadDirectory
-    ) throws IOException {
-        JsonNode jsonData;
-        try {
-            jsonData = GAME_MOD_JSON_MAPPER.readTree(requestData);
-        } catch (IOException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game creation data.", exception);
-        }
-        if (jsonData == null || !jsonData.isObject()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game creation data must be a JSON object.");
-        }
-
-        Map<String, GameCreationAsset> assets = new HashMap<>();
-        int assetIndex = 0;
-        for (Map.Entry<String, List<MultipartFile>> entry : uploadedFiles.entrySet()) {
-            String partName = entry.getKey();
-            if (!partName.startsWith("asset_") || partName.length() == "asset_".length()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unexpected game asset upload.");
-            }
-            if (entry.getValue().size() != 1) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each game asset must be uploaded once.");
-            }
-
-            MultipartFile uploadedFile = entry.getValue().get(0);
-            if (uploadedFile.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game assets cannot be empty.");
-            }
-            String resourceId = partName.substring("asset_".length());
-            String filename = uploadedFile.getOriginalFilename();
-            if (filename == null || filename.isBlank()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game asset filenames are required.");
-            }
-
-            Path assetPath = uploadDirectory.resolve("asset-" + assetIndex++);
-            uploadedFile.transferTo(assetPath);
-            if (assets.putIfAbsent(resourceId, new GameCreationAsset(filename, assetPath)) != null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duplicate game asset upload.");
-            }
-        }
-        return new GameCreationRequest(jsonData, assets);
-    }
-
-    private static GameCreationRequest parseRequest(Map<String, Object> requestBody) {
-        Object data = requestBody.get("data");
-        if (!(data instanceof Map<?, ?>)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game creation data must be a JSON object.");
-        }
-        JsonNode jsonData = GAME_MOD_JSON_MAPPER.valueToTree(data);
-        return new GameCreationRequest(jsonData);
     }
 
     private static void deleteTree(Path directory) throws IOException {

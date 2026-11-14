@@ -43,6 +43,7 @@ public final class H2SystemProvider implements ISystemProvider {
         String password = context.property("password").orElse("");
 
         connectionPool = JdbcConnectionPool.create(jdbcUrl, username, password);
+
         JdbcTemplate jdbcTemplate = new JdbcTemplate(connectionPool);
         DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(connectionPool);
         IMigrationRunner migrationRunner = new H2MigrationRunner(jdbcTemplate, transactionManager);

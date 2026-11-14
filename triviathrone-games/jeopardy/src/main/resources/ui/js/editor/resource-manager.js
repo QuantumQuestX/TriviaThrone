@@ -20,7 +20,7 @@ export class ResourceManager {
             name: file.name,
             mimeType: file.type,
             type: resourceType,
-            size: file.size
+            size: file.size,
         };
 
         this.resources.set(id, resource);
@@ -41,12 +41,18 @@ export class ResourceManager {
     }
 
     _detectType(file) {
-        if (file.type.startsWith("image/"))
+        if (file.type.startsWith("image/")) {
             return "image";
-        if (file.type.startsWith("video/"))
+        }
+
+        if (file.type.startsWith("video/")) {
             return "video";
-        if (file.type.startsWith("audio/"))
+        }
+
+        if (file.type.startsWith("audio/")) {
             return "audio";
+        }
+
         return "unknown";
     }
 }

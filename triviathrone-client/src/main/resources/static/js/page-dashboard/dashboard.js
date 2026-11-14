@@ -11,6 +11,7 @@ document.getElementById("account-btn").addEventListener("click", () => {
 });
 
 const params = new URLSearchParams(window.location.search);
+
 if (params.get("page") === "account") {
     setSectionVisible(dashboardSection, false);
     setSectionVisible(accountSection, true);

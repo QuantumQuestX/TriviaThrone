@@ -1,4 +1,4 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.action;
 
 import quantumquest.triviathrone.dto.game.GameActionMessage;
 
@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
-final class JeopardyActionRegistry {
+public final class JeopardyActionRegistry {
     private static final Map<String, Function<Map<String, Object>, Optional<IJeopardyAction>>> DECODERS = Map.ofEntries(
             Map.entry(IJeopardyAction.Command.BUZZ.wireName(), noParameters(IJeopardyAction.Command.BUZZ)),
             Map.entry(IJeopardyAction.Command.PLAY_MEDIA.wireName(), noParameters(IJeopardyAction.Command.PLAY_MEDIA)),
@@ -24,7 +24,7 @@ final class JeopardyActionRegistry {
     private JeopardyActionRegistry() {
     }
 
-    static Optional<IJeopardyAction> decode(GameActionMessage message) {
+    public static Optional<IJeopardyAction> decode(GameActionMessage message) {
         Function<Map<String, Object>, Optional<IJeopardyAction>> decoder = DECODERS.get(message.action());
         return decoder == null ? Optional.empty() : decoder.apply(message.parameters());
     }

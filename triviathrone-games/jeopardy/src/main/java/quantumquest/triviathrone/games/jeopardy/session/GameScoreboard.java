@@ -1,4 +1,4 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.session;
 
 import java.util.Map;
 import java.util.Objects;

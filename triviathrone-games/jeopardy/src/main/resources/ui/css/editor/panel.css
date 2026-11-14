@@ -39,8 +39,9 @@ main.editor-layout {
 .side-panel {
     flex: 0 0 var(--panel-expanded-width);
     max-width: var(--panel-expanded-width);
-    transition: flex-basis var(--panel-transition),
-                padding var(--panel-transition);
+    transition:
+        flex-basis var(--panel-transition),
+        padding var(--panel-transition);
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -132,8 +133,9 @@ main.editor-layout {
     color: var(--accent);
     background: var(--bg-panel-light);
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-                color 0.4s;
+    transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        color 0.4s;
 }
 
 .side-panel.collapsed .fold-btn {

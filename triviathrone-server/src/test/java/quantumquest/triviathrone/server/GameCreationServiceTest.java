@@ -8,6 +8,7 @@ import quantumquest.triviathrone.api.game.GamePackageManifest;
 import quantumquest.triviathrone.api.game.IGameCreator;
 import quantumquest.triviathrone.api.game.IGameDefinition;
 import quantumquest.triviathrone.api.game.IGameProvider;
+import quantumquest.triviathrone.server.game.creation.GameCreationService;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

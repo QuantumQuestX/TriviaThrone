@@ -26,9 +26,9 @@
 
 .upload-status::before {
     content: "Status: ";
-    color: rgba(255, 255, 255, 0.20);
+    color: rgba(255, 255, 255, 0.2);
 }
 
 .upload-status:empty::before {
-    content: '';
+    content: "";
 }

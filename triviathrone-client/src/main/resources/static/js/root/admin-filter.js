@@ -3,7 +3,5 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const adminElements = document.querySelectorAll(`[${adminAttribute}]`);
 
-    adminElements.forEach(el => 
-        el?.remove()
-    );
+    adminElements.forEach((el) => el?.remove());
 });

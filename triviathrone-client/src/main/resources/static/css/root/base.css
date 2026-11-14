@@ -64,7 +64,7 @@ code {
     display: none !important;
 }
 
-@media(max-width: 600px) {
+@media (max-width: 600px) {
     main {
         padding: 1rem;
     }

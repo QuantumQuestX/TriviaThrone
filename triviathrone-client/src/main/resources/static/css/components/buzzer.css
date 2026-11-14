@@ -28,7 +28,9 @@
         0 12px 25px rgba(0, 0, 0, 0.9);
 
     animation: pulse 2.2s infinite ease-in-out;
-    transition: transform 0.1s ease, filter 0.15s ease;
+    transition:
+        transform 0.1s ease,
+        filter 0.15s ease;
 
     overflow: hidden;
     flex-shrink: 0;

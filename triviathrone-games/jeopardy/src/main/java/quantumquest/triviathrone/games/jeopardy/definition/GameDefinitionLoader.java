@@ -1,10 +1,9 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.definition;
 
 import quantumquest.triviathrone.api.game.GamePackageManifest;
-import quantumquest.triviathrone.games.jeopardy.definition.Category;
+import quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider;
+import quantumquest.triviathrone.games.jeopardy.resource.GameResourceResolver;
 import quantumquest.triviathrone.games.jeopardy.dto.MediaType;
-import quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
-import quantumquest.triviathrone.games.jeopardy.definition.Round;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -125,8 +124,9 @@ public final class GameDefinitionLoader {
 
                     for (int r = 0; r < questionCount; r++) {
                         QuestionDefinition qDef = matrix[c][r];
-                        if (qDef == null)
+                        if (qDef == null) {
                             throw new IllegalStateException("missing question at category " + c + ", row " + r);
+                        }
                         questions.add(qDef);
                     }
 

@@ -1,67 +1,76 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TriviaThrone</title>
-    <link rel="stylesheet" href="/css/pages/dashboard.css">
-</head>
-<body class="dashboard-page tt-shell">
-    <div data-topbar="dashboard"></div>
-    <main>
-        <section id="dashboard-section" class="panel tt-card">
-            <h2>Available Lobbies</h2>
-            <ul id="lobby-list">
-                <li role="status">Loading lobbies…</li>
-            </ul>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>TriviaThrone</title>
+        <link rel="stylesheet" href="/css/pages/dashboard.css" />
+    </head>
+    <body class="dashboard-page tt-shell">
+        <div data-topbar="dashboard"></div>
+        <main>
+            <section id="dashboard-section" class="panel tt-card">
+                <h2>Available Lobbies</h2>
+                <ul id="lobby-list">
+                    <li role="status">Loading lobbies…</li>
+                </ul>
 
-            <div class="separator"></div>
+                <div class="separator"></div>
 
-            <h3>Join Lobby</h3>
-            <input class="tt-control" type="text" id="join-code" placeholder="Enter lobby code">
-            <button id="join-btn" class="secondary-btn tt-button tt-button--secondary">Join</button>
+                <h3>Join Lobby</h3>
+                <input class="tt-control" type="text" id="join-code" placeholder="Enter lobby code" />
+                <button id="join-btn" class="secondary-btn tt-button tt-button--secondary">Join</button>
 
-            <h3>Create Lobby</h3>
-            <input class="tt-control" type="text" id="lobby-name" placeholder="Lobby Name">
-            <button id="create-btn" class="secondary-btn tt-button tt-button--secondary">Create</button>
-        </section>
-        <section id="account-section" class="panel tt-card is-hidden">
-            <h2>Account Settings</h2>
+                <h3>Create Lobby</h3>
+                <input class="tt-control" type="text" id="lobby-name" placeholder="Lobby Name" />
+                <button id="create-btn" class="secondary-btn tt-button tt-button--secondary">Create</button>
+            </section>
+            <section id="account-section" class="panel tt-card is-hidden">
+                <h2>Account Settings</h2>
 
-            <div class="account-info">
-                <p>Username: <span id="account-username-display" data-current-user></span></p>
-                <p>Token expires in: <span id="token-expiry"></span></p>
-            </div>
+                <div class="account-info">
+                    <p>Username: <span id="account-username-display" data-current-user></span></p>
+                    <p>Token expires in: <span id="token-expiry"></span></p>
+                </div>
 
-            <div class="separator"></div>
+                <div class="separator"></div>
 
-            <div class="change-password">
-                <h3>Change Password</h3>
-                <form id="change-password-form">
-                    <div class="form-group">
-                        <input class="tt-control" type="password" id="current-password" placeholder="Current Password"/>
-                    </div>
+                <div class="change-password">
+                    <h3>Change Password</h3>
+                    <form id="change-password-form">
+                        <div class="form-group">
+                            <input
+                                class="tt-control"
+                                type="password"
+                                id="current-password"
+                                placeholder="Current Password"
+                            />
+                        </div>
 
-                    <div class="form-group">
-                        <input class="tt-control" type="password" id="new-password" placeholder="New Password"/>
-                    </div>
+                        <div class="form-group">
+                            <input class="tt-control" type="password" id="new-password" placeholder="New Password" />
+                        </div>
 
-                    <div class="form-group">
-                        <input class="tt-control" type="password" id="confirm-password" placeholder="Confirm New Password"/>
-                    </div>
+                        <div class="form-group">
+                            <input
+                                class="tt-control"
+                                type="password"
+                                id="confirm-password"
+                                placeholder="Confirm New Password"
+                            />
+                        </div>
 
-                    <button type="submit" class="primary-btn tt-button tt-button--primary">Update Password</button>
-                </form>
+                        <button type="submit" class="primary-btn tt-button tt-button--primary">Update Password</button>
+                    </form>
 
-                <div id="password-message" class="tt-status"></div>
-            </div>
-        </section>
+                    <div id="password-message" class="tt-status"></div>
+                </div>
+            </section>
+        </main>
 
-    </main>
-
-    <script type="module" src="/js/root/topbar.js"></script>
-    <script type="module" src="/js/root/version.js"></script>
-    <script type="module" src="/js/root/credits.js"></script>
-    <script type="module" src="/js/page-dashboard/index.js"></script>
-</body>
+        <script type="module" src="/js/root/topbar.js"></script>
+        <script type="module" src="/js/root/version.js"></script>
+        <script type="module" src="/js/root/credits.js"></script>
+        <script type="module" src="/js/page-dashboard/index.js"></script>
+    </body>
 </html>

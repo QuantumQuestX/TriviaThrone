@@ -8,6 +8,8 @@ import quantumquest.triviathrone.api.game.GameCreationRequest;
 import quantumquest.triviathrone.api.game.GameCreatorDescriptor;
 import quantumquest.triviathrone.api.game.GameCreatorInfo;
 import quantumquest.triviathrone.auth.UserAccount;
+import quantumquest.triviathrone.server.game.creation.GameCreationService;
+import quantumquest.triviathrone.server.game.creation.GameCreatorController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.mock.web.MockMultipartFile;

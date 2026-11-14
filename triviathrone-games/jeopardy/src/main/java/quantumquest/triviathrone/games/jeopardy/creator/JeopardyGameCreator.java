@@ -1,4 +1,4 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.creator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -87,7 +87,7 @@ public final class JeopardyGameCreator implements IGameCreator {
 
             String file = "resources/asset-" + index + safeExtension(asset.filename());
             try (InputStream input = Files.newInputStream(asset.path());
-                 OutputStream output = files.createFile(file)) {
+                    OutputStream output = files.createFile(file)) {
                 input.transferTo(output);
             }
             resources.add(new Resource(id, file, type));

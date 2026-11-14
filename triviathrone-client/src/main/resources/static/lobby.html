@@ -1,49 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lobby - TriviaThrone</title>
-    <link rel="stylesheet" href="/css/pages/lobby.css">
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-</head>
-<body class="lobby-page tt-shell">
-    <div data-topbar="lobby"></div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Lobby - TriviaThrone</title>
+        <link rel="stylesheet" href="/css/pages/lobby.css" />
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    </head>
+    <body class="lobby-page tt-shell">
+        <div data-topbar="lobby"></div>
 
-    <main class="lobby-layout">
-        <section class="players-panel panel tt-card">
-            <h2>Players</h2>
-            <ul id="player-list" class="player-list"></ul>
+        <main class="lobby-layout">
+            <section class="players-panel panel tt-card">
+                <h2>Players</h2>
+                <ul id="player-list" class="player-list"></ul>
 
-            <div class="host-controls" data-admin="true" style="display: none;">
-                <!--<button id="cancel-game-btn" data-admin="true" class="fullwidth-btn danger-btn">Cancel Game</button>-->
-                <button id="start-game-btn" class="fullwidth-btn primary-btn tt-button tt-button--primary">Start Game</button>
-            </div>
-        </section>
+                <div class="host-controls" data-admin="true" style="display: none">
+                    <!--<button id="cancel-game-btn" data-admin="true" class="fullwidth-btn danger-btn">Cancel Game</button>-->
+                    <button id="start-game-btn" class="fullwidth-btn primary-btn tt-button tt-button--primary">
+                        Start Game
+                    </button>
+                </div>
+            </section>
 
-        <section class="feed-panel panel tt-card">
-            <h2>Live Activity</h2>
-            <div id="event-feed" class="event-feed"></div>
-        </section>
+            <section class="feed-panel panel tt-card">
+                <h2>Live Activity</h2>
+                <div id="event-feed" class="event-feed"></div>
+            </section>
 
-        <section id="host-panel" data-admin="true" class="upload-pane panel tt-card" style="display: none;">
-            <h2>Upload Game</h2>
+            <section id="host-panel" data-admin="true" class="upload-pane panel tt-card" style="display: none">
+                <h2>Upload Game</h2>
 
-            <div class="upload-box">
-                <input type="file" id="game-file" accept=".game.throne">
-                <label for="game-file">Drop or Select <code>.game.throne</code> file</label>
-            </div>
+                <div class="upload-box">
+                    <input type="file" id="game-file" accept=".game.throne" />
+                    <label for="game-file">Drop or Select <code>.game.throne</code> file</label>
+                </div>
 
-            <button id="upload-btn" class="fullwidth-btn primary-btn">Upload</button>
+                <button id="upload-btn" class="fullwidth-btn primary-btn">Upload</button>
 
-            <p id="upload-status" class="upload-status tt-status"></p>
-        </section>
-    </main>
+                <p id="upload-status" class="upload-status tt-status"></p>
+            </section>
+        </main>
 
-    <script type="module" src="/js/root/topbar.js"></script>
-    <script type="module" src="/js/root/version.js"></script>
-    <script type="module" src="/js/root/credits.js"></script>
-    <script type="module" src="/js/page-lobby/index.js"></script>
-</body>
+        <script type="module" src="/js/root/topbar.js"></script>
+        <script type="module" src="/js/root/version.js"></script>
+        <script type="module" src="/js/root/credits.js"></script>
+        <script type="module" src="/js/page-lobby/index.js"></script>
+    </body>
 </html>

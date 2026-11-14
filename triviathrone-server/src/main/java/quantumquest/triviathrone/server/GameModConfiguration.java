@@ -23,7 +23,7 @@ public class GameModConfiguration {
      */
     @Bean(destroyMethod = "close")
     public GameModManager gameModManager(
-        @Value("${triviathrone.mods.games-directory:${triviathrone.plugin.directory:mods/games}}") String modsDir
+            @Value("${triviathrone.mods.games-directory:${triviathrone.plugin.directory:mods/games}}") String modsDir
     ) throws IOException {
         return GameModManager.load(Path.of(modsDir));
     }

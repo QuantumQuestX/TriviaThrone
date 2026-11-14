@@ -96,9 +96,9 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
      * @throws IllegalStateException if provider compatibility or identifiers are invalid
      */
     static SystemModManager load(
-        Path modsDirectory,
-        SystemProviderContext context,
-        ClassLoader parentClassLoader
+            Path modsDirectory,
+            SystemProviderContext context,
+            ClassLoader parentClassLoader
     ) throws IOException {
         Objects.requireNonNull(modsDirectory, "modsDirectory");
         Objects.requireNonNull(context, "context");
@@ -111,10 +111,10 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
             try (Stream<Path> entries = Files.list(modsDirectory)) {
                 List<Path> jars = entries
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar"))
-                    .sorted()
-                    .toList();
+                        .filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar"))
+                        .sorted()
+                        .toList();
                 for (Path jar : jars) {
                     manager.loadJar(jar, context, parentClassLoader);
                 }
@@ -189,11 +189,11 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
         classLoaders.add(classLoader);
 
         List<ISystemProvider> discovered = ServiceLoader
-            .load(ISystemProvider.class, classLoader)
-            .stream()
-            .filter(provider -> provider.type().getClassLoader() == classLoader)
-            .map(ServiceLoader.Provider::get)
-            .toList();
+                .load(ISystemProvider.class, classLoader)
+                .stream()
+                .filter(provider -> provider.type().getClassLoader() == classLoader)
+                .map(ServiceLoader.Provider::get)
+                .toList();
         if (discovered.isEmpty()) {
             throw new IllegalStateException("No system providers found in mod JAR: " + jar);
         }
@@ -221,8 +221,8 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
             }
 
             SystemProviderContext providerContext = new SystemProviderContext(
-                context.dataDirectory().resolve(descriptor.id()),
-                providerConfiguration(context.configuration(), descriptor.id())
+                    context.dataDirectory().resolve(descriptor.id()),
+                    providerConfiguration(context.configuration(), descriptor.id())
             );
             Files.createDirectories(providerContext.dataDirectory());
 
@@ -288,10 +288,10 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
                 provider.onEvent(event);
             } catch (RuntimeException exception) {
                 LOGGER.log(
-                    Level.SEVERE,
-                    "System provider " + provider.getClass().getName()
+                        Level.SEVERE,
+                        "System provider " + provider.getClass().getName()
                         + " failed while handling " + event.getClass().getSimpleName() + ".",
-                    exception
+                        exception
                 );
             }
         }

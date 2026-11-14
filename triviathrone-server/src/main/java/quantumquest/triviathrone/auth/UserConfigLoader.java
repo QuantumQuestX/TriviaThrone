@@ -55,9 +55,9 @@ public class UserConfigLoader {
      * @param accountDatabase the account repository
      */
     public UserConfigLoader(
-        AuthProperties props,
-        PasswordEncoder passwordEncoder,
-        IUserAccountRepository accountDatabase
+            AuthProperties props,
+            PasswordEncoder passwordEncoder,
+            IUserAccountRepository accountDatabase
     ) {
         AuthProperties properties = Objects.requireNonNull(props, "props");
         this.accountDatabase = Objects.requireNonNull(accountDatabase, "accountDatabase");
@@ -84,7 +84,7 @@ public class UserConfigLoader {
 
         validateDefaultAdminAccount();
         if (initialAdminUsername != null && !initialAdminUsername.isBlank()
-            && !DEFAULT_ADMIN_USERNAME.equals(initialAdminUsername)) {
+                && !DEFAULT_ADMIN_USERNAME.equals(initialAdminUsername)) {
             provisionInitialAdmin(initialAdminUsername, initialAdminPassword);
         }
         reconcileDefaultAdmin();
@@ -215,8 +215,8 @@ public class UserConfigLoader {
             throw new IllegalStateException("Default admin account is missing");
         }
         boolean anotherAdminExists = users.values().stream()
-            .filter(user -> !user.isDefaultAdmin())
-            .anyMatch(user -> user.isEnabled()
+                .filter(user -> !user.isDefaultAdmin())
+                .anyMatch(user -> user.isEnabled()
                 && user.getRoles().contains(UserAccount.ROLE_USER)
                 && user.getRoles().contains(UserAccount.ROLE_ADMIN));
         boolean shouldBeEnabled = !anotherAdminExists;
@@ -239,7 +239,7 @@ public class UserConfigLoader {
             account.setRoles(Set.of(UserAccount.ROLE_USER, UserAccount.ROLE_ADMIN));
             createUser(account);
         } else if (!account.getRoles().contains(UserAccount.ROLE_USER)
-            || !account.getRoles().contains(UserAccount.ROLE_ADMIN)) {
+                || !account.getRoles().contains(UserAccount.ROLE_ADMIN)) {
             Set<String> roles = new java.util.HashSet<>(account.getRoles());
             roles.add(UserAccount.ROLE_USER);
             roles.add(UserAccount.ROLE_ADMIN);
@@ -256,8 +256,8 @@ public class UserConfigLoader {
     private void validateDefaultAdminAccount() {
         UserAccount defaultAdmin = users.get(DEFAULT_ADMIN_USERNAME);
         if (defaultAdmin == null || !defaultAdmin.isDefaultAdmin()
-            || !defaultAdmin.getRoles().contains(UserAccount.ROLE_USER)
-            || !defaultAdmin.getRoles().contains(UserAccount.ROLE_ADMIN)) {
+                || !defaultAdmin.getRoles().contains(UserAccount.ROLE_USER)
+                || !defaultAdmin.getRoles().contains(UserAccount.ROLE_ADMIN)) {
             throw new IllegalStateException("Default admin account is missing or invalid");
         }
     }

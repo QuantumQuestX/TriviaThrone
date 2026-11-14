@@ -75,10 +75,10 @@ public class GameSessionCoordinator {
      * @param username the requesting username
      */
     private void handleControlAction(
-        GameControlAction action,
-        GameActionMessage message,
-        Lobby lobby,
-        String username
+            GameControlAction action,
+            GameActionMessage message,
+            Lobby lobby,
+            String username
     ) {
         switch (action) {
             case START_GAME -> startGame(message, lobby, username);
@@ -98,7 +98,7 @@ public class GameSessionCoordinator {
         IGameSession session = lobby.getGameSession();
         if (started) {
             systemMods.publishEvent(new GameStartedEvent(
-                Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
+                    Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
             ));
         }
         session.setStateChangeListener(() -> broadcastStateIfCurrent(lobby, session));

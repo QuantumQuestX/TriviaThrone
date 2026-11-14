@@ -33,8 +33,8 @@ public class GameWebSocketController {
      * @param gameSessionCoordinator the game-session coordinator
      */
     public GameWebSocketController(
-        LobbyService lobbyService,
-        GameSessionCoordinator gameSessionCoordinator
+            LobbyService lobbyService,
+            GameSessionCoordinator gameSessionCoordinator
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.gameSessionCoordinator = Objects.requireNonNull(gameSessionCoordinator, "gameSessionCoordinator");
@@ -53,6 +53,6 @@ public class GameWebSocketController {
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode())
-            .ifPresent(lobby -> gameSessionCoordinator.handleAction(msg, lobby, username));
+                .ifPresent(lobby -> gameSessionCoordinator.handleAction(msg, lobby, username));
     }
 }

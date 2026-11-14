@@ -19,13 +19,13 @@ import java.util.Objects;
  */
 @ConfigurationProperties(prefix = "auth")
 public record AuthProperties(
-    String jwtSecret,
-    long tokenValiditySeconds,
-    long refreshTokenValiditySeconds,
-    long refreshSessionMaxSeconds,
-    boolean refreshCookieSecure,
-    String initialAdminUsername,
-    String initialAdminPassword
+        String jwtSecret,
+        long tokenValiditySeconds,
+        long refreshTokenValiditySeconds,
+        long refreshSessionMaxSeconds,
+        boolean refreshCookieSecure,
+        String initialAdminUsername,
+        String initialAdminPassword
 ) {
     /**
      * Validates required signing material, token lifetimes, and optional initial-admin credentials.

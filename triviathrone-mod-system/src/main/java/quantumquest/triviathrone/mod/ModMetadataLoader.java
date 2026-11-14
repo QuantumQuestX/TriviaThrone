@@ -163,7 +163,7 @@ public final class ModMetadataLoader {
             throw new SAXException("Mod metadata must not declare a DOCTYPE");
         }
         byte[] doctypeDeclaration = ("<!DOCTYPE mod SYSTEM \"" + DTD_FILE + "\">\n")
-            .getBytes(StandardCharsets.US_ASCII);
+                .getBytes(StandardCharsets.US_ASCII);
 
         int bomLength = hasUtf8Bom(xml) ? 3 : 0;
         int insertionPoint = bomLength;
@@ -179,7 +179,7 @@ public final class ModMetadataLoader {
         System.arraycopy(xml, 0, result, 0, insertionPoint);
         System.arraycopy(doctypeDeclaration, 0, result, insertionPoint, doctypeDeclaration.length);
         System.arraycopy(xml, insertionPoint, result, insertionPoint + doctypeDeclaration.length,
-            xml.length - insertionPoint);
+                xml.length - insertionPoint);
         return result;
     }
 

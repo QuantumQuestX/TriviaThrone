@@ -42,10 +42,10 @@ public class AuthService {
      * @param encoder       the password encoder
      */
     public AuthService(
-        UserConfigLoader users,
-        TokenService tokens,
-        RefreshTokenService refreshTokens,
-        PasswordEncoder encoder
+            UserConfigLoader users,
+            TokenService tokens,
+            RefreshTokenService refreshTokens,
+            PasswordEncoder encoder
     ) {
         this.users = Objects.requireNonNull(users, "users");
         this.tokens = Objects.requireNonNull(tokens, "tokens");
@@ -85,7 +85,7 @@ public class AuthService {
         UserAccount user = users.findByUsername(username);
 
         if (user == null || !user.isEnabled() || !user.getRoles().contains(UserAccount.ROLE_USER)
-            || !encoder.matches(password, user.getPasswordHash())) {
+                || !encoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
@@ -143,11 +143,11 @@ public class AuthService {
      * @since 2.0.0
      */
     public record Session(
-        String accessToken,
-        String refreshToken,
-        long expiresIn,
-        Instant refreshExpiresAt,
-        String userId
+            String accessToken,
+            String refreshToken,
+            long expiresIn,
+            Instant refreshExpiresAt,
+            String userId
     ) {
         /**
          * Validates the session values returned to the authentication controller.

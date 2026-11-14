@@ -65,10 +65,10 @@ public final class GameModManager implements AutoCloseable {
 
         try (Stream<Path> entries = Files.list(modsDirectory)) {
             List<Path> jars = entries
-                .filter(Files::isRegularFile)
-                .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar"))
-                .sorted()
-                .toList();
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar"))
+                    .sorted()
+                    .toList();
 
             for (Path jar : jars) {
                 manager.loadJar(jar, gameTypes, modIds);
@@ -119,17 +119,17 @@ public final class GameModManager implements AutoCloseable {
         }
 
         URLClassLoader classLoader = new URLClassLoader(
-            new URL[]{jar.toUri().toURL()},
-            IGameProvider.class.getClassLoader()
+                new URL[]{jar.toUri().toURL()},
+                IGameProvider.class.getClassLoader()
         );
 
         try {
             List<IGameProvider> discovered = ServiceLoader
-                .load(IGameProvider.class, classLoader)
-                .stream()
-                .filter(provider -> provider.type().getClassLoader() == classLoader)
-                .map(ServiceLoader.Provider::get)
-                .toList();
+                    .load(IGameProvider.class, classLoader)
+                    .stream()
+                    .filter(provider -> provider.type().getClassLoader() == classLoader)
+                    .map(ServiceLoader.Provider::get)
+                    .toList();
 
             if (discovered.isEmpty()) {
                 throw new IllegalStateException("No game providers found in game mod JAR.");
@@ -137,11 +137,11 @@ public final class GameModManager implements AutoCloseable {
 
             Set<String> declaredClasses = new HashSet<>(descriptor.providerClasses());
             Set<String> discoveredClasses = discovered.stream()
-                .map(provider -> provider.getClass().getName())
-                .collect(java.util.stream.Collectors.toSet());
+                    .map(provider -> provider.getClass().getName())
+                    .collect(java.util.stream.Collectors.toSet());
 
             if (declaredClasses.size() != descriptor.providerClasses().size()
-                || !declaredClasses.equals(discoveredClasses)) {
+                    || !declaredClasses.equals(discoveredClasses)) {
                 throw new IllegalStateException(
                     "Provider declarations in mod.xml do not match the JAR service descriptor."
                 );
@@ -163,7 +163,7 @@ public final class GameModManager implements AutoCloseable {
             gameProviders.addAll(discovered);
             discovered.stream()
                 .map(provider -> new RegisteredGameProvider(provider, descriptor))
-                .forEach(registeredGameProviders::add);
+                    .forEach(registeredGameProviders::add);
             classLoaders.add(classLoader);
         } catch (RuntimeException | ServiceConfigurationError exception) {
             try {

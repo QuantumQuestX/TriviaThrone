@@ -15,12 +15,12 @@ import java.util.List;
  * @since 2.0.0
  */
 public record ModDescriptor(
-    String id,
-    String name,
-    String version,
-    String apiVersion,
-    String description,
-    List<String> providerClasses
+        String id,
+        String name,
+        String version,
+        String apiVersion,
+        String description,
+        List<String> providerClasses
 ) {
     /**
      * Creates metadata and snapshots the declared provider class names.

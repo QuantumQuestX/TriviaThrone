@@ -43,8 +43,8 @@ public class LobbyGameFiles {
      * Creates a LobbyGameFiles.
      */
     public LobbyGameFiles(
-        @Value("${triviathrone.games.storage-dir:upload/games}") String storageDir,
-        GameProviderRegistry gameProviders
+            @Value("${triviathrone.games.storage-dir:upload/games}") String storageDir,
+            GameProviderRegistry gameProviders
     ) {
         this.storageDir = Path.of(Objects.requireNonNull(storageDir, "storageDir"));
         this.gameProviders = Objects.requireNonNull(gameProviders, "gameProviders");
@@ -55,10 +55,10 @@ public class LobbyGameFiles {
      */
     private static Path safeZipEntryPath(String entryName) {
         if (entryName == null
-            || entryName.isBlank()
-            || entryName.contains("\\")
-            || entryName.contains("//")
-            || entryName.matches("^[A-Za-z]:.*")) {
+                || entryName.isBlank()
+                || entryName.contains("\\")
+                || entryName.contains("//")
+                || entryName.matches("^[A-Za-z]:.*")) {
             throw new IllegalArgumentException("Invalid zip entry.");
         }
         Path path;
@@ -72,8 +72,8 @@ public class LobbyGameFiles {
         }
         for (Path component : path) {
             if (component.toString().isBlank()
-                || component.toString().equals(".")
-                || component.toString().equals("..")) {
+                    || component.toString().equals(".")
+                    || component.toString().equals("..")) {
                 throw new IllegalArgumentException("Invalid zip entry.");
             }
         }
@@ -131,9 +131,9 @@ public class LobbyGameFiles {
      * @throws IOException if the requested file operation fails
      */
     public Optional<IGameDefinition> extractUploadedGame(
-        String lobbyCode,
-        String filename,
-        MultipartFile file
+            String lobbyCode,
+            String filename,
+            MultipartFile file
     ) throws IOException {
         Objects.requireNonNull(lobbyCode, "lobbyCode");
         Objects.requireNonNull(filename, "filename");
@@ -176,7 +176,7 @@ public class LobbyGameFiles {
 
             GamePackageManifest manifest = GamePackageManifest.read(stagingDir);
             IGameProvider provider = gameProviders.providerForPackage(manifest)
-                .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new IllegalArgumentException(
                     "No installed provider matches the game package manifest."
                 ));
             if (!provider.supportsFile(filename)) {
@@ -211,8 +211,8 @@ public class LobbyGameFiles {
         Path lobbyDir = storageRoot.resolve(lobbyCode).normalize();
         Path mediaFile = lobbyDir.resolve(mediaPath).normalize();
         if (!lobbyDir.startsWith(storageRoot)
-            || !mediaFile.startsWith(lobbyDir)
-            || !Files.isRegularFile(mediaFile)) {
+                || !mediaFile.startsWith(lobbyDir)
+                || !Files.isRegularFile(mediaFile)) {
             return Optional.empty();
         }
 

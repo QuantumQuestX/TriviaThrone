@@ -87,10 +87,10 @@ public class ProjectDeveloperService {
             }
             if (!name.isBlank()) {
                 developers.add(new Developer(
-                    name,
-                    childText(developer, "url"),
-                    childTexts(developer, "role"),
-                    organizationsFromPom(developer)
+                        name,
+                        childText(developer, "url"),
+                        childTexts(developer, "role"),
+                        organizationsFromPom(developer)
                 ));
             }
         }
@@ -110,10 +110,10 @@ public class ProjectDeveloperService {
                 String name = childText(developer, "name");
                 if (!name.isBlank()) {
                     developers.add(new Developer(
-                        name,
-                        childText(developer, "profileUrl"),
-                        childTexts(developer, "role"),
-                        organizationsFromGeneratedMetadata(developer)
+                            name,
+                            childText(developer, "profileUrl"),
+                            childTexts(developer, "role"),
+                            organizationsFromGeneratedMetadata(developer)
                     ));
                 }
             }

@@ -50,8 +50,8 @@ public class GameEventService {
      */
     public void broadcastGameEnded(String lobbyCode, IGameSession session, String hostUsername) {
         messagingTemplate.convertAndSend(
-            "/topic/game." + lobbyCode,
-            session.endedMessage(hostUsername)
+                "/topic/game." + lobbyCode,
+                session.endedMessage(hostUsername)
         );
     }
 }

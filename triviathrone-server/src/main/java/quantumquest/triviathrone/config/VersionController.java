@@ -32,8 +32,8 @@ public class VersionController {
      * @param projectDeveloperService the project developer service
      */
     public VersionController(
-        ObjectProvider<BuildProperties> buildProperties,
-        ProjectDeveloperService projectDeveloperService
+            ObjectProvider<BuildProperties> buildProperties,
+            ProjectDeveloperService projectDeveloperService
     ) {
         BuildProperties properties = buildProperties.getIfAvailable();
         this.version = properties == null || properties.getVersion().isBlank()

@@ -71,16 +71,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String username = claims.getSubject();
                 UserAccount account = userConfigLoader.findByUsername(username);
                 if (account == null || !account.isEnabled()
-                    || !account.getRoles().contains(UserAccount.ROLE_USER)) {
+                        || !account.getRoles().contains(UserAccount.ROLE_USER)) {
                     response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT");
                     return;
                 }
 
                 List<SimpleGrantedAuthority> authorities = account.getRoles().stream()
-                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                    .toList();
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .toList();
                 Authentication auth = new UsernamePasswordAuthenticationToken(
-                    account, null, authorities
+                        account, null, authorities
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);

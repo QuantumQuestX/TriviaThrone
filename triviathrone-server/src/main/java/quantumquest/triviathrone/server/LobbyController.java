@@ -104,8 +104,8 @@ public class LobbyController {
      */
     @PostMapping("/create")
     public LobbyCommonMessage createLobby(
-        @RequestParam("name") String name,
-        @AuthenticationPrincipal UserAccount user
+            @RequestParam("name") String name,
+            @AuthenticationPrincipal UserAccount user
     ) {
         if (name.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby name cannot be empty");

@@ -18,8 +18,11 @@ Building the full project from the repository root copies that mod into
 `mods/system`; the application does not load the infrastructure module on its
 own classpath.
 
-The release workflow publishes versioned game-api and system-api JARs as
-standalone assets for mod developers.
+The release workflow publishes both API artifacts to Maven Central under
+`io.github.quantumquestx` and attaches their JARs to the GitHub release. Add
+`io.github.quantumquestx:triviathrone-game-api` or
+`io.github.quantumquestx:triviathrone-system-api` as a `provided` dependency
+when building a mod.
 
 System mods are discovered from `mods/system` through Java `ServiceLoader`.
 Each JAR provides one or more `ISystemProvider` implementations in

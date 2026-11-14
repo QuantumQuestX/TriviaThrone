@@ -12,7 +12,7 @@
     <name>TriviaThrone Jeopardy Game</name>
     <dependencies>
         <dependency>
-            <groupId>quantumquest.triviathrone</groupId>
+            <groupId>io.github.quantumquestx</groupId>
             <artifactId>triviathrone-game-api</artifactId>
             <version>${project.version}</version>
         </dependency>

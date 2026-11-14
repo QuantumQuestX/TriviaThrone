@@ -12,12 +12,12 @@
     <name>TriviaThrone Mod System</name>
     <dependencies>
         <dependency>
-            <groupId>quantumquest.triviathrone</groupId>
+            <groupId>io.github.quantumquestx</groupId>
             <artifactId>triviathrone-game-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>quantumquest.triviathrone</groupId>
+            <groupId>io.github.quantumquestx</groupId>
             <artifactId>triviathrone-system-api</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,44 +1,44 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game library - TriviaThrone</title>
-    <link rel="stylesheet" href="/css/pages/game-creator.css">
-</head>
-<body class="tt-shell">
-<div data-topbar="game-creator"></div>
-<main class="tt-container tt-main creator-main">
-    <section class="creator-heading" aria-labelledby="creator-title">
-        <div class="creator-heading__meta">
-            <p class="creator-eyebrow">Your mod arcade</p>
-            <span id="creator-count" class="creator-count"></span>
-        </div>
-        <h1 id="creator-title">Choose your game</h1>
-        <p>Pick a game from your library and jump straight into its editor.</p>
-    </section>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game library - TriviaThrone</title>
+        <link rel="stylesheet" href="/css/pages/game-creator.css" />
+    </head>
+    <body class="tt-shell">
+        <div data-topbar="game-creator"></div>
+        <main class="tt-container tt-main creator-main">
+            <section class="creator-heading" aria-labelledby="creator-title">
+                <div class="creator-heading__meta">
+                    <p class="creator-eyebrow">Your mod arcade</p>
+                    <span id="creator-count" class="creator-count"></span>
+                </div>
+                <h1 id="creator-title">Choose your game</h1>
+                <p>Pick a game from your library and jump straight into its editor.</p>
+            </section>
 
-    <p id="library-status" class="tt-status tt-status--info" role="status" aria-live="polite">
-        Loading your game library…
-    </p>
-    <section id="game-library" class="game-library" aria-label="Available games"></section>
+            <p id="library-status" class="tt-status tt-status--info" role="status" aria-live="polite">
+                Loading your game library…
+            </p>
+            <section id="game-library" class="game-library" aria-label="Available games"></section>
 
-    <section id="creator-editor" class="creator-editor tt-card" aria-labelledby="creator-editor-title" hidden>
-        <button id="back-to-library" class="tt-button tt-button--secondary creator-back" type="button">
-            <span aria-hidden="true">←</span> Back to library
-        </button>
-        <div class="creator-editor__heading">
-            <p class="creator-eyebrow">Game setup</p>
-            <h2 id="creator-editor-title">Game details</h2>
-            <p id="creator-editor-description"></p>
-        </div>
-        <form id="creator-form" class="tt-grid tt-grid--2 creator-form"></form>
-        <p id="creator-status" class="tt-status" role="status" aria-live="polite"></p>
-    </section>
-</main>
-<script type="module" src="/js/root/topbar.js"></script>
-<script type="module" src="/js/root/version.js"></script>
-<script type="module" src="/js/root/credits.js"></script>
-<script type="module" src="/js/page-game-creator/index.js"></script>
-</body>
+            <section id="creator-editor" class="creator-editor tt-card" aria-labelledby="creator-editor-title" hidden>
+                <button id="back-to-library" class="tt-button tt-button--secondary creator-back" type="button">
+                    <span aria-hidden="true">←</span> Back to library
+                </button>
+                <div class="creator-editor__heading">
+                    <p class="creator-eyebrow">Game setup</p>
+                    <h2 id="creator-editor-title">Game details</h2>
+                    <p id="creator-editor-description"></p>
+                </div>
+                <form id="creator-form" class="tt-grid tt-grid--2 creator-form"></form>
+                <p id="creator-status" class="tt-status" role="status" aria-live="polite"></p>
+            </section>
+        </main>
+        <script type="module" src="/js/root/topbar.js"></script>
+        <script type="module" src="/js/root/version.js"></script>
+        <script type="module" src="/js/root/credits.js"></script>
+        <script type="module" src="/js/page-game-creator/index.js"></script>
+    </body>
 </html>

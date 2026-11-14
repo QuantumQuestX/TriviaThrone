@@ -4,6 +4,8 @@ import quantumquest.triviathrone.api.game.IGameDefinition;
 import quantumquest.triviathrone.api.game.IGameCreator;
 import quantumquest.triviathrone.api.game.IGameProvider;
 import quantumquest.triviathrone.api.game.GameUiDescriptor;
+import quantumquest.triviathrone.games.jeopardy.creator.JeopardyGameCreator;
+import quantumquest.triviathrone.games.jeopardy.definition.GameDefinitionLoader;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

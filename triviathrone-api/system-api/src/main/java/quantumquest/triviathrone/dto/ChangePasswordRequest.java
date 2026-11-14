@@ -1,3 +1,4 @@
 package quantumquest.triviathrone.dto;
 
-public record ChangePasswordRequest(String oldPassword, String newPassword) {}
+public record ChangePasswordRequest(String oldPassword, String newPassword) {
+}

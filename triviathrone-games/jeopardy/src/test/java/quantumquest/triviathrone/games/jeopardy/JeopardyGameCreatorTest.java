@@ -7,6 +7,8 @@ import quantumquest.triviathrone.api.game.GameCreationAsset;
 import quantumquest.triviathrone.api.game.GameCreationRequest;
 import quantumquest.triviathrone.api.game.GameFileWriter;
 import quantumquest.triviathrone.api.game.GamePackageManifest;
+import quantumquest.triviathrone.games.jeopardy.creator.JeopardyGameCreator;
+import quantumquest.triviathrone.games.jeopardy.definition.JeopardyDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

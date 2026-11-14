@@ -12,14 +12,14 @@ export const Actions = Object.freeze({
     BUZZ: "BUZZ",
     MARK_CORRECT: "MARK_CORRECT",
     MARK_INCORRECT: "MARK_INCORRECT",
-    RESET: "RESET"
+    RESET: "RESET",
 });
 
 let currentTopic = null;
 
 export async function subscribeToGame(lobbyCode, onStateUpdate) {
     await socket.connectSocket("/ws/lobby");
-    
+
     const topic = `/topic/game.${lobbyCode}`;
 
     if (currentTopic) {
@@ -37,7 +37,7 @@ export function sendAction(lobbyCode, action, details = {}) {
     socket.send("/app/game/action", {
         lobbyCode,
         action,
-        parameters: details
+        parameters: details,
     });
 }
 

@@ -1,4 +1,4 @@
-import {getAccessToken, refreshAccessToken} from "./auth.js";
+import { getAccessToken, refreshAccessToken } from "./auth.js";
 
 let stompClient = null;
 let connectionPromise = null;
@@ -10,47 +10,55 @@ export async function connectSocket(endpoint = "/ws/lobby") {
     if (stompClient?.connected && connectedEndpoint === endpoint) {
         return stompClient;
     }
+
     if (connectionPromise) {
         if (pendingEndpoint !== endpoint) {
             throw new Error("A connection to a different WebSocket endpoint is already starting.");
         }
+
         return connectionPromise;
     }
 
     pendingEndpoint = endpoint;
-    connectionPromise = connectWithRefresh(endpoint)
-        .finally(() => {
-            connectionPromise = null;
-            pendingEndpoint = null;
-        });
+    connectionPromise = connectWithRefresh(endpoint).finally(() => {
+        connectionPromise = null;
+        pendingEndpoint = null;
+    });
+
     return connectionPromise;
 }
 
 async function connectWithRefresh(endpoint) {
     for (let attempt = 0; attempt < 2; attempt++) {
         const token = await getAccessToken();
+
         try {
             return await openConnection(endpoint, token);
         } catch (error) {
-            if (attempt === 1) throw error;
+            if (attempt === 1) {
+                throw error;
+            }
+
             await refreshAccessToken();
         }
     }
+
     throw new Error("Could not establish the WebSocket connection.");
 }
 
 function openConnection(endpoint, token) {
     return new Promise((resolve, reject) => {
         const client = Stomp.over(new SockJS(endpoint));
+
         client.debug = () => {};
         client.connect(
-            {Authorization: `Bearer ${token}`},
+            { Authorization: `Bearer ${token}` },
             () => {
                 stompClient = client;
                 connectedEndpoint = endpoint;
                 resolve(client);
             },
-            error => reject(error)
+            (error) => reject(error),
         );
     });
 }
@@ -61,19 +69,23 @@ export function subscribe(topic, callback) {
     }
 
     unsubscribe(topic);
-    const subscription = stompClient.subscribe(topic, message => {
+
+    const subscription = stompClient.subscribe(topic, (message) => {
         try {
             callback(JSON.parse(message.body));
         } catch (error) {
             console.error(`Could not process WebSocket message for ${topic}.`, error);
         }
     });
+
     subscriptions.set(topic, subscription);
+
     return subscription;
 }
 
 export function unsubscribe(topic) {
     const subscription = subscriptions.get(topic);
+
     if (subscription) {
         subscription.unsubscribe();
         subscriptions.delete(topic);
@@ -84,14 +96,16 @@ export function send(destination, payload = {}) {
     if (!stompClient?.connected) {
         throw new Error("WebSocket not connected.");
     }
+
     stompClient.send(destination, {}, JSON.stringify(payload));
 }
 
 export function disconnect() {
     const client = stompClient;
+
     stompClient = null;
     connectedEndpoint = null;
-    subscriptions.forEach(subscription => subscription.unsubscribe());
+    subscriptions.forEach((subscription) => subscription.unsubscribe());
     subscriptions.clear();
 
     if (client?.connected) {

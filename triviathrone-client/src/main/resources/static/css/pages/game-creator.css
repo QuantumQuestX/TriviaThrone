@@ -75,7 +75,10 @@
     font: inherit;
     text-align: left;
     text-decoration: none;
-    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
 }
 
 .game-card:nth-child(5n + 2) {

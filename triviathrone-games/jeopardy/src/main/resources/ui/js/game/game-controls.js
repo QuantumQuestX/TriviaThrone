@@ -1,6 +1,6 @@
 import * as gameSocket from "./game-socket.js";
 import * as socket from "/js/root/socket.js";
-import {clearLobbyDetails} from "/js/root/lobby-storage.js";
+import { clearLobbyDetails } from "/js/root/lobby-storage.js";
 
 export function configureGameControls(lobbyCode) {
     document.getElementById("host-play-media").addEventListener("click", () => {
@@ -28,7 +28,7 @@ export function configureGameControls(lobbyCode) {
     });
 
     const leaveGame = () => {
-        socket.send("/app/leave", {lobbyCode});
+        socket.send("/app/leave", { lobbyCode });
         gameSocket.disconnect();
         clearLobbyDetails();
         window.location.href = "/";

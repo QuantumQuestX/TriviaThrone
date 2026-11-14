@@ -18,8 +18,8 @@ export async function login(username, password) {
     const response = await fetch("/auth/login", {
         method: "POST",
         credentials: "same-origin",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, password})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
     });
 
     if (!response.ok) {
@@ -36,12 +36,15 @@ export async function requireSession() {
 
     try {
         await refreshAccessToken();
+
         return true;
     } catch (error) {
         if (error instanceof AuthenticationError) {
             redirectToLogin();
+
             return false;
         }
+
         throw error;
     }
 }
@@ -57,6 +60,7 @@ export async function getAccessToken() {
         if (error instanceof AuthenticationError) {
             redirectToLogin();
         }
+
         throw error;
     }
 }
@@ -82,13 +86,14 @@ export async function refreshAccessToken() {
         const response = await fetch("/auth/refresh", {
             method: "POST",
             credentials: "same-origin",
-            headers: {Accept: "application/json"}
+            headers: { Accept: "application/json" },
         });
 
         if (response.status === 401) {
             clearSession();
             throw new AuthenticationError();
         }
+
         if (!response.ok) {
             throw new Error("Could not refresh your session.");
         }
@@ -98,8 +103,9 @@ export async function refreshAccessToken() {
 
     refreshPromise = (async () => {
         if (globalThis.navigator?.locks) {
-            return await navigator.locks.request(REFRESH_LOCK_NAME, {mode: "exclusive"}, refresh);
+            return await navigator.locks.request(REFRESH_LOCK_NAME, { mode: "exclusive" }, refresh);
         }
+
         return await refresh();
     })().finally(() => {
         refreshPromise = null;
@@ -111,8 +117,9 @@ export async function refreshAccessToken() {
 export async function logout() {
     const response = await fetch("/auth/logout", {
         method: "POST",
-        credentials: "same-origin"
+        credentials: "same-origin",
     });
+
     if (!response.ok) {
         throw new Error("Could not end the session. Please try again.");
     }
@@ -140,6 +147,7 @@ function updateSession(data) {
     }
 
     const payload = decodeTokenPayload(data.token);
+
     if (!payload || typeof payload.sub !== "string" || !Number.isFinite(payload.exp)) {
         clearSession();
         throw new Error("The server returned an invalid access token.");
@@ -149,17 +157,22 @@ function updateSession(data) {
     tokenPayload = payload;
     expiresAt = payload.exp * 1000;
     scheduleRefresh();
+
     return accessToken;
 }
 
 function decodeTokenPayload(token) {
     try {
         const encodedPayload = token.split(".")[1];
-        if (!encodedPayload) return null;
+
+        if (!encodedPayload) {
+            return null;
+        }
 
         const base64 = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
         const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
-        const bytes = Uint8Array.from(atob(padded), character => character.charCodeAt(0));
+        const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0));
+
         return JSON.parse(new TextDecoder().decode(bytes));
     } catch {
         return null;
@@ -168,13 +181,16 @@ function decodeTokenPayload(token) {
 
 function scheduleRefresh() {
     window.clearTimeout(refreshTimer);
+
     const delay = Math.max(1000, expiresAt - Date.now() - ACCESS_TOKEN_REFRESH_WINDOW_MS);
+
     refreshTimer = window.setTimeout(async () => {
         try {
             await refreshAccessToken();
         } catch (error) {
             if (error instanceof AuthenticationError) {
                 redirectToLogin();
+
                 return;
             }
 

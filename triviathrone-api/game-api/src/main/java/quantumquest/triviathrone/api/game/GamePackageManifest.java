@@ -1,16 +1,7 @@
 package quantumquest.triviathrone.api.game;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
+import quantumquest.triviathrone.api.game.internal.GamePackageManifestXml;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -21,7 +12,6 @@ import java.nio.file.StandardOpenOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.HashSet;
 import java.util.List;
@@ -44,7 +34,6 @@ public record GamePackageManifest(
     public static final String FILE_NAME = "manifest.xml";
     public static final String CURRENT_MANIFEST_VERSION = "2.0";
     private static final String LEGACY_MANIFEST_VERSION = "1.0";
-    private static final int MAX_MANIFEST_SIZE = 1024 * 1024;
     private static final String SHA_256 = "SHA-256";
 
     public GamePackageManifest {
@@ -77,97 +66,7 @@ public record GamePackageManifest(
 
     public static GamePackageManifest read(Path packageRoot) throws IOException {
         Objects.requireNonNull(packageRoot, "packageRoot");
-        Path packageDirectory = packageRoot.toAbsolutePath().normalize();
-        Path manifestFile = packageDirectory.resolve(FILE_NAME);
-        if (!Files.isRegularFile(manifestFile, LinkOption.NOFOLLOW_LINKS)) {
-            throw new IllegalArgumentException(FILE_NAME + " is required in a game package.");
-        }
-        Path realRoot = packageDirectory.toRealPath();
-        if (!manifestFile.toRealPath().startsWith(realRoot)) {
-            throw new IllegalArgumentException(FILE_NAME + " resolves outside the game package.");
-        }
-
-        byte[] xml;
-        try (InputStream input = Files.newInputStream(manifestFile)) {
-            xml = input.readNBytes(MAX_MANIFEST_SIZE + 1);
-        }
-        if (xml.length > MAX_MANIFEST_SIZE) {
-            throw new IllegalArgumentException(FILE_NAME + " exceeds the maximum size.");
-        }
-
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(false);
-            factory.setXIncludeAware(false);
-            factory.setExpandEntityReferences(false);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-
-            Document document = factory.newDocumentBuilder()
-                    .parse(new java.io.ByteArrayInputStream(xml));
-            Element root = document.getDocumentElement();
-            if (!"gamePackage".equals(root.getTagName())) {
-                throw new IllegalArgumentException("The package manifest root must be <gamePackage>.");
-            }
-
-            String manifestVersion = requiredAttribute(root, "manifestVersion");
-            Element mod;
-            if (CURRENT_MANIFEST_VERSION.equals(manifestVersion)) {
-                mod = requiredChild(root, "mod");
-            } else if (LEGACY_MANIFEST_VERSION.equals(manifestVersion)) {
-                mod = requiredChild(root, "plugin");
-            } else {
-                throw new IllegalArgumentException("Unsupported manifest version: " + manifestVersion);
-            }
-            Element game = requiredChild(root, "game");
-            Element createdBy = optionalChild(root, "createdBy");
-            Element metadataElement = optionalChild(root, "metadata");
-            Element assetsElement = optionalChild(root, "assets");
-
-            List<Asset> assets = new ArrayList<>();
-            if (assetsElement != null) {
-                NodeList assetNodes = assetsElement.getChildNodes();
-                for (int i = 0; i < assetNodes.getLength(); i++) {
-                    if (assetNodes.item(i) instanceof Element assetElement) {
-                        if (!"asset".equals(assetElement.getTagName())) {
-                            throw new IllegalArgumentException("Unexpected element in <assets>.");
-                        }
-                        String hash = optionalAttribute(assetElement, "sha256");
-                        assets.add(new Asset(requiredAttribute(assetElement, "path"), hash));
-                    }
-                }
-            }
-
-            PackageMetadata metadata = metadataElement == null
-                    ? null
-                    : new PackageMetadata(
-                            optionalAttribute(metadataElement, "title"),
-                            optionalAttribute(metadataElement, "author"),
-                            optionalAttribute(metadataElement, "language")
-                    );
-
-            GamePackageManifest manifest = new GamePackageManifest(
-                    manifestVersion,
-                    requiredAttribute(mod, "id"),
-                    requiredAttribute(mod, "version"),
-                    requiredAttribute(mod, "apiVersion"),
-                    requiredAttribute(game, "type"),
-                    requiredAttribute(game, "providerClass"),
-                    requiredAttribute(game, "dataFile"),
-                    requiredAttribute(game, "formatVersion"),
-                    createdBy == null ? null : optionalAttribute(createdBy, "serverVersion"),
-                    metadata,
-                    assets
-            );
-            manifest.validateFiles(packageRoot);
-            return manifest;
-        } catch (ParserConfigurationException | SAXException exception) {
-            throw new IllegalArgumentException("Could not parse " + FILE_NAME + ".", exception);
-        }
+        return GamePackageManifestXml.read(packageRoot);
     }
 
     public void write(Path packageRoot) throws IOException {
@@ -183,48 +82,7 @@ public record GamePackageManifest(
     }
 
     public void write(OutputStream output) throws IOException {
-        Objects.requireNonNull(output, "output");
-        try {
-            XMLStreamWriter xml = XMLOutputFactory.newFactory().createXMLStreamWriter(output, "UTF-8");
-            xml.writeStartDocument("UTF-8", "1.0");
-            xml.writeStartElement("gamePackage");
-            xml.writeAttribute("manifestVersion", manifestVersion);
-            xml.writeEmptyElement(CURRENT_MANIFEST_VERSION.equals(manifestVersion) ? "mod" : "plugin");
-            xml.writeAttribute("id", modId);
-            xml.writeAttribute("version", modVersion);
-            xml.writeAttribute("apiVersion", apiVersion);
-            xml.writeEmptyElement("game");
-            xml.writeAttribute("type", gameType);
-            xml.writeAttribute("providerClass", providerClass);
-            xml.writeAttribute("dataFile", gameDataFile);
-            xml.writeAttribute("formatVersion", gameDataFormatVersion);
-            if (serverVersion != null) {
-                xml.writeEmptyElement("createdBy");
-                xml.writeAttribute("serverVersion", serverVersion);
-            }
-            if (metadata != null) {
-                xml.writeEmptyElement("metadata");
-                writeOptionalAttribute(xml, "title", metadata.title());
-                writeOptionalAttribute(xml, "author", metadata.author());
-                writeOptionalAttribute(xml, "language", metadata.language());
-            }
-            if (!assets.isEmpty()) {
-                xml.writeStartElement("assets");
-                for (Asset asset : assets) {
-                    xml.writeEmptyElement("asset");
-                    xml.writeAttribute("path", asset.path());
-                    if (asset.sha256() != null) {
-                        xml.writeAttribute("sha256", asset.sha256());
-                    }
-                }
-                xml.writeEndElement();
-            }
-            xml.writeEndElement();
-            xml.writeEndDocument();
-            xml.flush();
-        } catch (XMLStreamException exception) {
-            throw new IOException("Could not write " + FILE_NAME + ".", exception);
-        }
+        GamePackageManifestXml.write(this, output);
     }
 
     public void validateFiles(Path packageRoot) throws IOException {
@@ -299,49 +157,9 @@ public record GamePackageManifest(
         }
     }
 
-    private static Element requiredChild(Element parent, String tagName) {
-        Element child = optionalChild(parent, tagName);
-        if (child == null) {
-            throw new IllegalArgumentException("Missing <" + tagName + "> in " + FILE_NAME + ".");
-        }
-        return child;
-    }
-
-    private static Element optionalChild(Element parent, String tagName) {
-        Element found = null;
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (children.item(i) instanceof Element element && tagName.equals(element.getTagName())) {
-                if (found != null) {
-                    throw new IllegalArgumentException("Duplicate <" + tagName + "> in " + FILE_NAME + ".");
-                }
-                found = element;
-            }
-        }
-        return found;
-    }
-
-    private static String requiredAttribute(Element element, String name) {
-        String value = element.getAttribute(name);
-        requireText(value, name);
-        return value.trim();
-    }
-
-    private static String optionalAttribute(Element element, String name) {
-        String value = element.getAttribute(name).trim();
-        return value.isEmpty() ? null : value;
-    }
-
     private static void requireText(String value, String name) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(name + " is required.");
-        }
-    }
-
-    private static void writeOptionalAttribute(XMLStreamWriter xml, String name, String value)
-            throws XMLStreamException {
-        if (value != null && !value.isBlank()) {
-            xml.writeAttribute(name, value);
         }
     }
 

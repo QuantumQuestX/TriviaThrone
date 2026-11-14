@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.games.jeopardy;
 
 import quantumquest.triviathrone.api.game.GamePackageManifest;
+import quantumquest.triviathrone.games.jeopardy.definition.GameDefinitionLoader;
 import quantumquest.triviathrone.games.jeopardy.definition.QuestionDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

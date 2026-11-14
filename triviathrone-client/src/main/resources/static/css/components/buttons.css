@@ -9,7 +9,10 @@
     flex: 0 0 auto;
     font: inherit;
     font-weight: 650;
-    transition: background-color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+    transition:
+        background-color 140ms ease,
+        border-color 140ms ease,
+        opacity 140ms ease;
 }
 
 .primary-btn {

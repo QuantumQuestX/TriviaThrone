@@ -1,4 +1,4 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.resource;
 
 import quantumquest.triviathrone.games.jeopardy.dto.MediaType;
 import org.apache.tika.Tika;
@@ -13,16 +13,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-final class GameResourceResolver {
+public final class GameResourceResolver {
     private final Path lobbyDirectory;
     private final Map<String, String> resourcePaths;
 
-    GameResourceResolver(Path lobbyDirectory, Element gameElement) {
+    public GameResourceResolver(Path lobbyDirectory, Element gameElement) {
         this.lobbyDirectory = Objects.requireNonNull(lobbyDirectory, "lobbyDirectory");
         this.resourcePaths = readResourcePaths(Objects.requireNonNull(gameElement, "gameElement"));
     }
 
-    String mediaPathFor(Element question) {
+    public String mediaPathFor(Element question) {
         if (question.hasAttribute("media")) {
             return question.getAttribute("media");
         }
@@ -40,7 +40,7 @@ final class GameResourceResolver {
         return mediaPath;
     }
 
-    MediaType detectMediaType(String mediaPath) throws IOException {
+    public MediaType detectMediaType(String mediaPath) throws IOException {
         if (mediaPath == null || mediaPath.isBlank()) {
             return MediaType.UNDEFINED;
         }

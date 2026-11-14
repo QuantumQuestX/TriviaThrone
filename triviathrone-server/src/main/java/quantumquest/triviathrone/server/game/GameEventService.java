@@ -15,7 +15,9 @@ public class GameEventService {
     }
 
     public void broadcastState(String lobbyCode, IGameSession session) {
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
         messagingTemplate.convertAndSend("/topic/game." + lobbyCode, session.stateMessage());
     }
 

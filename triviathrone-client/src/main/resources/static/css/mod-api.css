@@ -182,7 +182,9 @@
     font-weight: 650;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 140ms ease, border-color 140ms ease;
+    transition:
+        background-color 140ms ease,
+        border-color 140ms ease;
 }
 
 .tt-button--primary {

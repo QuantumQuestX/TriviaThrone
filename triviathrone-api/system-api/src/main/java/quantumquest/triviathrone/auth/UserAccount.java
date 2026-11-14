@@ -81,8 +81,12 @@ public class UserAccount {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof UserAccount other)) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof UserAccount other)) {
+            return false;
+        }
         return Objects.equals(username, other.username);
     }
 

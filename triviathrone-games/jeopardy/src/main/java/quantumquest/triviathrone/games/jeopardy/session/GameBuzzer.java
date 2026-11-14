@@ -1,4 +1,4 @@
-package quantumquest.triviathrone.games.jeopardy;
+package quantumquest.triviathrone.games.jeopardy.session;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,7 +71,9 @@ final class GameBuzzer {
     }
 
     synchronized void markIncorrect() {
-        if (winner == null) return;
+        if (winner == null) {
+            return;
+        }
         attemptedPlayers.add(winner);
         winner = null;
         buzzTimes.clear();
@@ -103,7 +105,9 @@ final class GameBuzzer {
     private void finalizeBuzz() {
         String finalizedWinner;
         synchronized (this) {
-            if (!collecting) return;
+            if (!collecting) {
+                return;
+            }
             finalizedWinner = finalizeBuzzLocked();
         }
         onBuzzFinalized.accept(finalizedWinner);

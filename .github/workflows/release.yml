@@ -345,3 +345,37 @@ jobs:
               --title "TriviaThrone $RELEASE_VERSION" \
               --generate-notes
           fi
+
+  publish-maven-central:
+    name: Publish API artifacts to Maven Central
+    needs:
+      - resolve-version
+      - publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-version.outputs.tag }}
+
+      - name: Set up Java and Maven credentials
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Publish game and system APIs
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: >
+          ./mvnw --batch-mode --no-transfer-progress
+          -pl triviathrone-api/game-api,triviathrone-api/system-api
+          -Pcentral-release deploy

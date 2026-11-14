@@ -24,15 +24,13 @@ final class GameQuestionBoard {
         Objects.requireNonNull(category, "category");
         Objects.requireNonNull(question, "question");
 
-        if (round < 0 || round >= definition.rounds().size()) {
+        if (!isValidRoundIndex(round)) {
             throw new IllegalArgumentException("Round index is out of range");
         }
-        Round roundDefinition = definition.rounds().get(round);
-        if (category < 0 || category >= roundDefinition.categories().size()) {
+        if (!isValidCategoryIndex(round, category)) {
             throw new IllegalArgumentException("Category index is out of range");
         }
-        Category categoryDefinition = roundDefinition.categories().get(category);
-        if (question < 0 || question >= categoryDefinition.questions().size()) {
+        if (!isValidQuestionIndex(round, category, question)) {
             throw new IllegalArgumentException("Question index is out of range");
         }
 
@@ -49,10 +47,18 @@ final class GameQuestionBoard {
 
     void selectRound(Integer round) {
         Objects.requireNonNull(round, "round");
-        if (round < 0 || round >= definition.rounds().size()) {
+        if (!isValidRoundIndex(round)) {
             throw new IllegalArgumentException("Round index is out of range");
         }
         currentRoundIdx = round;
+    }
+
+    boolean isValidRoundIndex(int round) {
+        return round >= 0 && round < definition.rounds().size();
+    }
+
+    boolean isValidQuestion(int round, int category, int question) {
+        return isValidQuestionIndex(round, category, question);
     }
 
     boolean isQuestionUsed(int round, int category, int question) {
@@ -97,5 +103,15 @@ final class GameQuestionBoard {
 
     private static String questionKey(int round, int category, int question) {
         return round + ":" + category + ":" + question;
+    }
+
+    private boolean isValidCategoryIndex(int round, int category) {
+        return isValidRoundIndex(round) && category >= 0
+                && category < definition.rounds().get(round).categories().size();
+    }
+
+    private boolean isValidQuestionIndex(int round, int category, int question) {
+        return isValidCategoryIndex(round, category) && question >= 0
+                && question < definition.rounds().get(round).categories().get(category).questions().size();
     }
 }

@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -169,7 +170,13 @@ public class JeopardySession implements IGameSession {
         Objects.requireNonNull(action, "action");
         Objects.requireNonNull(username, "username");
 
-        if ("BUZZ".equals(action.action())) {
+        Optional<IJeopardyAction> decodedAction = JeopardyActionRegistry.decode(action);
+        if (decodedAction.isEmpty()) {
+            return GameActionResult.rejected();
+        }
+
+        IJeopardyAction typedAction = decodedAction.get();
+        if (typedAction == IJeopardyAction.Command.BUZZ) {
             if (isHost) {
                 return GameActionResult.rejected();
             }
@@ -180,29 +187,35 @@ public class JeopardySession implements IGameSession {
             return GameActionResult.rejected();
         }
 
-        switch (action.action()) {
-            case "SELECT_ROUND" -> selectRound(requiredIndex(action, "roundIdx"));
-            case "SELECT_QUESTION" -> selectQuestion(
-                    requiredIndex(action, "roundIdx"),
-                    requiredIndex(action, "categoryIdx"),
-                    requiredIndex(action, "questionIdx")
-            );
-            case "PLAY_MEDIA" -> playMedia();
-            case "OPEN_BUZZ" -> openBuzz();
-            case "CLOSE_BUZZ" -> closeBuzz();
-            case "MARK_CORRECT" -> markCorrect();
-            case "MARK_INCORRECT" -> markIncorrect();
-            case "RESET" -> {
-                if (!hasUnusedQuestions()) {
-                    return GameActionResult.endGame();
+        return switch (typedAction) {
+            case IJeopardyAction.SelectRound selectRound -> {
+                if (currentState != GameState.IDLE || !board.isValidRoundIndex(selectRound.roundIndex())) {
+                    yield GameActionResult.rejected();
                 }
-                resetToIdle();
+                selectRound(selectRound.roundIndex());
+                yield GameActionResult.allow();
             }
-            default -> {
-                return GameActionResult.rejected();
+            case IJeopardyAction.SelectQuestion selectQuestion -> {
+                if (currentState != GameState.IDLE || !board.isValidQuestion(
+                        selectQuestion.roundIndex(),
+                        selectQuestion.categoryIndex(),
+                        selectQuestion.questionIndex()
+                ) || board.isQuestionUsed(
+                        selectQuestion.roundIndex(),
+                        selectQuestion.categoryIndex(),
+                        selectQuestion.questionIndex()
+                )) {
+                    yield GameActionResult.rejected();
+                }
+                selectQuestion(
+                        selectQuestion.roundIndex(),
+                        selectQuestion.categoryIndex(),
+                        selectQuestion.questionIndex()
+                );
+                yield GameActionResult.allow();
             }
-        }
-        return GameActionResult.allow();
+            case IJeopardyAction.Command command -> handleCommand(command);
+        };
     }
 
     @Override
@@ -271,12 +284,37 @@ public class JeopardySession implements IGameSession {
         return new JeopardyEndedMessage(lobbyCode, "jeopardy", true, leaderboard);
     }
 
-    private static int requiredIndex(GameActionMessage action, String name) {
-        Object value = action.parameters().get(name);
-        if (value instanceof Number number) {
-            return number.intValue();
-        }
-        throw new IllegalArgumentException("Missing integer action parameter: " + name);
+    private GameActionResult handleCommand(IJeopardyAction.Command command) {
+        return switch (command) {
+            case BUZZ -> GameActionResult.rejected();
+            case PLAY_MEDIA -> {
+                playMedia();
+                yield GameActionResult.allow();
+            }
+            case OPEN_BUZZ -> {
+                openBuzz();
+                yield GameActionResult.allow();
+            }
+            case CLOSE_BUZZ -> {
+                closeBuzz();
+                yield GameActionResult.allow();
+            }
+            case MARK_CORRECT -> {
+                markCorrect();
+                yield GameActionResult.allow();
+            }
+            case MARK_INCORRECT -> {
+                markIncorrect();
+                yield GameActionResult.allow();
+            }
+            case RESET -> {
+                if (!hasUnusedQuestions()) {
+                    yield GameActionResult.endGame();
+                }
+                resetToIdle();
+                yield GameActionResult.allow();
+            }
+        };
     }
 
     private GameQuestionMessage createGameQuestionMessage(Category category, QuestionDefinition question) {

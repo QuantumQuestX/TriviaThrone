@@ -1,9 +1,13 @@
 package quantumquest.triviathrone.server.game;
 
 import quantumquest.triviathrone.api.game.GameActionResult;
+import quantumquest.triviathrone.api.game.GameControlAction;
 import quantumquest.triviathrone.api.game.IGameDefinition;
 import quantumquest.triviathrone.api.game.IGameSession;
+import quantumquest.triviathrone.api.system.events.GameEndedEvent;
+import quantumquest.triviathrone.api.system.events.GameStartedEvent;
 import quantumquest.triviathrone.dto.game.GameActionMessage;
+import quantumquest.triviathrone.mod.SystemModManager;
 import quantumquest.triviathrone.server.Lobby;
 import quantumquest.triviathrone.server.LobbyService;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -38,6 +43,9 @@ class GameWebSocketControllerTest {
     private GameEventService gameEventService;
 
     @Mock
+    private SystemModManager systemModManager;
+
+    @Mock
     private IGameDefinition gameDefinition;
 
     @Mock
@@ -51,12 +59,13 @@ class GameWebSocketControllerTest {
         lobby = new Lobby(LOBBY_CODE, "Test lobby", "host");
         lobby.addUser("player");
         lobby.loadGame(gameDefinition);
+        lenient().when(gameDefinition.gameType()).thenReturn("test-game");
         when(gameDefinition.createSession(LOBBY_CODE, lobby.listUsernames())).thenReturn(session);
         lenient().when(session.handleAction(any(), anyString(), anyBoolean())).thenReturn(GameActionResult.allow());
         lobby.startGame();
 
         when(lobbyService.getLobby(LOBBY_CODE)).thenReturn(Optional.of(lobby));
-        controller = new GameWebSocketController(lobbyService, gameEventService);
+        controller = new GameWebSocketController(lobbyService, gameEventService, systemModManager);
     }
 
     @AfterEach
@@ -85,9 +94,13 @@ class GameWebSocketControllerTest {
 
     @Test
     void hostBroadcastsFinalMessageBeforeEndingGame() {
-        controller.handleAction(new GameActionMessage(LOBBY_CODE, "END_GAME", Map.of()), principal("host"));
+        controller.handleAction(
+                new GameActionMessage(LOBBY_CODE, GameControlAction.END_GAME.wireName(), Map.of()),
+                principal("host")
+        );
 
         verify(gameEventService).broadcastGameEnded(LOBBY_CODE, session, "host");
+        verify(systemModManager).publishEvent(isA(GameEndedEvent.class));
         assertFalse(lobby.hasActiveGame());
     }
 
@@ -99,7 +112,35 @@ class GameWebSocketControllerTest {
         controller.handleAction(action, principal("host"));
 
         verify(gameEventService).broadcastGameEnded(LOBBY_CODE, session, "host");
+        verify(systemModManager).publishEvent(isA(GameEndedEvent.class));
         assertFalse(lobby.hasActiveGame());
+    }
+
+    @Test
+    void publishesGameStartedOnlyOnTheTransitionToActive() {
+        lobby.endGame();
+        GameActionMessage start = new GameActionMessage(
+                LOBBY_CODE, GameControlAction.START_GAME.wireName(), Map.of()
+        );
+
+        controller.handleAction(start, principal("host"));
+        controller.handleAction(start, principal("host"));
+
+        verify(systemModManager).publishEvent(isA(GameStartedEvent.class));
+    }
+
+    @Test
+    void rejectsControlActionsWithUnexpectedParameters() {
+        GameActionMessage start = new GameActionMessage(
+                LOBBY_CODE,
+                GameControlAction.START_GAME.wireName(),
+                Map.of("unexpected", true)
+        );
+
+        controller.handleAction(start, principal("host"));
+
+        verify(session, never()).handleAction(start, "host", true);
+        verify(gameEventService, never()).broadcastState(LOBBY_CODE, session);
     }
 
     private static Principal principal(String username) {

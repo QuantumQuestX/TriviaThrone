@@ -153,7 +153,7 @@ class GameSessionTest {
         session = (JeopardySession) gameSession;
         GameActionMessage action = new GameActionMessage(
                 "ROOM01",
-                "SELECT_QUESTION",
+                IJeopardyAction.SelectQuestion.WIRE_NAME,
                 Map.of("roundIdx", 0, "categoryIdx", 0, "questionIdx", 0)
         );
 
@@ -163,6 +163,67 @@ class GameSessionTest {
         assertTrue(result.accepted());
         assertEquals(GameState.QUESTION_SELECTED, state.state());
         assertEquals("jeopardy", state.gameType());
+    }
+
+    @Test
+    void rejectsUnknownMalformedAndOutOfRangeActionsWithoutChangingState() {
+        session = createSession(MediaType.UNDEFINED, null);
+
+        assertFalse(session.handleAction(
+                new GameActionMessage("ROOM01", "UNKNOWN", Map.of()), "host", true
+        ).accepted());
+        assertFalse(session.handleAction(
+                new GameActionMessage(
+                        "ROOM01",
+                        IJeopardyAction.Command.PLAY_MEDIA.wireName(),
+                        Map.of("unexpected", true)
+                ),
+                "host",
+                true
+        ).accepted());
+        assertFalse(session.handleAction(
+                new GameActionMessage(
+                        "ROOM01",
+                        IJeopardyAction.SelectQuestion.WIRE_NAME,
+                        Map.of("roundIdx", 0, "categoryIdx", 0.5, "questionIdx", 0)
+                ),
+                "host",
+                true
+        ).accepted());
+        assertFalse(session.handleAction(
+                new GameActionMessage(
+                        "ROOM01",
+                        IJeopardyAction.SelectQuestion.WIRE_NAME,
+                        Map.of("roundIdx", 5, "categoryIdx", 0, "questionIdx", 0)
+                ),
+                "host",
+                true
+        ).accepted());
+
+        assertEquals(GameState.IDLE, session.getCurrentState());
+    }
+
+    @Test
+    void rejectsQuestionAndRoundSelectionWhileAQuestionIsActive() {
+        session = createSession(MediaType.UNDEFINED, null);
+        GameActionMessage selectQuestion = new GameActionMessage(
+                "ROOM01",
+                IJeopardyAction.SelectQuestion.WIRE_NAME,
+                Map.of("roundIdx", 0, "categoryIdx", 0, "questionIdx", 0)
+        );
+
+        assertTrue(session.handleAction(selectQuestion, "host", true).accepted());
+        assertFalse(session.handleAction(
+                new GameActionMessage(
+                        "ROOM01",
+                        IJeopardyAction.SelectRound.WIRE_NAME,
+                        Map.of("roundIdx", 0)
+                ),
+                "host",
+                true
+        ).accepted());
+        assertFalse(session.handleAction(selectQuestion, "host", true).accepted());
+        assertEquals(GameState.QUESTION_SELECTED, session.getCurrentState());
     }
 
     private static JeopardySession createSession(MediaType mediaType, String mediaPath) {

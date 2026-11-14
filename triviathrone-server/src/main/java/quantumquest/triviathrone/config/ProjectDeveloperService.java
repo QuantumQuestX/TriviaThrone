@@ -16,20 +16,34 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Loads project developer metadata for the public project-information API.
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 @Service
 public class ProjectDeveloperService {
+    /**
+     * Stores an internal helper required by this component.
+     */
     private static final String GENERATED_METADATA = "/project-metadata/developers.xml";
 
+    /**
+     * Holds the developers used by this component.
+     */
     private final List<Developer> developers;
 
+    /**
+     * Creates a ProjectDeveloperService.
+     */
     public ProjectDeveloperService() {
         this.developers = loadDevelopers();
     }
 
-    public List<Developer> getDevelopers() {
-        return developers;
-    }
-
+    /**
+     * Loads developer metadata bundled with the application.
+     */
     private static List<Developer> loadDevelopers() {
         InputStream metadata = ProjectDeveloperService.class.getResourceAsStream(GENERATED_METADATA);
         if (metadata != null) {
@@ -51,8 +65,17 @@ public class ProjectDeveloperService {
         throw new IllegalStateException("Generated developer metadata is missing and the Maven POM is unavailable.");
     }
 
+    /**
+     * Parses developer information from the Maven POM.
+     *
+     * @param pom the POM XML stream
+     * @return the declared project developers
+     * @throws IOException                  if the stream cannot be read
+     * @throws ParserConfigurationException if the XML parser cannot be configured
+     * @throws SAXException                 if the POM XML is malformed
+     */
     private static List<Developer> parsePom(InputStream pom)
-            throws IOException, ParserConfigurationException, SAXException {
+        throws IOException, ParserConfigurationException, SAXException {
         Document document = newDocumentBuilderFactory().newDocumentBuilder().parse(pom);
         NodeList developerNodes = document.getElementsByTagName("developer");
         List<Developer> developers = new ArrayList<>(developerNodes.getLength());
@@ -64,16 +87,19 @@ public class ProjectDeveloperService {
             }
             if (!name.isBlank()) {
                 developers.add(new Developer(
-                        name,
-                        childText(developer, "url"),
-                        childTexts(developer, "role"),
-                        organizationsFromPom(developer)
+                    name,
+                    childText(developer, "url"),
+                    childTexts(developer, "role"),
+                    organizationsFromPom(developer)
                 ));
             }
         }
         return List.copyOf(developers);
     }
 
+    /**
+     * Parses developers from generated XML metadata.
+     */
     private static List<Developer> parseGeneratedMetadata(InputStream metadata) {
         try {
             Document document = newDocumentBuilderFactory().newDocumentBuilder().parse(metadata);
@@ -84,10 +110,10 @@ public class ProjectDeveloperService {
                 String name = childText(developer, "name");
                 if (!name.isBlank()) {
                     developers.add(new Developer(
-                            name,
-                            childText(developer, "profileUrl"),
-                            childTexts(developer, "role"),
-                            organizationsFromGeneratedMetadata(developer)
+                        name,
+                        childText(developer, "profileUrl"),
+                        childTexts(developer, "role"),
+                        organizationsFromGeneratedMetadata(developer)
                     ));
                 }
             }
@@ -97,6 +123,9 @@ public class ProjectDeveloperService {
         }
     }
 
+    /**
+     * Creates a hardened XML document-builder factory.
+     */
     private static DocumentBuilderFactory newDocumentBuilderFactory() throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -110,6 +139,9 @@ public class ProjectDeveloperService {
         return factory;
     }
 
+    /**
+     * Reads developer organizations from Maven POM metadata.
+     */
     private static List<Organization> organizationsFromPom(Element developer) {
         List<String> names = childTexts(developer, "organization");
         List<String> urls = childTexts(developer, "organizationUrl");
@@ -123,6 +155,9 @@ public class ProjectDeveloperService {
         return List.copyOf(organizations);
     }
 
+    /**
+     * Reads developer organizations from generated metadata.
+     */
     private static List<Organization> organizationsFromGeneratedMetadata(Element developer) {
         NodeList organizations = developer.getElementsByTagName("organization");
         List<Organization> result = new ArrayList<>(organizations.getLength());
@@ -133,11 +168,17 @@ public class ProjectDeveloperService {
         return List.copyOf(result);
     }
 
+    /**
+     * Returns the text of a named child XML element.
+     */
     private static String childText(Element parent, String tagName) {
         List<String> values = childTexts(parent, tagName);
         return values.isEmpty() ? "" : values.getFirst();
     }
 
+    /**
+     * Returns the text of all matching child XML elements.
+     */
     private static List<String> childTexts(Element parent, String tagName) {
         NodeList nodes = parent.getElementsByTagName(tagName);
         List<String> values = new ArrayList<>(nodes.getLength());
@@ -150,9 +191,34 @@ public class ProjectDeveloperService {
         return List.copyOf(values);
     }
 
+    /**
+     * Returns the project developers loaded from build metadata.
+     */
+    public List<Developer> getDevelopers() {
+        return developers;
+    }
+
+    /**
+     * Describes a project developer.
+     *
+     * @param name          the developer name
+     * @param url           the developer URL
+     * @param roles         the developer roles
+     * @param organizations the developer organizations
+     * @author TiJ
+     * @since 2.0.0
+     */
     public record Developer(String name, String url, List<String> roles, List<Organization> organizations) {
     }
 
+    /**
+     * Describes a developer organization.
+     *
+     * @param name the organization name
+     * @param url  the organization URL
+     * @author TiJ
+     * @since 2.0.0
+     */
     public record Organization(String name, String url) {
     }
 }

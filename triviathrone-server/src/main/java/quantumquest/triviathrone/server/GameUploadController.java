@@ -1,7 +1,5 @@
 package quantumquest.triviathrone.server;
 
-import quantumquest.triviathrone.auth.UserAccount;
-import quantumquest.triviathrone.api.game.IGameDefinition;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import quantumquest.triviathrone.api.game.IGameDefinition;
+import quantumquest.triviathrone.auth.UserAccount;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,34 +27,68 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Handles authorized game-package uploads and game-media retrieval.
+ *
+ * @author TiJ
+ * @since 2.0.0
+ */
 @RestController
 @RequestMapping("/api/game")
 public class GameUploadController {
+    /**
+     * Logs events from this component.
+     */
     private static final Logger logger = LoggerFactory.getLogger(GameUploadController.class);
 
+    /**
+     * Holds the lobb ervice used by this component.
+     */
     private final LobbyService lobbyService;
+    /**
+     * Holds the lobb ven ervice used by this component.
+     */
     private final LobbyEventService lobbyEventService;
+    /**
+     * Holds the lobb am iles used by this component.
+     */
     private final LobbyGameFiles lobbyGameFiles;
 
+    /**
+     * Creates a GameUploadController.
+     *
+     * @param lobbyService      the lobby service
+     * @param lobbyEventService the lobby event service
+     * @param lobbyGameFiles    the lobby game files
+     */
     public GameUploadController(
-            LobbyService lobbyService,
-            LobbyEventService lobbyEventService,
-            LobbyGameFiles lobbyGameFiles
+        LobbyService lobbyService,
+        LobbyEventService lobbyEventService,
+        LobbyGameFiles lobbyGameFiles
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
         this.lobbyGameFiles = Objects.requireNonNull(lobbyGameFiles, "lobbyGameFiles");
     }
 
+    /**
+     * Serves a media file referenced by the lobby's loaded game to one of its members.
+     *
+     * @param lobbyCode code of the lobby that owns the media
+     * @param mediaPath package-relative path of the requested media
+     * @param user      authenticated user requesting the media
+     * @return the detected media resource
+     * @throws IOException if the stored media cannot be read
+     */
     @GetMapping("/{lobbyCode}/media")
     public ResponseEntity<Resource> getGameMedia(
-            @PathVariable String lobbyCode,
-            @RequestParam("path") String mediaPath,
-            @AuthenticationPrincipal UserAccount user
+        @PathVariable String lobbyCode,
+        @RequestParam("path") String mediaPath,
+        @AuthenticationPrincipal UserAccount user
     ) throws IOException {
         Objects.requireNonNull(user, "user");
         Lobby lobby = lobbyService.getLobby(lobbyCode)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!lobby.listUsernames().contains(user.getUsername())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
@@ -66,7 +100,7 @@ public class GameUploadController {
         }
 
         Path realMediaFile = lobbyGameFiles.findMediaFile(lobbyCode, mediaPath)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         String contentType;
         try (InputStream media = Files.newInputStream(realMediaFile)) {
@@ -74,15 +108,23 @@ public class GameUploadController {
         }
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .body(new FileSystemResource(realMediaFile));
+            .contentType(MediaType.parseMediaType(contentType))
+            .body(new FileSystemResource(realMediaFile));
     }
 
+    /**
+     * Validates, stores, and loads a game package uploaded by a lobby host.
+     *
+     * @param file      the file
+     * @param lobbyCode the lobby code
+     * @param user      the user account
+     * @return the upload outcome
+     */
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadGame(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("lobbyCode") String lobbyCode,
-            @AuthenticationPrincipal UserAccount user
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("lobbyCode") String lobbyCode,
+        @AuthenticationPrincipal UserAccount user
     ) {
         Objects.requireNonNull(file, "file");
         Objects.requireNonNull(lobbyCode, "lobbyCode");
@@ -108,7 +150,7 @@ public class GameUploadController {
 
         try {
             Optional<IGameDefinition> definition =
-                    lobbyGameFiles.extractUploadedGame(lobbyCode, originalFilename, file);
+                lobbyGameFiles.extractUploadedGame(lobbyCode, originalFilename, file);
             if (definition.isEmpty()) {
                 return ResponseEntity.badRequest().body("Game definition missing.");
             }

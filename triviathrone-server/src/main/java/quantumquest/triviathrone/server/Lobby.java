@@ -23,12 +23,12 @@ public class Lobby {
         users.add(hostUser);
     }
 
-    public void addUser(String username) {
-        users.add(Objects.requireNonNull(username, "username"));
+    public boolean addUser(String username) {
+        return users.add(Objects.requireNonNull(username, "username"));
     }
 
-    public void removeUser(String username) {
-        users.remove(Objects.requireNonNull(username, "username"));
+    public boolean removeUser(String username) {
+        return users.remove(Objects.requireNonNull(username, "username"));
     }
 
     public String getLobbyCode() {
@@ -66,9 +66,25 @@ public class Lobby {
         this.gameSession = gameDefinition.createSession(code, listUsernames());
     }
 
+    public synchronized boolean startGameIfInactive() {
+        if (gameSession != null) {
+            return false;
+        }
+        startGame();
+        return true;
+    }
+
     public synchronized void endGame() {
-        if (gameSession != null) gameSession.close();
+        endGameIfActive();
+    }
+
+    public synchronized boolean endGameIfActive() {
+        if (gameSession == null) {
+            return false;
+        }
+        gameSession.close();
         this.gameSession = null;
+        return true;
     }
 
     public boolean hasActiveGame() {

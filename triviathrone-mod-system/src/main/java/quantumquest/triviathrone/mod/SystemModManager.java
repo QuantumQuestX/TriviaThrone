@@ -1,7 +1,9 @@
 package quantumquest.triviathrone.mod;
 
+import quantumquest.triviathrone.api.system.events.ISystemEvent;
 import quantumquest.triviathrone.api.system.ISystemProvider;
 import quantumquest.triviathrone.api.system.SystemApi;
+import quantumquest.triviathrone.api.system.SystemCompatibility;
 import quantumquest.triviathrone.api.system.SystemProviderContext;
 import quantumquest.triviathrone.api.system.SystemProviderDescriptor;
 import quantumquest.triviathrone.api.system.SystemServiceRegistry;
@@ -23,15 +25,19 @@ import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class SystemModManager implements SystemServiceRegistry, AutoCloseable {
+    private static final Logger LOGGER = Logger.getLogger(SystemModManager.class.getName());
+
     private final List<URLClassLoader> classLoaders = new ArrayList<>();
     private final List<ISystemProvider> providers = new ArrayList<>();
     private final Map<Class<?>, Object> services = new LinkedHashMap<>();
     private final Map<Class<?>, String> serviceOwners = new LinkedHashMap<>();
     private final Set<String> providerIds = new HashSet<>();
     private boolean acceptingRegistrations = true;
-    private boolean closed;
+    private volatile boolean closed;
     private String registeringProviderId;
 
     private SystemModManager() {
@@ -92,6 +98,13 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
         for (ISystemProvider provider : discovered) {
             SystemProviderDescriptor descriptor = Objects.requireNonNull(provider.descriptor(), "provider descriptor");
+            SystemCompatibility compatibility = provider.getClass().getAnnotation(SystemCompatibility.class);
+            if (compatibility != null && !SystemApi.isCompatibleMajor(compatibility.major())) {
+                throw new IllegalStateException(
+                        "System mod " + descriptor.id() + " requires compatibility level "
+                                + compatibility.major() + "; server provides " + SystemApi.CURRENT_VERSION
+                );
+            }
             if (!SystemApi.isCompatible(descriptor.apiVersion())) {
                 throw new IllegalStateException(
                         "System mod " + descriptor.id() + " requires API " + descriptor.apiVersion()
@@ -144,6 +157,26 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
 
     public List<SystemProviderDescriptor> providers() {
         return providers.stream().map(ISystemProvider::descriptor).toList();
+    }
+
+    public void publishEvent(ISystemEvent event) {
+        Objects.requireNonNull(event, "event");
+        if (closed) {
+            throw new IllegalStateException("System providers are closed.");
+        }
+
+        for (ISystemProvider provider : List.copyOf(providers)) {
+            try {
+                provider.onEvent(event);
+            } catch (RuntimeException exception) {
+                LOGGER.log(
+                        Level.SEVERE,
+                        "System provider " + provider.getClass().getName()
+                                + " failed while handling " + event.getClass().getSimpleName() + ".",
+                        exception
+                );
+            }
+        }
     }
 
     @Override

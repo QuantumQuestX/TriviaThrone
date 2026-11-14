@@ -1,17 +1,21 @@
 package quantumquest.triviathrone.mod;
 
-import quantumquest.triviathrone.api.system.ISystemProvider;
-import quantumquest.triviathrone.api.system.SystemProviderContext;
-import quantumquest.triviathrone.api.system.SystemProviderDescriptor;
-import quantumquest.triviathrone.api.system.SystemServiceRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import quantumquest.triviathrone.api.system.events.ISystemEvent;
+import quantumquest.triviathrone.api.system.ISystemProvider;
+import quantumquest.triviathrone.api.system.SystemCompatibility;
+import quantumquest.triviathrone.api.system.SystemProviderContext;
+import quantumquest.triviathrone.api.system.SystemProviderDescriptor;
+import quantumquest.triviathrone.api.system.SystemServiceRegistry;
+import quantumquest.triviathrone.api.system.events.LobbyCreatedEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +35,7 @@ public class SystemModManagerTest {
     public static final AtomicInteger CLOSED_COUNT = new AtomicInteger();
     public static final AtomicReference<String> INITIALIZED_DATA_DIRECTORY = new AtomicReference<>();
     public static final AtomicReference<String> INITIALIZED_SETTING = new AtomicReference<>();
+    public static final AtomicReference<ISystemEvent> RECEIVED_EVENT = new AtomicReference<>();
 
     @TempDir
     Path tempDir;
@@ -41,6 +46,7 @@ public class SystemModManagerTest {
         CLOSED_COUNT.set(0);
         INITIALIZED_DATA_DIRECTORY.set(null);
         INITIALIZED_SETTING.set(null);
+        RECEIVED_EVENT.set(null);
     }
 
     @Test
@@ -63,6 +69,9 @@ public class SystemModManagerTest {
             assertEquals(tempDir.resolve("data/system/test").toAbsolutePath().normalize().toString(),
                     INITIALIZED_DATA_DIRECTORY.get());
             assertEquals("jdbc:test", INITIALIZED_SETTING.get());
+            ISystemEvent event = new LobbyCreatedEvent(Instant.parse("2026-01-01T00:00:00Z"), "ROOM01", "host");
+            manager.publishEvent(event);
+            assertEquals(event, RECEIVED_EVENT.get());
             assertFalse(CLOSED.get());
             assertThrows(IllegalStateException.class,
                     () -> manager.register(TestService.class, () -> "late"));
@@ -79,10 +88,31 @@ public class SystemModManagerTest {
         SystemProviderContext context = new SystemProviderContext(tempDir.resolve("data/system"), Map.of());
 
         IllegalStateException failure = assertThrows(IllegalStateException.class,
-                () -> SystemModManager.load(modsDirectory, context, parentFor(TestProvider.class, DuplicateProvider.class)));
+                () -> SystemModManager.load(
+                        modsDirectory,
+                        context,
+                        parentFor(TestProvider.class, DuplicateProvider.class)
+                ).close());
 
         assertTrue(failure.getMessage().contains("already registered"));
         assertEquals(2, CLOSED_COUNT.get());
+    }
+
+    @Test
+    void rejectsProvidersWithIncompatibleSystemCompatibilityLevel() throws IOException {
+        Path modsDirectory = tempDir.resolve("mods/system");
+        Files.createDirectories(modsDirectory);
+        writeProviderJar(modsDirectory.resolve("incompatible-system.jar"), IncompatibleProvider.class);
+        SystemProviderContext context = new SystemProviderContext(tempDir.resolve("data/system"), Map.of());
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> SystemModManager.load(
+                        modsDirectory,
+                        context,
+                        parentFor(IncompatibleProvider.class)
+                ).close());
+
+        assertTrue(failure.getMessage().contains("compatibility level 3"));
     }
 
     private static ClassLoader parentFor(Class<?>... providers) {
@@ -127,6 +157,7 @@ public class SystemModManagerTest {
         String value();
     }
 
+    @SystemCompatibility(major = 2)
     public static class TestProvider implements ISystemProvider {
         public TestProvider() {
         }
@@ -144,12 +175,18 @@ public class SystemModManagerTest {
         }
 
         @Override
+        public void onEvent(ISystemEvent event) {
+            RECEIVED_EVENT.set(event);
+        }
+
+        @Override
         public void close() {
             CLOSED.set(true);
             CLOSED_COUNT.incrementAndGet();
         }
     }
 
+    @SystemCompatibility(major = 2)
     public static class DuplicateProvider implements ISystemProvider {
         public DuplicateProvider() {
         }
@@ -167,6 +204,18 @@ public class SystemModManagerTest {
         @Override
         public void close() {
             CLOSED_COUNT.incrementAndGet();
+        }
+    }
+
+    @SystemCompatibility(major = 3)
+    public static class IncompatibleProvider implements ISystemProvider {
+        @Override
+        public SystemProviderDescriptor descriptor() {
+            return new SystemProviderDescriptor("incompatible", "1.0.0", "2.0.0");
+        }
+
+        @Override
+        public void initialize(SystemProviderContext context, SystemServiceRegistry services) {
         }
     }
 }

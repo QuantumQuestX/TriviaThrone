@@ -10,6 +10,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ModMetadataLoaderTest {
     @TempDir
@@ -38,7 +39,7 @@ class ModMetadataLoaderTest {
     }
 
     @Test
-    void acceptsLegacyPluginXmlDescriptors() throws IOException {
+    void rejectsJarsWithOnlyLegacyPluginXml() throws IOException {
         Path modJar = createJar("plugin.xml", """
                 <plugin id="legacy">
                     <name>Legacy</name>
@@ -51,10 +52,9 @@ class ModMetadataLoaderTest {
                 </plugin>
                 """);
 
-        ModDescriptor descriptor = ModMetadataLoader.load(modJar);
+        IOException exception = assertThrows(IOException.class, () -> ModMetadataLoader.load(modJar));
 
-        assertEquals("legacy", descriptor.id());
-        assertEquals(java.util.List.of("example.LegacyProvider"), descriptor.providerClasses());
+        assertEquals("Game mod JAR is missing mod.xml: " + modJar, exception.getMessage());
     }
 
     private Path createJar(String entryName, String metadata) throws IOException {

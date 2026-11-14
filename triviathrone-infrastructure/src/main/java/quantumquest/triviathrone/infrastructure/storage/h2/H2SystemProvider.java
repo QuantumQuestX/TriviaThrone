@@ -3,6 +3,7 @@ package quantumquest.triviathrone.infrastructure.storage.h2;
 import quantumquest.triviathrone.api.storage.migration.IMigrationRunner;
 import quantumquest.triviathrone.api.system.ISystemProvider;
 import quantumquest.triviathrone.api.system.SystemApi;
+import quantumquest.triviathrone.api.system.SystemCompatibility;
 import quantumquest.triviathrone.api.system.SystemProviderContext;
 import quantumquest.triviathrone.api.system.SystemProviderDescriptor;
 import quantumquest.triviathrone.api.system.SystemServiceRegistry;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 
 import java.util.Objects;
 
+@SystemCompatibility(major = 2)
 public final class H2SystemProvider implements ISystemProvider {
     private static final SystemProviderDescriptor DESCRIPTOR =
             new SystemProviderDescriptor("h2", "1.0.0", SystemApi.CURRENT_VERSION);

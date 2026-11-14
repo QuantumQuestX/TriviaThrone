@@ -29,7 +29,6 @@ public final class ModMetadataLoader {
     private static final String DTD_FILE = "mod.dtd";
     private static final String XSD_FILE = "mod.xsd";
     private static final String MOD_FILE = "mod.xml";
-    private static final String LEGACY_PLUGIN_FILE = "plugin.xml";
     private static final byte[] DOCTYPE_MARKER = "<!DOCTYPE".getBytes(StandardCharsets.US_ASCII);
     private static final int MAX_METADATA_SIZE = 1024 * 1024;
 
@@ -39,29 +38,24 @@ public final class ModMetadataLoader {
     public static ModDescriptor load(Path modJar) throws IOException {
         try (JarFile jar = new JarFile(modJar.toFile())) {
             JarEntry entry = jar.getJarEntry(MOD_FILE);
-            boolean legacyPluginDescriptor = false;
-            if (entry == null) {
-                entry = jar.getJarEntry(LEGACY_PLUGIN_FILE);
-                legacyPluginDescriptor = entry != null;
-            }
             if (entry == null) {
                 throw new IOException("Game mod JAR is missing " + MOD_FILE + ": " + modJar);
             }
             try (InputStream input = jar.getInputStream(entry)) {
-                return parse(input, legacyPluginDescriptor);
+                return parse(input);
             } catch (ParserConfigurationException | SAXException exception) {
                 throw new IOException("Invalid " + entry.getName() + " in " + modJar, exception);
             }
         }
     }
 
-    private static ModDescriptor parse(InputStream input, boolean legacyPluginDescriptor)
+    private static ModDescriptor parse(InputStream input)
             throws IOException, ParserConfigurationException, SAXException {
         byte[] xml = input.readNBytes(MAX_METADATA_SIZE + 1);
         if (xml.length > MAX_METADATA_SIZE) {
             throw new IOException(MOD_FILE + " exceeds the maximum size of " + MAX_METADATA_SIZE + " bytes");
         }
-        xml = addDoctype(xml, legacyPluginDescriptor);
+        xml = addDoctype(xml);
 
         Schema schema = loadSchema();
 
@@ -94,10 +88,8 @@ public final class ModMetadataLoader {
 
         Document document = builder.parse(new InputSource(new ByteArrayInputStream(xml)));
         Element root = document.getDocumentElement();
-        String expectedRoot = legacyPluginDescriptor ? "plugin" : "mod";
-        if (!expectedRoot.equals(root.getTagName())) {
-            throw new SAXException("The root element in " + (legacyPluginDescriptor ? LEGACY_PLUGIN_FILE : MOD_FILE)
-                    + " must be <" + expectedRoot + ">.");
+        if (!"mod".equals(root.getTagName())) {
+            throw new SAXException("The root element in " + MOD_FILE + " must be <mod>.");
         }
 
         List<String> providerClasses = new ArrayList<>();
@@ -116,12 +108,11 @@ public final class ModMetadataLoader {
         );
     }
 
-    private static byte[] addDoctype(byte[] xml, boolean legacyPluginDescriptor) throws SAXException {
+    private static byte[] addDoctype(byte[] xml) throws SAXException {
         if (contains(xml, DOCTYPE_MARKER)) {
             throw new SAXException("Mod metadata must not declare a DOCTYPE");
         }
-        String rootName = legacyPluginDescriptor ? "plugin" : "mod";
-        byte[] doctypeDeclaration = ("<!DOCTYPE " + rootName + " SYSTEM \"" + DTD_FILE + "\">\n")
+        byte[] doctypeDeclaration = ("<!DOCTYPE mod SYSTEM \"" + DTD_FILE + "\">\n")
                 .getBytes(StandardCharsets.US_ASCII);
 
         int bomLength = hasUtf8Bom(xml) ? 3 : 0;

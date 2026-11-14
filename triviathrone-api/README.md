@@ -30,6 +30,18 @@ interface type. Service registrations must be unique; providers are started in
 JAR-name order and closed in reverse order. System configuration uses the
 `triviathrone.system.<provider-id>.*` namespace.
 
+Provider classes may declare their required system API compatibility major with
+`@SystemCompatibility(major = 2)`. The system loader rejects annotated
+providers whose major is incompatible with the server; the API version in the
+provider descriptor is also checked.
+
+Providers can observe immutable lobby and game lifecycle events through the
+default `ISystemProvider.onEvent` callback. Events are delivered synchronously
+and may be delivered concurrently; providers should keep handlers fast and
+thread-safe. A provider failure is logged and does not interrupt the server
+operation or delivery to other providers. The current events cover lobby
+creation/closure, player join/leave, and game start/end.
+
 System providers are trusted server code, not uploaded content. A mod should
 use the system API as a provided dependency, bundle any non-platform runtime
 dependencies, and declare its service file. Its configuration keys are exposed

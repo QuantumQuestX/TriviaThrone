@@ -11,7 +11,11 @@ public final class SystemApi {
     }
 
     public static boolean isCompatible(String apiVersion) {
-        return majorVersion(apiVersion) == majorVersion(CURRENT_VERSION);
+        return isCompatibleMajor(majorVersion(apiVersion));
+    }
+
+    public static boolean isCompatibleMajor(int apiMajorVersion) {
+        return apiMajorVersion == majorVersion(CURRENT_VERSION);
     }
 
     private static int majorVersion(String version) {

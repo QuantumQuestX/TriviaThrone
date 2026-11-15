@@ -1,9 +1,6 @@
 export default [
     {
-        files: [
-            "triviathrone-client/src/main/resources/static/js/**/*.js",
-            "triviathrone-games/jeopardy/src/main/resources/ui/js/**/*.js",
-        ],
+        files: ["triviathrone-client/src/main/resources/static/js/**/*.js"],
         rules: {
             curly: ["error", "all"],
             "padding-line-between-statements": [

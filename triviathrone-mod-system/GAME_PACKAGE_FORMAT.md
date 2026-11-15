@@ -5,10 +5,10 @@ A `.game.throne` archive must contain a `manifest.xml` at its root. The manifest
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <gamePackage manifestVersion="2.0">
-  <mod id="jeopardy" version="1.0.0" apiVersion="2.0.0"/>
+  <mod id="example-game" version="1.0.0" apiVersion="2.0.0"/>
   <game
-      type="jeopardy"
-      providerClass="quantumquest.triviathrone.games.jeopardy.JeopardyGameProvider"
+      type="example-game"
+      providerClass="com.example.game.ExampleGameProvider"
       dataFile="game.xml"
       formatVersion="1.0"/>
   <createdBy serverVersion="2.0.0"/>
@@ -25,7 +25,7 @@ The mod ID, game type, and provider class must match a registered provider. The 
 
 `dataFile` and asset paths are relative to the package root. The game data file must exist. Assets are optional. If an asset entry includes a SHA-256 hash, it must match the bundled file.
 
-After a provider creates the game data, the server writes the manifest. Each additional file in the package is listed as an asset and given a SHA-256 hash. The Jeopardy editor sends the game structure and media files to the server; its provider writes `game.xml` and the resource files.
+After a provider creates the game data, the server writes the manifest. Each additional file in the package is listed as an asset and given a SHA-256 hash. A game editor sends the game structure and media files to the server; its provider writes `game.xml` and the resource files.
 
 To include uploaded files, send `POST /api/game/create/{gameType}` as `multipart/form-data`. Put the JSON object in the `data` part and name each file part `asset_<resourceId>`. The server makes the files available to the creator and removes temporary uploads after generation.
 

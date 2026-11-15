@@ -11,7 +11,4 @@
     <artifactId>triviathrone-games</artifactId>
     <packaging>pom</packaging>
     <name>TriviaThrone Games</name>
-    <modules>
-        <module>jeopardy</module>
-    </modules>
 </project>

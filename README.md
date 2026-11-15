@@ -23,7 +23,7 @@ Run the Java tests with `./mvnw test`. Run the client tests with `npm ci` follow
 - `triviathrone-mod-system` and `triviathrone-games` support game discovery and implementations.
 - `triviathrone-application` assembles and starts the application.
 
-The Jeopardy implementation is in `triviathrone-games/jeopardy`. For more on the modules and migrations, see [HELP.md](HELP.md).
+For more on the modules and migrations, see [HELP.md](HELP.md).
 
 ## Admin account
 

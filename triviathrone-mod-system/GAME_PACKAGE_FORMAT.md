@@ -29,4 +29,4 @@ After a provider creates the game data, the server writes the manifest. Each add
 
 To include uploaded files, send `POST /api/game/create/{gameType}` as `multipart/form-data`. Put the JSON object in the `data` part and name each file part `asset_<resourceId>`. The server makes the files available to the creator and removes temporary uploads after generation.
 
-Game mod JARs use `triviathrone-game-api` and load from `mods/games` at server startup. System implementations use `triviathrone-system-api`; the built-in H2 implementation comes from `triviathrone-infrastructure`.
+Game mod JARs use `triviathrone-game-api` and load from `mods/games` at server startup. System implementations use `triviathrone-system-api` and load from `mods/system`.

@@ -17,7 +17,3 @@ triviathrone:
     system-directory: ${TRIVIATHRONE_SYSTEM_MODS_DIRECTORY:mods/system}
   system:
     data-directory: ${TRIVIATHRONE_SYSTEM_DATA_DIRECTORY:data/system}
-    h2:
-      jdbc-url: ${AUTH_USER_DATABASE_URL:jdbc:h2:file:./triviathrone-users;AUTO_SERVER=TRUE}
-      username: ${AUTH_USER_DATABASE_USERNAME:sa}
-      password: ${AUTH_USER_DATABASE_PASSWORD:}

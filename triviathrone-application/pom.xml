@@ -18,12 +18,6 @@
         </dependency>
         <dependency>
             <groupId>quantumquest.triviathrone</groupId>
-            <artifactId>triviathrone-infrastructure</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>quantumquest.triviathrone</groupId>
             <artifactId>triviathrone-client</artifactId>
             <version>${project.version}</version>
             <scope>runtime</scope>

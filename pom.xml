@@ -55,7 +55,6 @@
         <module>triviathrone-api</module>
         <module>triviathrone-mod-system</module>
         <module>triviathrone-client</module>
-        <module>triviathrone-games</module>
         <module>triviathrone-server</module>
         <module>triviathrone-application</module>
     </modules>

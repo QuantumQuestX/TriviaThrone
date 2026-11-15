@@ -1,6 +1,6 @@
 # TriviaThrone
 
-TriviaThrone is a trivia game server with a browser client. The project is split into Maven modules, and games can be added as providers.
+TriviaThrone is a trivia game server with a browser client. The server discovers game and system implementations from external mods.
 
 ## Running locally
 
@@ -19,14 +19,14 @@ Run the Java tests with `./mvnw test`. Run the client tests with `npm ci` follow
 - `triviathrone-api` contains shared game, account, repository, and migration interfaces.
 - `triviathrone-server` handles lobbies, authentication, and transport.
 - `triviathrone-client` contains the browser client.
-- `triviathrone-mod-system` and `triviathrone-games` support game discovery and implementations.
+- `triviathrone-mod-system` supports discovery and loading of external game and system mods.
 - `triviathrone-application` assembles and starts the application.
 
 For more on the modules and migrations, see [HELP.md](HELP.md).
 
 ## Admin account
 
-On a local development database, the migration creates an `admin` account with password `default_password`. This password is public; do not expose the service with it unchanged. To use a different initial administrator, set both `AUTH_INITIAL_ADMIN_USERNAME` and `AUTH_INITIAL_ADMIN_PASSWORD`.
+The server loads game mods from `mods/games` and system mods from `mods/system`. Account storage and migrations are provided by a system mod. To configure the initial administrator, set both `AUTH_INITIAL_ADMIN_USERNAME` and `AUTH_INITIAL_ADMIN_PASSWORD`.
 
 ## Contributions
 

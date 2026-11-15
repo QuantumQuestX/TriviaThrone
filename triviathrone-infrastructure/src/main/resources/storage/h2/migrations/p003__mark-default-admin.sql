@@ -1,1 +1,0 @@
-ALTER TABLE user_accounts ADD COLUMN default_admin BOOLEAN NOT NULL DEFAULT FALSE;

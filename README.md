@@ -19,7 +19,6 @@ Run the Java tests with `./mvnw test`. Run the client tests with `npm ci` follow
 - `triviathrone-api` contains shared game, account, repository, and migration interfaces.
 - `triviathrone-server` handles lobbies, authentication, and transport.
 - `triviathrone-client` contains the browser client.
-- `triviathrone-infrastructure` provides H2 account storage and migrations.
 - `triviathrone-mod-system` and `triviathrone-games` support game discovery and implementations.
 - `triviathrone-application` assembles and starts the application.
 

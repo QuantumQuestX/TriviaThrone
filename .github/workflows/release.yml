@@ -116,7 +116,6 @@ jobs:
             org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
             -DnewVersion="$RELEASE_VERSION" \
             -DgenerateBackupPoms=false \
-            -DprocessParent=false \
             -DprocessDependencies=false \
             -DprocessPlugins=false
 
@@ -164,7 +163,6 @@ jobs:
             org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
             -DnewVersion="$RELEASE_VERSION" \
             -DgenerateBackupPoms=false \
-            -DprocessParent=false \
             -DprocessDependencies=false \
             -DprocessPlugins=false
 
@@ -197,7 +195,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-input
-          cp "target/TriviaThrone-${RELEASE_VERSION}.jar" release-input/TriviaThrone.jar
+          cp "triviathrone-application/target/triviathrone-application-${RELEASE_VERSION}.jar" \
+            release-input/TriviaThrone.jar
 
           jpackage \
             --type app-image \
@@ -210,8 +209,9 @@ jobs:
             --description "TriviaThrone game server"
 
           install -m 755 packaging/run-linux.sh release-output/TriviaThrone/run.sh
-          cp "target/TriviaThrone-${RELEASE_VERSION}.jar" .
-          (cd target && sha256sum "TriviaThrone-${RELEASE_VERSION}.jar") \
+          cp "triviathrone-application/target/triviathrone-application-${RELEASE_VERSION}.jar" \
+            "TriviaThrone-${RELEASE_VERSION}.jar"
+          sha256sum "TriviaThrone-${RELEASE_VERSION}.jar" \
             > "TriviaThrone-${RELEASE_VERSION}.jar.sha256"
           (cd release-output && zip -qr \
             "$GITHUB_WORKSPACE/TriviaThrone-${RELEASE_VERSION}-linux.zip" \
@@ -224,7 +224,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release-input | Out-Null
-          $releaseJar = "target/TriviaThrone-$($env:RELEASE_VERSION).jar"
+          $releaseJar = "triviathrone-application/target/triviathrone-application-$($env:RELEASE_VERSION).jar"
           Copy-Item $releaseJar release-input/TriviaThrone.jar
 
           jpackage `
@@ -312,13 +312,12 @@ jobs:
             org.codehaus.mojo:versions-maven-plugin:2.18.0:set \
             -DnewVersion="$RELEASE_VERSION" \
             -DgenerateBackupPoms=false \
-            -DprocessParent=false \
             -DprocessDependencies=false \
             -DprocessPlugins=false
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -- pom.xml
+          git add -- ':(glob)**/pom.xml'
           if git diff --cached --quiet; then
             echo "No POM version change to commit." >&2
             exit 1

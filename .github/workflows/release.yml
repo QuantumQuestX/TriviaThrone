@@ -168,13 +168,13 @@ jobs:
 
       - name: Build server JAR
         if: matrix.platform == 'linux'
-        run: ./mvnw --batch-mode --no-transfer-progress clean package -DskipTests
+        run: ./mvnw --batch-mode --no-transfer-progress clean package -DskipTests -Pcentral-release
 
       - name: Build server JAR
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
-          .\mvnw.cmd --batch-mode --no-transfer-progress clean package -DskipTests
+          .\mvnw.cmd --batch-mode --no-transfer-progress clean package -DskipTests -Pcentral-release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Stage API JARs for release
@@ -376,5 +376,5 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         run: >
           ./mvnw --batch-mode --no-transfer-progress
-          -pl triviathrone-api/game-api,triviathrone-api/system-api
+          -pl triviathrone-api/shared-api,triviathrone-api/game-api,triviathrone-api/system-api
           -Pcentral-release deploy

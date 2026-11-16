@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!ELEMENT mod (name, version, apiVersion, description, providers)>
+<!ELEMENT mod (name, version, apiVersion, apiCompatability?, description, providers)>
 <!ATTLIST mod id CDATA #REQUIRED>
 
 <!ELEMENT plugin (name, version, apiVersion, description, providers)>
@@ -9,6 +9,11 @@
 <!ELEMENT version (#PCDATA)>
 <!ELEMENT apiVersion (#PCDATA)>
 <!ELEMENT description (#PCDATA)>
+
+<!ELEMENT apiCompatability EMPTY>
+<!ATTLIST apiCompatability
+    minimum CDATA #REQUIRED
+    maximumExclusive CDATA #REQUIRED>
 
 <!ELEMENT providers (provider+)>
 <!ELEMENT provider EMPTY>

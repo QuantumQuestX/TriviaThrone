@@ -6,11 +6,17 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <xs:complexType name="apiCompatibilityType">
+        <xs:attribute name="minimum" type="nonEmptyText" use="required"/>
+        <xs:attribute name="maximumExclusive" type="nonEmptyText" use="required"/>
+    </xs:complexType>
+
     <xs:complexType name="modType">
         <xs:sequence>
             <xs:element name="name" type="nonEmptyText"/>
             <xs:element name="version" type="nonEmptyText"/>
             <xs:element name="apiVersion" type="nonEmptyText"/>
+            <xs:element name="apiCompatability" type="apiCompatibilityType" minOccurs="0" maxOccurs="1"/>
             <xs:element name="description" type="nonEmptyText"/>
             <xs:element name="providers">
                 <xs:complexType>

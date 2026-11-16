@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.server;
 
 import quantumquest.triviathrone.api.game.GameCreatorInfo;
+import quantumquest.triviathrone.api.game.GameApi;
 import quantumquest.triviathrone.api.game.GamePackageManifest;
 import quantumquest.triviathrone.api.game.IGameCreator;
 import quantumquest.triviathrone.api.game.IGameProvider;
@@ -49,7 +50,7 @@ public final class GameProviderRegistry {
                     provider.gameType(),
                     provider.gameType(),
                     "test",
-                    "test",
+                    GameApi.CURRENT_VERSION,
                     "",
                     List.of(provider.getClass().getName())
                 )
@@ -104,7 +105,7 @@ public final class GameProviderRegistry {
         Objects.requireNonNull(manifest, "manifest");
         return registrations.stream()
             .filter(registration -> registration.mod().id().equals(manifest.modId()))
-            .filter(registration -> registration.mod().apiVersion().equals(manifest.apiVersion()))
+            .filter(registration -> GameApi.isCompatible(manifest.apiVersion()))
             .map(RegisteredGameProvider::provider)
             .filter(provider -> provider.gameType().equals(manifest.gameType()))
             .filter(provider -> provider.getClass().getName().equals(manifest.providerClass()))

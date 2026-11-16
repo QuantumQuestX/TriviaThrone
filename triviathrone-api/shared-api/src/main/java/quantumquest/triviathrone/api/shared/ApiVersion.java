@@ -14,7 +14,7 @@ public final class ApiVersion {
      * Pattern accepted for semantic API versions, including optional qualifiers.
      */
     private static final Pattern VERSION_PATTERN =
-            Pattern.compile("^(\\d+)\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$");
+            Pattern.compile("^(\\d+)\\.(\\d+)\\.(\\d+)(?:[-+][0-9A-Za-z.-]+)?$");
 
     /**
      * Prevents instantiation of this utility class.

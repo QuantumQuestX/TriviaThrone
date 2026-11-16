@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.mod;
 
 import quantumquest.triviathrone.api.game.IGameProvider;
+import quantumquest.triviathrone.api.game.GameApi;
 
 import java.io.IOException;
 import java.net.URL;
@@ -114,6 +115,12 @@ public final class GameModManager implements AutoCloseable {
      */
     private void loadJar(Path jar, Set<String> gameTypes, Set<String> modIds) throws IOException {
         ModDescriptor descriptor = ModMetadataLoader.load(jar);
+        if (!GameApi.isCompatible(descriptor.apiVersion())) {
+            throw new IllegalStateException(
+                "Game mod " + descriptor.id() + " requires API " + descriptor.apiVersion()
+                    + "; server provides " + GameApi.CURRENT_VERSION
+            );
+        }
         if (modIds.contains(descriptor.id())) {
             throw new IllegalStateException("Duplicate game mod id: " + descriptor.id());
         }

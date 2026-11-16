@@ -20,6 +20,11 @@
     </scm>
     <dependencies>
         <dependency>
+            <groupId>quantumquest.triviathrone</groupId>
+            <artifactId>triviathrone-shared-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>

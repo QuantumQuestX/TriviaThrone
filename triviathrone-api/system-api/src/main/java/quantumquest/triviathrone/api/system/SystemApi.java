@@ -1,7 +1,6 @@
 package quantumquest.triviathrone.api.system;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import quantumquest.triviathrone.api.shared.ApiVersion;
 
 /**
  * Utilities and version information for the system-provider API.
@@ -14,10 +13,6 @@ public final class SystemApi {
      * Current semantic version of this API. Compatibility is determined by major version.
      */
     public static final String CURRENT_VERSION = "2.0.0";
-    /**
-     * Pattern that extracts the major component of an accepted semantic version.
-     */
-    private static final Pattern VERSION_PATTERN = Pattern.compile("^(\\d+)\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$");
 
     /**
      * Prevents instantiation of this utility class.
@@ -33,7 +28,7 @@ public final class SystemApi {
      * @throws IllegalArgumentException if the version is absent or invalid
      */
     public static boolean isCompatible(String apiVersion) {
-        return isCompatibleMajor(majorVersion(apiVersion));
+        return isCompatibleMajor(ApiVersion.parse(apiVersion).major());
     }
 
     /**
@@ -43,24 +38,6 @@ public final class SystemApi {
      * @return whether the major versions match
      */
     public static boolean isCompatibleMajor(int apiMajorVersion) {
-        return apiMajorVersion == majorVersion(CURRENT_VERSION);
-    }
-
-    /**
-     * Parses the major component of a semantic version.
-     *
-     * @param version semantic version to parse
-     * @return parsed major version
-     * @throws IllegalArgumentException if the version is absent or invalid
-     */
-    private static int majorVersion(String version) {
-        if (version == null) {
-            throw new IllegalArgumentException("API version is required.");
-        }
-        Matcher matcher = VERSION_PATTERN.matcher(version);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid API version: " + version);
-        }
-        return Integer.parseInt(matcher.group(1));
+        return apiMajorVersion == ApiVersion.parse(CURRENT_VERSION).major();
     }
 }

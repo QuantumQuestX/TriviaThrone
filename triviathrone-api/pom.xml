@@ -14,6 +14,7 @@
     <modules>
         <module>game-api</module>
         <module>system-api</module>
+        <module>shared-api</module>
     </modules>
     <profiles>
         <profile>

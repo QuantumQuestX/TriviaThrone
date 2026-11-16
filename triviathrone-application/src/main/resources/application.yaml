@@ -1,6 +1,13 @@
 spring:
   application:
     name: TriviaThrone
+  servlet:
+    multipart:
+      max-file-size: ${TRIVIATHRONE_MAX_UPLOAD_SIZE:50MB}
+      max-request-size: ${TRIVIATHRONE_MAX_UPLOAD_SIZE:50MB}
+server:
+  tomcat:
+    max-http-form-post-size: ${TRIVIATHRONE_MAX_UPLOAD_SIZE:50MB}
 auth:
   # Override with a private signing key outside local development.
   jwt-secret: ${AUTH_JWT_SECRET:CHANCE_THIS_SECRET_CHANGE_THIS_SECRET}

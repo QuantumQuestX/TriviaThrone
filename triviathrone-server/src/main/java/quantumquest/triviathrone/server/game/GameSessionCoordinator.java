@@ -3,7 +3,11 @@ package quantumquest.triviathrone.server.game;
 import org.springframework.stereotype.Service;
 import quantumquest.triviathrone.api.game.GameActionResult;
 import quantumquest.triviathrone.api.game.GameControlAction;
+import quantumquest.triviathrone.api.game.IGamePrivateMessage;
+import quantumquest.triviathrone.api.game.IGameMessage;
 import quantumquest.triviathrone.api.game.IGameSession;
+import quantumquest.triviathrone.api.game.ILifelineGameSession;
+import quantumquest.triviathrone.api.game.IPrivateGameSession;
 import quantumquest.triviathrone.api.system.events.GameEndedEvent;
 import quantumquest.triviathrone.api.system.events.GameStartedEvent;
 import quantumquest.triviathrone.dto.game.GameActionMessage;
@@ -66,6 +70,29 @@ public class GameSessionCoordinator {
         handleGameAction(message, lobby, username);
     }
 
+    private void publishState(Lobby lobby, IGameSession session) {
+        if (lobby.getGameSession() != session) {
+            return;
+        }
+
+        gameEventService.broadcastState(
+            lobby.getLobbyCode(),
+            session
+        );
+
+        if (!(session instanceof IPrivateGameSession privateSession)) {
+            return;
+        }
+
+        for (String username : lobby.listUsernames()) {
+            IGamePrivateMessage message = privateSession.privateStateMessage(username);
+
+            if (message != null) {
+                gameEventService.sendPrivateState(username, message);
+            }
+        }
+    }
+
     /**
      * Dispatches a start, end, or synchronization action for a lobby game.
      *
@@ -75,10 +102,10 @@ public class GameSessionCoordinator {
      * @param username the requesting username
      */
     private void handleControlAction(
-            GameControlAction action,
-            GameActionMessage message,
-            Lobby lobby,
-            String username
+        GameControlAction action,
+        GameActionMessage message,
+        Lobby lobby,
+        String username
     ) {
         switch (action) {
             case START_GAME -> startGame(message, lobby, username);
@@ -98,11 +125,11 @@ public class GameSessionCoordinator {
         IGameSession session = lobby.getGameSession();
         if (started) {
             systemMods.publishEvent(new GameStartedEvent(
-                    Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
+                Instant.now(), message.lobbyCode(), lobby.getGameDefinition().gameType()
             ));
         }
-        session.setStateChangeListener(() -> broadcastStateIfCurrent(lobby, session));
-        broadcastStateIfCurrent(lobby, session);
+        session.setStateChangeListener(() -> publishState(lobby, session));
+        publishState(lobby, session);
     }
 
     /**
@@ -118,7 +145,7 @@ public class GameSessionCoordinator {
             return;
         }
 
-        gameEventService.broadcastGameEnded(message.lobbyCode(), session, lobby.getHostUsername());
+        rememberAndBroadcastEndedGame(lobby, session);
         if (lobby.endGameIfActive(session)) {
             systemMods.publishEvent(new GameEndedEvent(Instant.now(), message.lobbyCode(), gameType));
         }
@@ -130,7 +157,16 @@ public class GameSessionCoordinator {
     private void syncGame(Lobby lobby) {
         IGameSession session = lobby.getGameSession();
         if (session != null) {
-            broadcastStateIfCurrent(lobby, session);
+            publishState(lobby, session);
+            return;
+        }
+
+        IGameMessage completedGameMessage = lobby.getCompletedGameMessage();
+        if (completedGameMessage != null) {
+            gameEventService.broadcastGameEnded(
+                lobby.getLobbyCode(),
+                completedGameMessage
+            );
         }
     }
 
@@ -139,7 +175,22 @@ public class GameSessionCoordinator {
      */
     private void handleGameAction(GameActionMessage message, Lobby lobby, String username) {
         IGameSession session = lobby.getGameSession();
+
         if (session == null) {
+            return;
+        }
+
+        if (session instanceof ILifelineGameSession lifelineSession
+            && lifelineSession.isLifelineAction(message)) {
+            GameActionResult result = lifelineSession.userLifeline(username, message);
+            if (lobby.getGameSession() != session || !result.accepted()) {
+                return;
+            }
+            if (result.gameEnded()) {
+                finishGame(lobby, session);
+            } else {
+                publishState(lobby, session);
+            }
             return;
         }
 
@@ -152,22 +203,33 @@ public class GameSessionCoordinator {
             return;
         }
         if (result.gameEnded()) {
-            String gameType = lobby.getGameDefinition().gameType();
-            gameEventService.broadcastGameEnded(message.lobbyCode(), session, lobby.getHostUsername());
-            if (lobby.endGameIfActive(session)) {
-                systemMods.publishEvent(new GameEndedEvent(Instant.now(), message.lobbyCode(), gameType));
-            }
+            finishGame(lobby, session);
             return;
         }
-        broadcastStateIfCurrent(lobby, session);
+        publishState(lobby, session);
     }
 
-    /**
-     * Publishes state only while the session remains current.
-     */
-    private void broadcastStateIfCurrent(Lobby lobby, IGameSession session) {
-        if (lobby.getGameSession() == session) {
-            gameEventService.broadcastState(lobby.getLobbyCode(), session);
+    private void finishGame(Lobby lobby, IGameSession session) {
+        String gameType = lobby.getGameDefinition().gameType();
+        rememberAndBroadcastEndedGame(lobby, session);
+        if (lobby.endGameIfActive(session)) {
+            systemMods.publishEvent(new GameEndedEvent(
+                Instant.now(),
+                lobby.getLobbyCode(),
+                gameType
+            ));
         }
+    }
+
+    private void rememberAndBroadcastEndedGame(Lobby lobby, IGameSession session) {
+        IGameMessage endedMessage = session.endedMessage(lobby.getHostUsername());
+        if (endedMessage != null) {
+            lobby.rememberCompletedGame(endedMessage);
+        }
+        gameEventService.broadcastGameEnded(
+            lobby.getLobbyCode(),
+            session,
+            lobby.getHostUsername()
+        );
     }
 }

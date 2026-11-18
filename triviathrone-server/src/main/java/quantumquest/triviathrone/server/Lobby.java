@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.server;
 
 import quantumquest.triviathrone.api.game.IGameDefinition;
+import quantumquest.triviathrone.api.game.IGameMessage;
 import quantumquest.triviathrone.api.game.IGameSession;
 
 import java.util.Objects;
@@ -39,6 +40,7 @@ public class Lobby {
      * Holds the gam ession used by this component.
      */
     private volatile IGameSession gameSession;
+    private volatile IGameMessage completedGameMessage;
 
     /**
      * Creates a Lobby.
@@ -72,6 +74,18 @@ public class Lobby {
      */
     public boolean removeUser(String username) {
         return users.remove(Objects.requireNonNull(username, "username"));
+    }
+
+    public void rememberCompletedGame(IGameMessage message) {
+        this.completedGameMessage = Objects.requireNonNull(message, "message");
+    }
+
+    public void clearCompletedGame() {
+        this.completedGameMessage = null;
+    }
+
+    public IGameMessage getCompletedGameMessage() {
+        return completedGameMessage;
     }
 
     /**

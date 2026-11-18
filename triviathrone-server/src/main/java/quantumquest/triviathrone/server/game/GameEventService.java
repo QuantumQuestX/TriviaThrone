@@ -2,6 +2,8 @@ package quantumquest.triviathrone.server.game;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import quantumquest.triviathrone.api.game.IGamePrivateMessage;
+import quantumquest.triviathrone.api.game.IGameMessage;
 import quantumquest.triviathrone.api.game.IGameSession;
 
 import java.util.Objects;
@@ -50,8 +52,38 @@ public class GameEventService {
      */
     public void broadcastGameEnded(String lobbyCode, IGameSession session, String hostUsername) {
         messagingTemplate.convertAndSend(
-                "/topic/game." + lobbyCode,
-                session.endedMessage(hostUsername)
+            "/topic/game." + lobbyCode,
+            session.endedMessage(hostUsername)
         );
+    }
+
+    /**
+     * Broadcasts an already-created completed-game message to a lobby.
+     *
+     * @param lobbyCode non-null lobby code
+     * @param message   non-null completed-game message
+     */
+    public void broadcastGameEnded(String lobbyCode, IGameMessage message) {
+        messagingTemplate.convertAndSend("/topic/game." + lobbyCode, message);
+    }
+
+    /**
+     * Sends private game state to one authenticated participant.
+     *
+     * @param username non-null participant username
+     * @param message  private message whose recipient must match {@code username}
+     */
+    public void sendPrivateState(String username, IGamePrivateMessage message) {
+        if (message == null) {
+            return;
+        }
+
+        if (!username.equals(message.recipient())) {
+            throw new IllegalArgumentException(
+                "Private message recipient does not match target user"
+            );
+        }
+
+        messagingTemplate.convertAndSendToUser(username, "/queue/game.private", message);
     }
 }

@@ -83,6 +83,10 @@ export function subscribe(topic, callback) {
     return subscription;
 }
 
+export function subscribePrivateGameState(callback) {
+    return subscribe("/user/queue/game.private", callback);
+}
+
 export function unsubscribe(topic) {
     const subscription = subscriptions.get(topic);
 

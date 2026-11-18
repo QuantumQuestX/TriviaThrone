@@ -21,6 +21,7 @@ if (!lobbyCode) {
 }
 
 let lobbySubscription;
+let privateGameSubscription;
 let isLeaving = false;
 let isStartingGame = false;
 
@@ -64,6 +65,14 @@ async function initLobby() {
         } else {
             renderPlayers(data.usernames, data.lobbyHost);
         }
+    });
+
+    privateGameSubscription = socket.subscribePrivateGameState((state) => {
+        if (state?.recipient && state.recipient !== currentUser) {
+            return;
+        }
+
+        sessionStorage.setItem(`game.private-state.${lobbyCode}`, JSON.stringify(state));
     });
 
     socket.send("/app/join", { lobbyCode: lobbyCode });
@@ -173,6 +182,11 @@ document.getElementById("leave-btn").addEventListener("click", () => {
         socket.unsubscribe(`/topic/lobby.${lobbyCode}`);
     }
 
+    if (privateGameSubscription) {
+        socket.unsubscribe("/user/queue/game.private");
+    }
+
+    sessionStorage.removeItem(`game.private-state.${lobbyCode}`);
     socket.disconnect();
     clearLobbyDetails();
     window.location.href = "/";

@@ -2,7 +2,9 @@ package quantumquest.triviathrone.ws;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import quantumquest.triviathrone.api.system.events.GameEndedEvent;
@@ -47,6 +49,7 @@ public class WebSocketLobbyController {
      * Holds the syste ods used by this component.
      */
     private final SystemModManager systemMods;
+    private final WebSocketSessionRegistry sessionRegistry;
 
     /**
      * Creates a WebSocketLobbyController.
@@ -56,16 +59,34 @@ public class WebSocketLobbyController {
      * @param lobbyGameFiles    the lobby game files
      * @param systemMods        the system-mod manager
      */
+    @Autowired
     public WebSocketLobbyController(
-            LobbyService lobbyService,
-            LobbyEventService lobbyEventService,
-            LobbyGameFiles lobbyGameFiles,
-            SystemModManager systemMods
+        LobbyService lobbyService,
+        LobbyEventService lobbyEventService,
+        LobbyGameFiles lobbyGameFiles,
+        SystemModManager systemMods,
+        WebSocketSessionRegistry sessionRegistry
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
         this.lobbyGameFiles = Objects.requireNonNull(lobbyGameFiles, "lobbyGameFiles");
         this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
+        this.sessionRegistry = Objects.requireNonNull(sessionRegistry, "sessionRegistry");
+    }
+
+    public WebSocketLobbyController(
+        LobbyService lobbyService,
+        LobbyEventService lobbyEventService,
+        LobbyGameFiles lobbyGameFiles,
+        SystemModManager systemMods
+    ) {
+        this(
+            lobbyService,
+            lobbyEventService,
+            lobbyGameFiles,
+            systemMods,
+            new WebSocketSessionRegistry()
+        );
     }
 
     /**
@@ -74,8 +95,12 @@ public class WebSocketLobbyController {
      * @param msg       the msg
      * @param principal the principal
      */
-    @MessageMapping("/join")
     public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
+        join(msg, principal, null);
+    }
+
+    @MessageMapping("/join")
+    public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal, SimpMessageHeaderAccessor headers) {
         Objects.requireNonNull(msg, "msg");
         Objects.requireNonNull(principal, "principal");
         logger.info("OnJoin: {} joined lobby with code {}", principal.getName(), msg.lobbyCode());
@@ -83,9 +108,19 @@ public class WebSocketLobbyController {
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
             boolean joined = lobby.addUser(username);
+
             if (joined) {
                 systemMods.publishEvent(new PlayerJoinedLobbyEvent(Instant.now(), msg.lobbyCode(), username));
             }
+
+            if (headers != null && headers.getSessionId() != null) {
+                sessionRegistry.register(
+                    headers.getSessionId(),
+                    msg.lobbyCode(),
+                    username
+                );
+            }
+
             lobbyEventService.userJoined(msg.lobbyCode(), lobby.getHostUsername(), username);
         });
     }
@@ -97,7 +132,10 @@ public class WebSocketLobbyController {
      * @param principal the principal
      */
     @MessageMapping("/leave")
-    public void leave(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
+    public void leave(
+        LobbyCommonMessage msg,
+        @AuthenticationPrincipal Principal principal
+    ) {
         Objects.requireNonNull(msg, "msg");
         Objects.requireNonNull(principal, "principal");
         logger.info("OnLeave: {} left lobby with code {}", principal.getName(), msg.lobbyCode());
@@ -106,6 +144,11 @@ public class WebSocketLobbyController {
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
             boolean left = lobby.removeUser(username);
             if (left) {
+                sessionRegistry.removeForUser(msg.lobbyCode(), username);
+                if (lobby.getGameSession()
+                    instanceof quantumquest.triviathrone.api.game.IDisconnectAwareGameSession session) {
+                    session.playerDisconnected(username);
+                }
                 systemMods.publishEvent(new PlayerLeftLobbyEvent(Instant.now(), msg.lobbyCode(), username));
             }
             lobbyEventService.userLeft(msg.lobbyCode(), lobby.getHostUsername(), username);

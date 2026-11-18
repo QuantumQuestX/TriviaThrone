@@ -8,13 +8,14 @@ import java.time.Instant;
  * @author TiJ
  * @since 2.0.0
  */
-public sealed interface ISystemEvent permits
-        LobbyCreatedEvent,
-        LobbyClosedEvent,
-        PlayerJoinedLobbyEvent,
-        PlayerLeftLobbyEvent,
-        GameStartedEvent,
-        GameEndedEvent {
+public sealed interface ISystemEvent
+        permits GameEndedEvent,
+            GameStartedEvent,
+            LobbyClosedEvent,
+            LobbyCreatedEvent,
+            PlayerDisconnectedEvent,
+            PlayerJoinedLobbyEvent,
+            PlayerLeftLobbyEvent {
     /**
      * Returns the instant at which this event occurred.
      */

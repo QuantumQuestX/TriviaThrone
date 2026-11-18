@@ -12,7 +12,7 @@ public final class GameApi {
     /**
      * Current semantic version of this API. Compatibility is determined by major version.
      */
-    public static final String CURRENT_VERSION = "2.0.0";
+    public static final String CURRENT_VERSION = "2.2.0";
 
     /**
      * Prevents instantiation of this utility class.

@@ -83,6 +83,12 @@ export function subscribe(topic, callback) {
     return subscription;
 }
 
+/**
+ * Subscribes to the authenticated user's private game-state queue.
+ *
+ * @param {Function} callback receives each parsed private game-state message
+ * @returns {Object} the STOMP subscription
+ */
 export function subscribePrivateGameState(callback) {
     return subscribe("/user/queue/game.private", callback);
 }

@@ -67,6 +67,7 @@ async function initLobby() {
         }
     });
 
+    // Keep the latest recipient-specific state available to the mod-provided game page.
     privateGameSubscription = socket.subscribePrivateGameState((state) => {
         if (state?.recipient && state.recipient !== currentUser) {
             return;

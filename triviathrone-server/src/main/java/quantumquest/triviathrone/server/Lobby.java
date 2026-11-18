@@ -40,6 +40,9 @@ public class Lobby {
      * Holds the gam ession used by this component.
      */
     private volatile IGameSession gameSession;
+    /**
+     * Holds the last completed game message for synchronization after the session is closed.
+     */
     private volatile IGameMessage completedGameMessage;
 
     /**
@@ -76,14 +79,27 @@ public class Lobby {
         return users.remove(Objects.requireNonNull(username, "username"));
     }
 
+    /**
+     * Stores the terminal message of the completed game.
+     *
+     * @param message non-null completed-game message
+     */
     public void rememberCompletedGame(IGameMessage message) {
         this.completedGameMessage = Objects.requireNonNull(message, "message");
     }
 
+    /**
+     * Removes the cached completed-game message.
+     */
     public void clearCompletedGame() {
         this.completedGameMessage = null;
     }
 
+    /**
+     * Returns the cached terminal message of the last completed game.
+     *
+     * @return the completed-game message, or {@code null} when none is cached
+     */
     public IGameMessage getCompletedGameMessage() {
         return completedGameMessage;
     }

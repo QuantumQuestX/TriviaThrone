@@ -11,6 +11,9 @@ import java.util.Objects;
 /**
  * Publishes game state and completion messages over STOMP.
  *
+ * <p>Public messages use {@code /topic/game.{lobbyCode}}. Recipient-specific messages
+ * use {@code /user/queue/game.private}.</p>
+ *
  * @author TiJ
  * @since 2.0.0
  */

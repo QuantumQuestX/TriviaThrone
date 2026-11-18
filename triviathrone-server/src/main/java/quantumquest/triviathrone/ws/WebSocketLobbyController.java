@@ -49,6 +49,9 @@ public class WebSocketLobbyController {
      * Holds the syste ods used by this component.
      */
     private final SystemModManager systemMods;
+    /**
+     * Tracks WebSocket sessions so disconnects can update lobby membership.
+     */
     private final WebSocketSessionRegistry sessionRegistry;
 
     /**
@@ -58,6 +61,7 @@ public class WebSocketLobbyController {
      * @param lobbyEventService the lobby event service
      * @param lobbyGameFiles    the lobby game files
      * @param systemMods        the system-mod manager
+     * @param sessionRegistry   the WebSocket session registry
      */
     @Autowired
     public WebSocketLobbyController(
@@ -74,6 +78,16 @@ public class WebSocketLobbyController {
         this.sessionRegistry = Objects.requireNonNull(sessionRegistry, "sessionRegistry");
     }
 
+    /**
+     * Creates a controller with a local WebSocket session registry.
+     *
+     * <p>This overload is retained for callers that construct the controller directly.</p>
+     *
+     * @param lobbyService      the lobby service
+     * @param lobbyEventService the lobby event service
+     * @param lobbyGameFiles    the lobby game files
+     * @param systemMods        the system-mod manager
+     */
     public WebSocketLobbyController(
         LobbyService lobbyService,
         LobbyEventService lobbyEventService,
@@ -92,13 +106,20 @@ public class WebSocketLobbyController {
     /**
      * Handles a STOMP join message and broadcasts the lobby membership change.
      *
-     * @param msg       the msg
-     * @param principal the principal
+     * @param msg       the join message
+     * @param principal the authenticated participant
      */
     public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
         join(msg, principal, null);
     }
 
+    /**
+     * Handles a STOMP join message and registers its WebSocket session.
+     *
+     * @param msg       the join message
+     * @param principal the authenticated participant
+     * @param headers   the STOMP headers, when available
+     */
     @MessageMapping("/join")
     public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal, SimpMessageHeaderAccessor headers) {
         Objects.requireNonNull(msg, "msg");
@@ -128,8 +149,11 @@ public class WebSocketLobbyController {
     /**
      * Handles a STOMP leave message and removes an empty lobby when necessary.
      *
-     * @param msg       the msg
-     * @param principal the principal
+     * <p>Explicit leaves also remove the participant from the WebSocket session registry
+     * and notify disconnect-aware game sessions.</p>
+     *
+     * @param msg       the leave message
+     * @param principal the authenticated participant
      */
     @MessageMapping("/leave")
     public void leave(

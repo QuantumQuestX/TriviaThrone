@@ -24,12 +24,30 @@ import java.time.Instant;
  */
 @Component
 public final class WebSocketDisconnectHandler {
+    /**
+     * Logs disconnect cleanup events.
+     */
     private static final Logger logger =
         LoggerFactory.getLogger(WebSocketDisconnectHandler.class);
+    /**
+     * Tracks WebSocket sessions and their lobby participants.
+     */
     private final WebSocketSessionRegistry sessionRegistry;
+    /**
+     * Provides access to active lobbies.
+     */
     private final LobbyService lobbyService;
+    /**
+     * Publishes system events.
+     */
     private final SystemModManager systemMods;
+    /**
+     * Publishes lobby membership changes.
+     */
     private final LobbyEventService lobbyEventService;
+    /**
+     * Removes uploaded files when a lobby becomes empty.
+     */
     private final LobbyGameFiles lobbyGameFiles;
 
     /**
@@ -57,6 +75,9 @@ public final class WebSocketDisconnectHandler {
 
     /**
      * Removes the disconnected participant from its lobby and notifies interested components.
+     *
+     * <p>This emits a {@link PlayerDisconnectedEvent}, invokes
+     * {@link IDisconnectAwareGameSession} when supported, and removes empty lobbies.</p>
      *
      * @param event the WebSocket disconnect event
      */

@@ -70,6 +70,12 @@ public class GameSessionCoordinator {
         handleGameAction(message, lobby, username);
     }
 
+    /**
+     * Publishes public state and, when supported, recipient-specific private state.
+     *
+     * @param lobby   the affected lobby
+     * @param session the session whose state is published
+     */
     private void publishState(Lobby lobby, IGameSession session) {
         if (lobby.getGameSession() != session) {
             return;
@@ -154,6 +160,11 @@ public class GameSessionCoordinator {
     /**
      * Publishes the current game state to its lobby.
      */
+    /**
+     * Replays the cached terminal message when no active session remains.
+     *
+     * @param lobby the lobby whose completed game is synchronized
+     */
     private void syncGame(Lobby lobby) {
         IGameSession session = lobby.getGameSession();
         if (session != null) {
@@ -209,6 +220,12 @@ public class GameSessionCoordinator {
         publishState(lobby, session);
     }
 
+    /**
+     * Ends a session, caches its terminal message, and emits the system event.
+     *
+     * @param lobby   the affected lobby
+     * @param session the session being ended
+     */
     private void finishGame(Lobby lobby, IGameSession session) {
         String gameType = lobby.getGameDefinition().gameType();
         rememberAndBroadcastEndedGame(lobby, session);
@@ -221,6 +238,12 @@ public class GameSessionCoordinator {
         }
     }
 
+    /**
+     * Creates, caches, and broadcasts a terminal game message.
+     *
+     * @param lobby   the affected lobby
+     * @param session the session that produced the terminal message
+     */
     private void rememberAndBroadcastEndedGame(Lobby lobby, IGameSession session) {
         IGameMessage endedMessage = session.endedMessage(lobby.getHostUsername());
         if (endedMessage != null) {

@@ -378,3 +378,16 @@ jobs:
           ./mvnw --batch-mode --no-transfer-progress
           -pl triviathrone-api/shared-api,triviathrone-api/game-api,triviathrone-api/system-api
           -Pcentral-release deploy
+
+  publish-javadocs:
+    name: Publish Javadocs
+    needs:
+      - resolve-version
+      - publish-maven-central
+    uses: ./.github/workflows/publish-javadocs.yml
+    with:
+      ref: ${{ needs.resolve-version.outputs.tag }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

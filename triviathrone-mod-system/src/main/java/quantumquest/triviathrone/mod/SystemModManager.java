@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -85,6 +86,28 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
     }
 
     /**
+     * Loads system providers after registering host-provided services.
+     *
+     * @param modsDirectory       directory containing system-mod JARs
+     * @param context             shared host context
+     * @param hostServiceRegistrar callback registering services available to providers
+     * @return an initialized manager
+     * @throws IOException if loading or initialization fails
+     */
+    public static SystemModManager load(
+            Path modsDirectory,
+            SystemProviderContext context,
+            Consumer<SystemServiceRegistry> hostServiceRegistrar
+    ) throws IOException {
+        return load(
+                modsDirectory,
+                context,
+                ISystemProvider.class.getClassLoader(),
+                hostServiceRegistrar
+        );
+    }
+
+    /**
      * Loads system providers using an explicit parent class loader.
      *
      * @param modsDirectory     directory containing system-mod JARs
@@ -100,12 +123,23 @@ public final class SystemModManager implements SystemServiceRegistry, AutoClosea
             SystemProviderContext context,
             ClassLoader parentClassLoader
     ) throws IOException {
+        return load(modsDirectory, context, parentClassLoader, ignored -> { });
+    }
+
+    private static SystemModManager load(
+            Path modsDirectory,
+            SystemProviderContext context,
+            ClassLoader parentClassLoader,
+            Consumer<SystemServiceRegistry> hostServiceRegistrar
+    ) throws IOException {
         Objects.requireNonNull(modsDirectory, "modsDirectory");
         Objects.requireNonNull(context, "context");
         Objects.requireNonNull(parentClassLoader, "parentClassLoader");
+        Objects.requireNonNull(hostServiceRegistrar, "hostServiceRegistrar");
 
         SystemModManager manager = new SystemModManager();
         try {
+            hostServiceRegistrar.accept(manager);
             Files.createDirectories(modsDirectory);
             Files.createDirectories(context.dataDirectory());
 

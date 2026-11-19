@@ -1,5 +1,6 @@
 package quantumquest.triviathrone.server;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +8,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import quantumquest.triviathrone.api.system.SystemProviderContext;
+import quantumquest.triviathrone.api.system.lobby.ISystemLobbyQuery;
 import quantumquest.triviathrone.auth.IRefreshTokenSessionRepository;
 import quantumquest.triviathrone.auth.IUserAccountRepository;
 import quantumquest.triviathrone.mod.SystemModManager;
@@ -53,11 +55,16 @@ public class SystemModConfiguration {
     public SystemModManager systemModManager(
             @Value("${triviathrone.mods.system-directory:mods/system}") String modsDirectory,
             @Value("${triviathrone.system.data-directory:data/system}") String dataDirectory,
-            ConfigurableEnvironment environment
+            ConfigurableEnvironment environment,
+            ObjectProvider<LobbyService> lobbyService
     ) throws IOException {
         return SystemModManager.load(
             Path.of(modsDirectory),
-            new SystemProviderContext(Path.of(dataDirectory), systemConfiguration(environment))
+            new SystemProviderContext(Path.of(dataDirectory), systemConfiguration(environment)),
+            services -> services.register(
+                    ISystemLobbyQuery.class,
+                    new SystemLobbyQuery(lobbyService::getObject)
+            )
         );
     }
 

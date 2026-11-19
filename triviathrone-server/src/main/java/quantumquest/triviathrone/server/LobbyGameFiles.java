@@ -177,8 +177,8 @@ public class LobbyGameFiles {
             GamePackageManifest manifest = GamePackageManifest.read(stagingDir);
             IGameProvider provider = gameProviders.providerForPackage(manifest)
                     .orElseThrow(() -> new IllegalArgumentException(
-                    "No installed provider matches the game package manifest."
-                ));
+                            "No installed provider matches the game package manifest."
+                    ));
             if (!provider.supportsFile(filename)) {
                 throw new IllegalArgumentException("The game package provider does not support this file type.");
             }

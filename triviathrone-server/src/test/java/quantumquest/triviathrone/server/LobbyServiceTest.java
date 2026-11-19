@@ -7,9 +7,12 @@ import quantumquest.triviathrone.auth.UserAccount;
 import quantumquest.triviathrone.mod.SystemModManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -32,5 +35,34 @@ class LobbyServiceTest {
         assertEquals(lobby.getLobbyCode(), created.lobbyCode());
         assertEquals("host", created.hostUsername());
         assertEquals(lobby.getLobbyCode(), closed.lobbyCode());
+    }
+
+    @Test
+    void supportsPasswordProtectedLobbiesWithoutExposingThePassword() {
+        SystemModManager systemMods = mock(SystemModManager.class);
+        UserAccount host = new UserAccount();
+        host.setUsername("host");
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        LobbyService lobbyService = new LobbyService(systemMods, encoder);
+
+        Lobby lobby = lobbyService.createLobby("Private lobby", host, "StrongPassword1!");
+
+        assertTrue(lobby.isPasswordProtected());
+        assertTrue(lobby.acceptsPassword("StrongPassword1!", encoder));
+        assertFalse(lobby.acceptsPassword("WrongPassword1!", encoder));
+        assertFalse(lobby.toString().contains("StrongPassword1!"));
+        assertFalse(lobby.toString().contains("$2"));
+    }
+
+    @Test
+    void legacyLobbyCreationRemainsOpen() {
+        SystemModManager systemMods = mock(SystemModManager.class);
+        UserAccount host = new UserAccount();
+        host.setUsername("host");
+
+        Lobby lobby = new LobbyService(systemMods).createLobby("Open lobby", host);
+
+        assertFalse(lobby.isPasswordProtected());
+        assertTrue(lobby.acceptsPassword(null, new BCryptPasswordEncoder()));
     }
 }

@@ -105,6 +105,7 @@ public class LobbyController {
     @PostMapping("/create")
     public LobbyCommonMessage createLobby(
             @RequestParam("name") String name,
+            @RequestParam(value = "password", required = false) String password,
             @AuthenticationPrincipal UserAccount user
     ) {
         if (name.isBlank()) {
@@ -112,7 +113,7 @@ public class LobbyController {
         }
 
         logger.info("Creating lobby with name {} for user {}", name, user.getUsername());
-        Lobby lobby = lobbyService.createLobby(name, user);
+        Lobby lobby = lobbyService.createLobby(name, user, password);
         return new LobbyCommonMessage(lobby.getLobbyName(), lobby.getLobbyCode());
     }
 }

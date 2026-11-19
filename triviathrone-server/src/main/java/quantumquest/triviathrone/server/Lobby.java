@@ -1,5 +1,6 @@
 package quantumquest.triviathrone.server;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import quantumquest.triviathrone.api.game.IGameDefinition;
 import quantumquest.triviathrone.api.game.IGameMessage;
 import quantumquest.triviathrone.api.game.IGameSession;
@@ -27,6 +28,7 @@ public class Lobby {
      * Holds the hos ser used by this component.
      */
     private final String hostUser;
+    private final String passwordHash;
     /**
      * Stores an internal helper required by this component.
      */
@@ -53,9 +55,14 @@ public class Lobby {
      * @param hostUser the host username
      */
     public Lobby(String code, String name, String hostUser) {
+        this(code, name, hostUser, null);
+    }
+
+    public Lobby(String code, String name, String hostUser, String passwordHash) {
         this.code = Objects.requireNonNull(code, "code");
         this.name = Objects.requireNonNull(name, "name");
         this.hostUser = Objects.requireNonNull(hostUser, "hostUser");
+        this.passwordHash = passwordHash;
         users.add(hostUser);
     }
 
@@ -104,6 +111,10 @@ public class Lobby {
         return completedGameMessage;
     }
 
+    public boolean isPasswordProtected() {
+        return passwordHash != null;
+    }
+
     /**
      * Returns the lobby code.
      */
@@ -132,6 +143,11 @@ public class Lobby {
      */
     public Set<String> listUsernames() {
         return Set.copyOf(users);
+    }
+
+    public boolean acceptsPassword(String password, PasswordEncoder passwordEncoder) {
+        Objects.requireNonNull(passwordEncoder, "passwordEncoder");
+        return passwordHash == null || password != null && passwordEncoder.matches(password, passwordHash);
     }
 
     /**

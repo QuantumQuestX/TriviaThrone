@@ -2,9 +2,12 @@ package quantumquest.triviathrone.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import quantumquest.triviathrone.api.system.events.LobbyClosedEvent;
 import quantumquest.triviathrone.api.system.events.LobbyCreatedEvent;
+import quantumquest.triviathrone.auth.PasswordUtils;
 import quantumquest.triviathrone.auth.UserAccount;
 import quantumquest.triviathrone.mod.SystemModManager;
 
@@ -45,6 +48,7 @@ public class LobbyService {
      * Holds the syste ods used by this component.
      */
     private final SystemModManager systemMods;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Creates a LobbyService.
@@ -52,7 +56,12 @@ public class LobbyService {
      * @param systemMods the system-mod manager
      */
     public LobbyService(SystemModManager systemMods) {
+        this(systemMods, new BCryptPasswordEncoder());
+    }
+
+    public LobbyService(SystemModManager systemMods, PasswordEncoder passwordEncoder) {
         this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
+        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");
     }
 
     /**
@@ -63,14 +72,28 @@ public class LobbyService {
      * @return the created a lobby hosted by the authenticated user
      */
     public Lobby createLobby(String name, UserAccount hostAccount) {
+        return createLobby(name, hostAccount, null);
+    }
+
+    public Lobby createLobby(String name, UserAccount hostAccount, String password) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(hostAccount, "hostAccount");
+
+        String normalizedPassword = password == null || password.isBlank() ? null : password;
+        if (normalizedPassword != null) {
+            PasswordUtils.validate(normalizedPassword);
+        }
+
         String hostUsername = Objects.requireNonNull(hostAccount.getUsername(), "host username");
         Lobby lobby;
         String code;
+
         do {
             code = generateCode();
-            lobby = new Lobby(code, name, hostUsername);
+            String passwordHash = normalizedPassword == null
+                ? null
+                : passwordEncoder.encode(normalizedPassword);
+            lobby = new Lobby(code, name, hostUsername, passwordHash);
         } while (lobbies.putIfAbsent(code, lobby) != null);
 
         logger.info("Creating lobby with code {} by {}", code, hostUsername);

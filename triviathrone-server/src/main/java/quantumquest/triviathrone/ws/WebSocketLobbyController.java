@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import quantumquest.triviathrone.api.system.events.GameEndedEvent;
 import quantumquest.triviathrone.api.system.events.PlayerJoinedLobbyEvent;
 import quantumquest.triviathrone.api.system.events.PlayerLeftLobbyEvent;
 import quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
+import quantumquest.triviathrone.dto.lobby.LobbyJoinMessage;
 import quantumquest.triviathrone.mod.SystemModManager;
 import quantumquest.triviathrone.server.LobbyEventService;
 import quantumquest.triviathrone.server.LobbyGameFiles;
@@ -53,6 +56,7 @@ public class WebSocketLobbyController {
      * Tracks WebSocket sessions so disconnects can update lobby membership.
      */
     private final WebSocketSessionRegistry sessionRegistry;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Creates a WebSocketLobbyController.
@@ -69,13 +73,15 @@ public class WebSocketLobbyController {
         LobbyEventService lobbyEventService,
         LobbyGameFiles lobbyGameFiles,
         SystemModManager systemMods,
-        WebSocketSessionRegistry sessionRegistry
+        WebSocketSessionRegistry sessionRegistry,
+        PasswordEncoder passwordEncoder
     ) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
         this.lobbyEventService = Objects.requireNonNull(lobbyEventService, "lobbyEventService");
         this.lobbyGameFiles = Objects.requireNonNull(lobbyGameFiles, "lobbyGameFiles");
         this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
         this.sessionRegistry = Objects.requireNonNull(sessionRegistry, "sessionRegistry");
+        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");
     }
 
     /**
@@ -99,7 +105,8 @@ public class WebSocketLobbyController {
             lobbyEventService,
             lobbyGameFiles,
             systemMods,
-            new WebSocketSessionRegistry()
+            new WebSocketSessionRegistry(),
+            new BCryptPasswordEncoder()
         );
     }
 
@@ -110,7 +117,7 @@ public class WebSocketLobbyController {
      * @param principal the authenticated participant
      */
     public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal) {
-        join(msg, principal, null);
+        join(new LobbyJoinMessage(msg.name(), msg.lobbyCode(), null), principal, null);
     }
 
     /**
@@ -121,13 +128,17 @@ public class WebSocketLobbyController {
      * @param headers   the STOMP headers, when available
      */
     @MessageMapping("/join")
-    public void join(LobbyCommonMessage msg, @AuthenticationPrincipal Principal principal, SimpMessageHeaderAccessor headers) {
+    public void join(LobbyJoinMessage msg, @AuthenticationPrincipal Principal principal, SimpMessageHeaderAccessor headers) {
         Objects.requireNonNull(msg, "msg");
         Objects.requireNonNull(principal, "principal");
-        logger.info("OnJoin: {} joined lobby with code {}", principal.getName(), msg.lobbyCode());
+        logger.info("Join requested by {} for lobby {}", principal.getName(), msg.lobbyCode());
         String username = principal.getName();
 
         lobbyService.getLobby(msg.lobbyCode()).ifPresent(lobby -> {
+            if (!lobby.acceptsPassword(msg.password(), passwordEncoder)) {
+                logger.warn("Rejected lobby join for {} by {}", msg.lobbyCode(), username);
+                return;
+            }
             boolean joined = lobby.addUser(username);
 
             if (joined) {

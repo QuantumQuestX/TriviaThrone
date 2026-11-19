@@ -2,9 +2,13 @@ package quantumquest.triviathrone.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +39,7 @@ public class LobbyController {
      * Holds the lobb ervice used by this component.
      */
     private final LobbyService lobbyService;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Creates a LobbyController.
@@ -42,7 +47,19 @@ public class LobbyController {
      * @param lobbyService the lobby service
      */
     public LobbyController(LobbyService lobbyService) {
+        this(lobbyService, new BCryptPasswordEncoder());
+    }
+
+    /**
+     * Creates a LobbyController with the configured password encoder.
+     *
+     * @param lobbyService the lobby service
+     * @param passwordEncoder encoder for lobby passwords
+     */
+    @Autowired
+    public LobbyController(LobbyService lobbyService, PasswordEncoder passwordEncoder) {
         this.lobbyService = Objects.requireNonNull(lobbyService, "lobbyService");
+        this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");
     }
 
     /**
@@ -93,6 +110,29 @@ public class LobbyController {
             return false;
         }
         return lobbyService.getLobby(code).isPresent();
+    }
+
+    /**
+     * Verifies a lobby password before the client opens the lobby screen.
+     *
+     * @param code     lobby code to join
+     * @param password optional lobby password
+     */
+    @PostMapping("/join")
+    public void verifyJoinPassword(
+            @RequestParam("code") String code,
+            @RequestBody(required = false) LobbyJoinRequest request
+    ) {
+        if (code.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Lobby code cannot be empty");
+        }
+
+        Lobby lobby = lobbyService.getLobby(code)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lobby does not exist"));
+        String password = request == null ? null : request.password();
+        if (!lobby.acceptsPassword(password, passwordEncoder)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Incorrect lobby password");
+        }
     }
 
     /**

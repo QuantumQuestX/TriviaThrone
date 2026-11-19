@@ -98,7 +98,8 @@ public class LobbyController {
     /**
      * Creates a lobby hosted by the authenticated user.
      *
-     * @param name the lobby name
+     * @param name     the lobby name
+     * @param password optional lobby password
      * @param user the user account
      * @return the created a lobby hosted by the authenticated user
      */

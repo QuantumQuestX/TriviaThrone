@@ -10,9 +10,10 @@ import quantumquest.triviathrone.api.shared.ApiVersion;
  */
 public final class SystemApi {
     /**
-     * Current semantic version of this API. Compatibility is determined by major version.
+     * Current semantic version of this API. Providers must require this major version
+     * and no newer minor or patch version.
      */
-    public static final String CURRENT_VERSION = "2.2.0";
+    public static final String CURRENT_VERSION = "2.3.0";
 
     /**
      * Prevents instantiation of this utility class.
@@ -28,7 +29,8 @@ public final class SystemApi {
      * @throws IllegalArgumentException if the version is absent or invalid
      */
     public static boolean isCompatible(String apiVersion) {
-        return isCompatibleMajor(ApiVersion.parse(apiVersion).major());
+        return isCompatibleMajor(ApiVersion.parse(apiVersion).major())
+                && ApiVersion.compare(apiVersion, CURRENT_VERSION) <= 0;
     }
 
     /**

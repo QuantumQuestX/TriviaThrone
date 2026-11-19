@@ -9,7 +9,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import quantumquest.triviathrone.api.system.events.GameEndedEvent;
 import quantumquest.triviathrone.api.system.events.PlayerJoinedLobbyEvent;
 import quantumquest.triviathrone.api.system.events.PlayerLeftLobbyEvent;
 import quantumquest.triviathrone.dto.lobby.LobbyCommonMessage;
@@ -187,14 +186,8 @@ public class WebSocketLobbyController {
                 systemMods.publishEvent(new PlayerLeftLobbyEvent(Instant.now(), msg.lobbyCode(), username));
             }
             lobbyEventService.userLeft(msg.lobbyCode(), lobby.getHostUsername(), username);
-            if (lobby.listUsernames().isEmpty()) {
+            if (lobby.listUsernames().isEmpty() && !lobby.hasActiveGame()) {
                 logger.info("Lobby with code {} is empty. Deleting...", msg.lobbyCode());
-                if (lobby.hasActiveGame()) {
-                    String gameType = lobby.getGameDefinition().gameType();
-                    if (lobby.endGameIfActive()) {
-                        systemMods.publishEvent(new GameEndedEvent(Instant.now(), msg.lobbyCode(), gameType));
-                    }
-                }
                 lobbyService.removeLobby(lobby.getLobbyCode());
                 try {
                     lobbyGameFiles.deleteLobbyFiles(lobby.getLobbyCode());

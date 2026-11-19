@@ -58,6 +58,14 @@ public class Lobby {
         this(code, name, hostUser, null);
     }
 
+    /**
+     * Creates a lobby with an optional BCrypt password hash.
+     *
+     * @param code lobby code
+     * @param name lobby name
+     * @param hostUser host username
+     * @param passwordHash password hash, or {@code null} for an open lobby
+     */
     public Lobby(String code, String name, String hostUser, String passwordHash) {
         this.code = Objects.requireNonNull(code, "code");
         this.name = Objects.requireNonNull(name, "name");
@@ -111,6 +119,9 @@ public class Lobby {
         return completedGameMessage;
     }
 
+    /**
+     * Reports whether this lobby requires a join password.
+     */
     public boolean isPasswordProtected() {
         return passwordHash != null;
     }
@@ -145,6 +156,13 @@ public class Lobby {
         return Set.copyOf(users);
     }
 
+    /**
+     * Checks a supplied password without exposing the stored hash.
+     *
+     * @param password candidate password, possibly {@code null}
+     * @param passwordEncoder encoder used for the stored hash
+     * @return whether the candidate is accepted
+     */
     public boolean acceptsPassword(String password, PasswordEncoder passwordEncoder) {
         Objects.requireNonNull(passwordEncoder, "passwordEncoder");
         return passwordHash == null || password != null && passwordEncoder.matches(password, passwordHash);

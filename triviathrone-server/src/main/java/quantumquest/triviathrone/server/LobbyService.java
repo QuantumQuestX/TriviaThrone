@@ -48,12 +48,16 @@ public class LobbyService {
      * Holds the syste ods used by this component.
      */
     private final SystemModManager systemMods;
+    /**
+     * Encodes passwords before they are stored in lobby state.
+     */
     private final PasswordEncoder passwordEncoder;
 
     /**
      * Creates a LobbyService.
      *
-     * @param systemMods the system-mod manager
+     * @param systemMods      the system-mod manager
+     * @param passwordEncoder encoder for lobby passwords
      */
     public LobbyService(SystemModManager systemMods) {
         this(systemMods, new BCryptPasswordEncoder());

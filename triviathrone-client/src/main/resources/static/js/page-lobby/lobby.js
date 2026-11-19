@@ -1,6 +1,6 @@
 import { apiFetch } from "../root/api.js";
 import { getCurrentUser } from "../root/auth.js";
-import { clearLobbyDetails, getLobbyDetails } from "../root/lobby-storage.js";
+import { clearLobbyDetails, getLobbyDetails, getLobbyPassword } from "../root/lobby-storage.js";
 import { handleDeltaMessage, handleHostUploadedGameMessage } from "./messages.js";
 import * as socket from "../root/socket.js";
 
@@ -16,7 +16,9 @@ if (!lobbyCode) {
     document.getElementById("lobby-code").textContent = lobbyCode;
     initLobby().catch((error) => {
         console.error("Could not initialize the lobby.", error);
-        addFeedMessage("Could not connect to this lobby. Please return to the dashboard and try again.");
+        clearLobbyDetails();
+        window.alert(error.message || "Could not join this lobby.");
+        window.location.href = "/";
     });
 }
 
@@ -43,6 +45,22 @@ async function getLobbyData(code) {
     }
 
     return response.json();
+}
+
+async function waitForMembership(code) {
+    const deadline = Date.now() + 5000;
+
+    while (Date.now() < deadline) {
+        const lobbyData = await getLobbyData(code);
+
+        if (lobbyData?.usernames?.includes(currentUser)) {
+            return lobbyData;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 200));
+    }
+
+    throw new Error("The lobby password was rejected or the lobby is unavailable.");
 }
 
 async function initLobby() {
@@ -76,15 +94,13 @@ async function initLobby() {
         sessionStorage.setItem(`game.private-state.${lobbyCode}`, JSON.stringify(state));
     });
 
-    socket.send("/app/join", { lobbyCode: lobbyCode });
+    socket.send("/app/join", {
+        name: currentUser,
+        lobbyCode: lobbyCode,
+        password: getLobbyPassword() || null,
+    });
 
-    const lobbyData = await getLobbyData(lobbyCode);
-
-    if (!lobbyData) {
-        window.location.href = "/";
-
-        return;
-    }
+    const lobbyData = await waitForMembership(lobbyCode);
 
     renderPlayers(lobbyData.usernames, lobbyData.lobbyHost);
     removeHostElements(lobbyData.lobbyHost);

@@ -52,10 +52,10 @@ public class TokenService {
         Instant now = Instant.now();
 
         return Jwts.builder()
-            .setSubject(user.getUsername())
+            .subject(user.getUsername())
             .claim("roles", user.getRoles())
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(now.plusSeconds(validitySeconds)))
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(now.plusSeconds(validitySeconds)))
             .signWith(key)
             .compact();
     }
@@ -68,10 +68,10 @@ public class TokenService {
      */
     public Jws<Claims> parse(String token) {
         Objects.requireNonNull(token, "token");
-        return Jwts.parserBuilder()
-            .setSigningKey(key)
+        return Jwts.parser()
+            .verifyWith(key)
             .build()
-            .parseClaimsJws(token);
+            .parseSignedClaims(token);
     }
 
     /**

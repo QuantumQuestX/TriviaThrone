@@ -2,6 +2,7 @@ package quantumquest.triviathrone.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -63,6 +64,7 @@ public class LobbyService {
         this(systemMods, new BCryptPasswordEncoder());
     }
 
+    @Autowired
     public LobbyService(SystemModManager systemMods, PasswordEncoder passwordEncoder) {
         this.systemMods = Objects.requireNonNull(systemMods, "systemMods");
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "passwordEncoder");

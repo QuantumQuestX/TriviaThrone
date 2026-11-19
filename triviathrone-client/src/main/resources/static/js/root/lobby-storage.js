@@ -1,4 +1,5 @@
 const LOBBY_DETAILS_KEY = "lobbyDetails";
+const LOBBY_PASSWORD_KEY = "lobbyPassword";
 
 export function getLobbyDetails() {
     try {
@@ -28,4 +29,17 @@ export function saveLobbyDetails(details) {
 
 export function clearLobbyDetails() {
     localStorage.removeItem(LOBBY_DETAILS_KEY);
+    sessionStorage.removeItem(LOBBY_PASSWORD_KEY);
+}
+
+export function saveLobbyPassword(password) {
+    if (password) {
+        sessionStorage.setItem(LOBBY_PASSWORD_KEY, password);
+    } else {
+        sessionStorage.removeItem(LOBBY_PASSWORD_KEY);
+    }
+}
+
+export function getLobbyPassword() {
+    return sessionStorage.getItem(LOBBY_PASSWORD_KEY) ?? "";
 }

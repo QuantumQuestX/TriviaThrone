@@ -119,6 +119,7 @@ public final class GamePackageManifestXml {
                     requiredAttribute(mod, "id"),
                     requiredAttribute(mod, "version"),
                     requiredAttribute(mod, "apiVersion"),
+                    optionalAttribute(mod, "apiMaximumExclusive"),
                     requiredAttribute(game, "type"),
                     requiredAttribute(game, "providerClass"),
                     requiredAttribute(game, "dataFile"),
@@ -157,6 +158,9 @@ public final class GamePackageManifestXml {
             xml.writeAttribute("id", manifest.modId());
             xml.writeAttribute("version", manifest.modVersion());
             xml.writeAttribute("apiVersion", manifest.apiVersion());
+            if (manifest.apiMaximumExclusive() != null) {
+                xml.writeAttribute("apiMaximumExclusive", manifest.apiMaximumExclusive());
+            }
             xml.writeEmptyElement("game");
             xml.writeAttribute("type", manifest.gameType());
             xml.writeAttribute("providerClass", manifest.providerClass());

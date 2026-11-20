@@ -115,11 +115,7 @@ public final class GameModManager implements AutoCloseable {
      */
     private void loadJar(Path jar, Set<String> gameTypes, Set<String> modIds) throws IOException {
         ModDescriptor descriptor = ModMetadataLoader.load(jar);
-        if (!GameApi.isCompatible(
-                descriptor.apiVersion(),
-                descriptor.apiMinimum(),
-                descriptor.apiMaximumExclusive()
-        )) {
+        if (!GameApi.isCompatible(descriptor.apiVersion(), descriptor.apiMaximumExclusive())) {
             throw new IllegalStateException(
                 "Game mod " + descriptor.id() + " requires API " + descriptor.apiVersion()
                     + "; server provides " + GameApi.CURRENT_VERSION

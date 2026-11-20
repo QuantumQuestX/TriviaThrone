@@ -7,6 +7,7 @@ import quantumquest.triviathrone.api.game.IGameSession;
 
 import java.util.Objects;
 import java.util.Set;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
@@ -46,6 +47,7 @@ public class Lobby {
      * Holds the last completed game message for synchronization after the session is closed.
      */
     private volatile IGameMessage completedGameMessage;
+    private volatile Instant emptySince;
 
     /**
      * Creates a Lobby.
@@ -81,7 +83,11 @@ public class Lobby {
      * @return the generated result
      */
     public boolean addUser(String username) {
-        return users.add(Objects.requireNonNull(username, "username"));
+        boolean added = users.add(Objects.requireNonNull(username, "username"));
+        if (added) {
+            emptySince = null;
+        }
+        return added;
     }
 
     /**
@@ -91,7 +97,18 @@ public class Lobby {
      * @return the generated result
      */
     public boolean removeUser(String username) {
-        return users.remove(Objects.requireNonNull(username, "username"));
+        boolean removed = users.remove(Objects.requireNonNull(username, "username"));
+        if (removed && users.isEmpty()) {
+            emptySince = Instant.now();
+        }
+        return removed;
+    }
+
+    /**
+     * Returns when this lobby became empty, or {@code null} when it has members.
+     */
+    public Instant getEmptySince() {
+        return emptySince;
     }
 
     /**

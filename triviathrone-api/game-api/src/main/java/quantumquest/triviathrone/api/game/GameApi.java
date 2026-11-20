@@ -13,7 +13,7 @@ public final class GameApi {
     /**
      * Current semantic version of this API. Compatibility is determined by major version.
      */
-    public static final String CURRENT_VERSION = "2.3.1";
+    public static final String CURRENT_VERSION = "2.3.3";
     /** API version 2.0.0. */
     public static final Version VERSION_2_0_0 = new Version(2, 0, 0);
     /** API version 2.1.0. */
@@ -28,13 +28,17 @@ public final class GameApi {
     public static final Version VERSION_2_3_0 = new Version(2, 3, 0);
     /** API version 2.3.1. */
     public static final Version VERSION_2_3_1 = new Version(2, 3, 1);
+    /** API version 2.3.2. */
+    public static final Version VERSION_2_3_2 = new Version(2, 3, 2);
+    /** API version 2.3.3 */
+    public static final Version VERSION_2_3_3 = new Version(2, 3, 3);
     /**
      * Parsed current game API version for feature-dependent provider behavior.
      *
      * <p>Providers can compare this value with the {@code VERSION_*} constants when selecting
      * behavior for a specific API release.</p>
      */
-    public static final Version CURRENT_API_VERSION = VERSION_2_3_1;
+    public static final Version CURRENT_API_VERSION = VERSION_2_3_3;
 
     /**
      * Prevents instantiation of this utility class.

@@ -20,6 +20,9 @@ auth:
   initial-admin-password: ${AUTH_INITIAL_ADMIN_PASSWORD:}
 
 triviathrone:
+  lobby:
+    empty-active-game-timeout: ${TRIVIATHRONE_EMPTY_GAME_TIMEOUT:30s}
+    empty-active-game-cleanup-interval: ${TRIVIATHRONE_EMPTY_GAME_CLEANUP_INTERVAL:10s}
   mods:
     system-directory: ${TRIVIATHRONE_SYSTEM_MODS_DIRECTORY:mods/system}
   system:

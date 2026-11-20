@@ -122,7 +122,7 @@ public final class WebSocketDisconnectHandler {
                 )
             );
 
-            if (lobby.listUsernames().isEmpty()) {
+            if (lobby.listUsernames().isEmpty() && !lobby.hasActiveGame()) {
                 lobbyService.removeLobby(lobby.getLobbyCode());
                 try {
                     lobbyGameFiles.deleteLobbyFiles(lobby.getLobbyCode());

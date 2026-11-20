@@ -1,6 +1,7 @@
 package quantumquest.triviathrone.api.system;
 
 import quantumquest.triviathrone.api.shared.ApiVersion;
+import quantumquest.triviathrone.api.shared.Version;
 
 /**
  * Utilities and version information for the system-provider API.
@@ -14,6 +15,22 @@ public final class SystemApi {
      * and no newer minor or patch version.
      */
     public static final String CURRENT_VERSION = "2.3.0";
+    /** System API version 2.0.0. */
+    public static final Version VERSION_2_0_0 = new Version(2, 0, 0);
+    /** System API version 2.1.0. */
+    public static final Version VERSION_2_1_0 = new Version(2, 1, 0);
+    /** System API version 2.1.1. */
+    public static final Version VERSION_2_1_1 = new Version(2, 1, 1);
+    /** System API version 2.2.0. */
+    public static final Version VERSION_2_2_0 = new Version(2, 2, 0);
+    /** System API version 2.2.1. */
+    public static final Version VERSION_2_2_1 = new Version(2, 2, 1);
+    /** System API version 2.3.0. */
+    public static final Version VERSION_2_3_0 = new Version(2, 3, 0);
+    /**
+     * Parsed current system API version for feature-dependent provider behavior.
+     */
+    public static final Version CURRENT_API_VERSION = VERSION_2_3_0;
 
     /**
      * Prevents instantiation of this utility class.

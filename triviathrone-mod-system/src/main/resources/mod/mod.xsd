@@ -7,7 +7,7 @@
     </xs:simpleType>
 
     <xs:complexType name="apiCompatibilityType">
-        <xs:attribute name="minimum" type="nonEmptyText" use="required"/>
+        <xs:attribute name="minimum" type="nonEmptyText" use="optional"/>
         <xs:attribute name="maximumExclusive" type="nonEmptyText" use="required"/>
     </xs:complexType>
 

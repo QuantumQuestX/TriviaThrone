@@ -64,7 +64,7 @@ class ModMetadataLoaderTest {
                     <name>Sample</name>
                     <version>1.2.3</version>
                     <apiVersion>2.0.0</apiVersion>
-                    <apiCompatibility minimum="2.1.0" maximumExclusive="3.0.0"/>
+                    <apiCompatibility maximumExclusive="3.0.0"/>
                     <description>Sample game mod.</description>
                     <providers>
                         <provider class="example.SampleProvider"/>
@@ -74,7 +74,6 @@ class ModMetadataLoaderTest {
 
         ModDescriptor descriptor = ModMetadataLoader.load(modJar);
 
-        assertEquals("2.1.0", descriptor.apiMinimum());
         assertEquals("3.0.0", descriptor.apiMaximumExclusive());
     }
 
@@ -85,7 +84,7 @@ class ModMetadataLoaderTest {
                     <name>Sample</name>
                     <version>1.2.3</version>
                     <apiVersion>2.0.0</apiVersion>
-                    <apiCompatability minimum="2.0.0" maximumExclusive="3.0.0"/>
+                    <apiCompatability maximumExclusive="3.0.0"/>
                     <description>Sample game mod.</description>
                     <providers>
                         <provider class="example.SampleProvider"/>
@@ -95,7 +94,6 @@ class ModMetadataLoaderTest {
 
         ModDescriptor descriptor = ModMetadataLoader.load(modJar);
 
-        assertEquals("2.0.0", descriptor.apiMinimum());
         assertEquals("3.0.0", descriptor.apiMaximumExclusive());
     }
 

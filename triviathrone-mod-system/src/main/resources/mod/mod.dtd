@@ -12,11 +12,11 @@
 
 <!ELEMENT apiCompatibility EMPTY>
 <!ATTLIST apiCompatibility
-    minimum CDATA #REQUIRED
+    minimum CDATA #IMPLIED
     maximumExclusive CDATA #REQUIRED>
 <!ELEMENT apiCompatability EMPTY>
 <!ATTLIST apiCompatability
-    minimum CDATA #REQUIRED
+    minimum CDATA #IMPLIED
     maximumExclusive CDATA #REQUIRED>
 
 <!ELEMENT providers (provider+)>

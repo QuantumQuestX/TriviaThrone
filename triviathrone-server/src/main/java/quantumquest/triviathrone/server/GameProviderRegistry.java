@@ -105,7 +105,8 @@ public final class GameProviderRegistry {
         Objects.requireNonNull(manifest, "manifest");
         return registrations.stream()
             .filter(registration -> registration.mod().id().equals(manifest.modId()))
-            .filter(registration -> GameApi.isCompatible(manifest.apiVersion()))
+            .filter(registration -> GameApi.isCompatible(
+                    manifest.apiVersion(), manifest.apiMaximumExclusive()))
             .map(RegisteredGameProvider::provider)
             .filter(provider -> provider.gameType().equals(manifest.gameType()))
             .filter(provider -> provider.getClass().getName().equals(manifest.providerClass()))

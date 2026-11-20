@@ -32,26 +32,44 @@ public final class GameApi {
     }
 
     /**
-     * Determines whether the current API satisfies an optional compatibility range.
+     * Determines whether the current API satisfies a game mod's compatibility declaration.
      *
-     * @param apiVersion         API version the provider targets
-     * @param minimumVersion     inclusive minimum, or {@code null} for major-version compatibility
-     * @param maximumExclusive   exclusive maximum, or {@code null} for major-version compatibility
+     * <p>{@code apiVersion} is the inclusive minimum supported version. When no maximum is
+     * declared, compatibility follows the API major-version rule.</p>
+     *
+     * @param apiVersion       inclusive minimum API version supported by the mod
+     * @param maximumExclusive optional exclusive maximum API version
      * @return whether the current API is compatible
      */
+    public static boolean isCompatible(String apiVersion, String maximumExclusive) {
+        if (maximumExclusive == null) {
+            return isCompatible(apiVersion);
+        }
+        return ApiVersion.isInRange(CURRENT_VERSION, apiVersion, maximumExclusive);
+    }
+
+    /**
+     * Determines compatibility using the legacy explicit range form.
+     *
+     * <p>This overload remains available for source and binary compatibility with clients that
+     * use an independently supplied minimum. New game-mod manifests should use {@link
+     * #isCompatible(String, String)}, where {@code apiVersion} is the minimum.</p>
+     *
+     * @param apiVersion       API version declared by the provider
+     * @param minimumVersion   explicit inclusive minimum API version
+     * @param maximumExclusive explicit exclusive maximum API version
+     * @return whether the current API is compatible
+     * @deprecated use {@link #isCompatible(String, String)} for game-mod compatibility checks
+     */
+    @Deprecated
     public static boolean isCompatible(
             String apiVersion,
             String minimumVersion,
             String maximumExclusive
     ) {
-        if (minimumVersion == null && maximumExclusive == null) {
-            return isCompatible(apiVersion);
+        if (minimumVersion == null) {
+            return isCompatible(apiVersion, maximumExclusive);
         }
-
-        if (minimumVersion == null || maximumExclusive == null) {
-            throw new IllegalArgumentException("API compatibility requires both bounds.");
-        }
-
         return ApiVersion.isInRange(CURRENT_VERSION, minimumVersion, maximumExclusive)
                 && isCompatible(apiVersion);
     }

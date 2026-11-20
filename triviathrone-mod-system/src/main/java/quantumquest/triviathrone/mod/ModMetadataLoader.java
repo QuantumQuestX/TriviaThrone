@@ -145,11 +145,9 @@ public final class ModMetadataLoader {
         if (compatibility.getLength() == 0) {
             compatibility = root.getElementsByTagName("apiCompatability");
         }
-        String apiMinimum = null;
         String apiMaximumExclusive = null;
         if (compatibility.getLength() > 0) {
             Element element = (Element) compatibility.item(0);
-            apiMinimum = element.getAttribute("minimum").trim();
             apiMaximumExclusive = element.getAttribute("maximumExclusive").trim();
         }
 
@@ -158,7 +156,6 @@ public final class ModMetadataLoader {
             text(root, "name"),
             text(root, "version"),
             text(root, "apiVersion"),
-            apiMinimum,
             apiMaximumExclusive,
             text(root, "description"),
             providerClasses

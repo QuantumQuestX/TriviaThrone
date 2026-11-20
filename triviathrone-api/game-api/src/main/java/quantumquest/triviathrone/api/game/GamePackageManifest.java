@@ -27,7 +27,8 @@ import java.util.Set;
  * @param manifestVersion       supported manifest version
  * @param modId                 non-blank mod identifier
  * @param modVersion            non-blank mod version
- * @param apiVersion            non-blank API version required by the package
+ * @param apiVersion            non-blank inclusive minimum API version compatible with the package
+ * @param apiMaximumExclusive   optional exclusive maximum API version
  * @param gameType              non-blank game-type identifier
  * @param providerClass         non-blank provider class name
  * @param gameDataFile          non-blank relative data-file path
@@ -43,6 +44,7 @@ public record GamePackageManifest(
         String modId,
         String modVersion,
         String apiVersion,
+        String apiMaximumExclusive,
         String gameType,
         String providerClass,
         String gameDataFile,
@@ -51,6 +53,15 @@ public record GamePackageManifest(
         PackageMetadata metadata,
         List<Asset> assets
 ) {
+    public GamePackageManifest(
+            String manifestVersion, String modId, String modVersion, String apiVersion,
+            String gameType, String providerClass, String gameDataFile, String gameDataFormatVersion,
+            String serverVersion, PackageMetadata metadata, List<Asset> assets
+    ) {
+        this(manifestVersion, modId, modVersion, apiVersion, null, gameType, providerClass,
+                gameDataFile, gameDataFormatVersion, serverVersion, metadata, assets);
+    }
+
     /**
      * Standard filename of a package manifest.
      */
@@ -84,6 +95,9 @@ public record GamePackageManifest(
         requireText(modId, "modId");
         requireText(modVersion, "modVersion");
         requireText(apiVersion, "apiVersion");
+        if (apiMaximumExclusive != null && apiMaximumExclusive.isBlank()) {
+            apiMaximumExclusive = null;
+        }
         requireText(gameType, "gameType");
         requireText(providerClass, "providerClass");
         requireRelativePath(gameDataFile);

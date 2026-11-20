@@ -140,7 +140,11 @@ public final class ModMetadataLoader {
         for (int i = 0; i < providers.getLength(); i++) {
             providerClasses.add(((Element) providers.item(i)).getAttribute("class").trim());
         }
-        NodeList compatibility = root.getElementsByTagName("apiCompatability");
+        NodeList compatibility = root.getElementsByTagName("apiCompatibility");
+        // Accept the misspelled element emitted by early 2.x builds.
+        if (compatibility.getLength() == 0) {
+            compatibility = root.getElementsByTagName("apiCompatability");
+        }
         String apiMinimum = null;
         String apiMaximumExclusive = null;
         if (compatibility.getLength() > 0) {

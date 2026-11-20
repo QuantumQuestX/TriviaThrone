@@ -47,6 +47,9 @@ public class Lobby {
      * Holds the last completed game message for synchronization after the session is closed.
      */
     private volatile IGameMessage completedGameMessage;
+    /**
+     * Records when this lobby became empty for active-game cleanup.
+     */
     private volatile Instant emptySince;
 
     /**
@@ -106,6 +109,8 @@ public class Lobby {
 
     /**
      * Returns when this lobby became empty, or {@code null} when it has members.
+     *
+     * @return the empty timestamp, or {@code null} when the lobby is occupied
      */
     public Instant getEmptySince() {
         return emptySince;

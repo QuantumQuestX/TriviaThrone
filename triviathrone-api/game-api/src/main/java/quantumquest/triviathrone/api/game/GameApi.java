@@ -30,6 +30,9 @@ public final class GameApi {
     public static final Version VERSION_2_3_1 = new Version(2, 3, 1);
     /**
      * Parsed current game API version for feature-dependent provider behavior.
+     *
+     * <p>Providers can compare this value with the {@code VERSION_*} constants when selecting
+     * behavior for a specific API release.</p>
      */
     public static final Version CURRENT_API_VERSION = VERSION_2_3_1;
 

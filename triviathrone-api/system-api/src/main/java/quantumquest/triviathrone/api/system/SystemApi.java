@@ -29,6 +29,9 @@ public final class SystemApi {
     public static final Version VERSION_2_3_0 = new Version(2, 3, 0);
     /**
      * Parsed current system API version for feature-dependent provider behavior.
+     *
+     * <p>Providers can compare this value with the {@code VERSION_*} constants when selecting
+     * behavior for a specific API release.</p>
      */
     public static final Version CURRENT_API_VERSION = VERSION_2_3_0;
 

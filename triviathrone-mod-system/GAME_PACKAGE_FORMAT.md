@@ -5,7 +5,7 @@ A `.game.throne` archive must contain a `manifest.xml` at its root. The manifest
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <gamePackage manifestVersion="2.0">
-  <mod id="example-game" version="1.0.0" apiVersion="2.0.0"/>
+  <mod id="example-game" version="1.0.0" apiVersion="2.0.0" apiMaximumExclusive="3.0.0"/>
   <game
       type="example-game"
       providerClass="com.example.game.ExampleGameProvider"
@@ -21,7 +21,7 @@ A `.game.throne` archive must contain a `manifest.xml` at its root. The manifest
 
 `manifestVersion` is the package format version. It is separate from the game data's `formatVersion`. New packages use version `2.0` and a `<mod>` element. The server also reads version `1.0` manifests that use the older `<plugin>` element.
 
-The mod ID, game type, and provider class must match a registered provider. The server does not load a class named by uploaded XML. The package API version must be a valid semantic version with the same major version as the installed game API; patch and minor releases within that major version are compatible. Mod and server versions are informational; the server version is not used to decide compatibility.
+The mod ID, game type, and provider class must match a registered provider. The server does not load a class named by uploaded XML. `apiVersion` is the inclusive minimum game API version supported by the package. `apiMaximumExclusive`, when present, is the exclusive upper bound; otherwise the package follows the same-major-version compatibility rule. Mod and server versions are informational; the server version is not used to decide compatibility.
 
 `dataFile` and asset paths are relative to the package root. The game data file must exist. Assets are optional. If an asset entry includes a SHA-256 hash, it must match the bundled file.
 

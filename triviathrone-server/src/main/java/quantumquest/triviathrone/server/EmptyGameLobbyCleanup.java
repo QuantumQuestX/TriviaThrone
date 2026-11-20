@@ -11,13 +11,32 @@ import java.util.Objects;
 
 /**
  * Closes active game lobbies that remain empty beyond the reconnect grace period.
+ *
+ * @author TiJ
+ * @since 2.3.3
  */
 @Component
 public final class EmptyGameLobbyCleanup {
+    /**
+     * Provides access to active lobbies.
+     */
     private final LobbyService lobbyService;
+    /**
+     * Removes files belonging to closed lobbies.
+     */
     private final LobbyGameFiles lobbyGameFiles;
+    /**
+     * Maximum duration an empty active-game lobby may remain open.
+     */
     private final Duration timeout;
 
+    /**
+     * Creates an empty-game lobby cleanup task.
+     *
+     * @param lobbyService    service containing active lobbies
+     * @param lobbyGameFiles  service managing lobby game files
+     * @param timeout         maximum empty-lobby duration
+     */
     public EmptyGameLobbyCleanup(
             LobbyService lobbyService,
             LobbyGameFiles lobbyGameFiles,
@@ -31,6 +50,9 @@ public final class EmptyGameLobbyCleanup {
         this.timeout = timeout;
     }
 
+    /**
+     * Closes active-game lobbies that have exceeded the configured empty duration.
+     */
     @Scheduled(fixedDelayString = "${triviathrone.lobby.empty-active-game-cleanup-interval:10s}")
     public void closeExpiredLobbies() {
         Instant cutoff = Instant.now().minus(timeout);

@@ -57,6 +57,48 @@ class ModMetadataLoaderTest {
         assertEquals("Game mod JAR is missing mod.xml: " + modJar, exception.getMessage());
     }
 
+    @Test
+    void loadsOptionalApiCompatibilityRange() throws IOException {
+        Path modJar = createJar("mod.xml", """
+                <mod id="sample">
+                    <name>Sample</name>
+                    <version>1.2.3</version>
+                    <apiVersion>2.0.0</apiVersion>
+                    <apiCompatibility minimum="2.1.0" maximumExclusive="3.0.0"/>
+                    <description>Sample game mod.</description>
+                    <providers>
+                        <provider class="example.SampleProvider"/>
+                    </providers>
+                </mod>
+                """);
+
+        ModDescriptor descriptor = ModMetadataLoader.load(modJar);
+
+        assertEquals("2.1.0", descriptor.apiMinimum());
+        assertEquals("3.0.0", descriptor.apiMaximumExclusive());
+    }
+
+    @Test
+    void retainsCompatibilityWithTheEarlyMisspelledElement() throws IOException {
+        Path modJar = createJar("mod.xml", """
+                <mod id="sample">
+                    <name>Sample</name>
+                    <version>1.2.3</version>
+                    <apiVersion>2.0.0</apiVersion>
+                    <apiCompatability minimum="2.0.0" maximumExclusive="3.0.0"/>
+                    <description>Sample game mod.</description>
+                    <providers>
+                        <provider class="example.SampleProvider"/>
+                    </providers>
+                </mod>
+                """);
+
+        ModDescriptor descriptor = ModMetadataLoader.load(modJar);
+
+        assertEquals("2.0.0", descriptor.apiMinimum());
+        assertEquals("3.0.0", descriptor.apiMaximumExclusive());
+    }
+
     private Path createJar(String entryName, String metadata) throws IOException {
         Path jar = tempDir.resolve(entryName.replace('.', '-') + ".jar");
         try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {

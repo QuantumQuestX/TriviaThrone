@@ -8,7 +8,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import quantumquest.triviathrone.api.system.events.LobbyClosedEvent;
 import quantumquest.triviathrone.api.system.events.LobbyCreatedEvent;
-import quantumquest.triviathrone.auth.PasswordUtils;
 import quantumquest.triviathrone.auth.UserAccount;
 import quantumquest.triviathrone.mod.SystemModManager;
 
@@ -86,9 +85,6 @@ public class LobbyService {
         Objects.requireNonNull(hostAccount, "hostAccount");
 
         String normalizedPassword = password == null || password.isBlank() ? null : password;
-        if (normalizedPassword != null) {
-            PasswordUtils.validate(normalizedPassword);
-        }
 
         String hostUsername = Objects.requireNonNull(hostAccount.getUsername(), "host username");
         Lobby lobby;

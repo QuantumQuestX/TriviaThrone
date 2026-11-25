@@ -132,34 +132,7 @@ if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
   $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$downloadPath = "$TMP_DOWNLOAD_DIR/$distributionUrlName"
-$downloaded = $false
-for ($attempt = 1; $attempt -le 3 -and !$downloaded; $attempt++) {
-  try {
-    $webclient.DownloadFile($distributionUrl, $downloadPath) | Out-Null
-    $downloaded = $true
-  } catch {
-    if ($attempt -lt 3) {
-      Start-Sleep -Seconds 2
-    }
-  }
-}
-if (!$downloaded) {
-  Write-Verbose "WebClient failed; trying Invoke-WebRequest ..."
-  for ($attempt = 1; $attempt -le 3 -and !$downloaded; $attempt++) {
-    try {
-      Invoke-WebRequest -Uri $distributionUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 30
-      $downloaded = $true
-    } catch {
-      if ($attempt -lt 3) {
-        Start-Sleep -Seconds 2
-      }
-    }
-  }
-}
-if (!$downloaded) {
-  Write-Error "Failed to fetch $distributionUrl"
-}
+$webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file
 $distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum

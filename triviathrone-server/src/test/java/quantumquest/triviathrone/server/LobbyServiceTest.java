@@ -55,6 +55,20 @@ class LobbyServiceTest {
     }
 
     @Test
+    void supportsSimplePasswordProtectedLobbies() {
+        SystemModManager systemMods = mock(SystemModManager.class);
+        UserAccount host = new UserAccount();
+        host.setUsername("host");
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        LobbyService lobbyService = new LobbyService(systemMods, encoder);
+
+        Lobby lobby = lobbyService.createLobby("Private lobby", host, "password");
+
+        assertTrue(lobby.isPasswordProtected());
+        assertTrue(lobby.acceptsPassword("password", encoder));
+    }
+
+    @Test
     void legacyLobbyCreationRemainsOpen() {
         SystemModManager systemMods = mock(SystemModManager.class);
         UserAccount host = new UserAccount();

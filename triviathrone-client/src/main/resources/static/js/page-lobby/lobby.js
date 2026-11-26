@@ -11,14 +11,14 @@ const lobbyCode = lobbyDetails.lobbyCode;
 if (!lobbyCode) {
     console.warn("No lobby code found in Session");
     clearLobbyDetails();
-    window.location.href = "/";
+    window.location.href = "/dashboard";
 } else {
     document.getElementById("lobby-code").textContent = lobbyCode;
     initLobby().catch((error) => {
         console.error("Could not initialize the lobby.", error);
         clearLobbyDetails();
         window.alert(error.message || "Could not join this lobby.");
-        window.location.href = "/";
+        window.location.href = "/dashboard";
     });
 }
 
@@ -68,7 +68,7 @@ async function initLobby() {
 
     if (!valid) {
         console.warn("Lobby does not exist");
-        window.location.href = "/";
+        window.location.href = "/dashboard";
 
         return;
     }
@@ -206,7 +206,7 @@ document.getElementById("leave-btn").addEventListener("click", () => {
     sessionStorage.removeItem(`game.private-state.${lobbyCode}`);
     socket.disconnect();
     clearLobbyDetails();
-    window.location.href = "/";
+    window.location.href = "/dashboard";
 });
 
 window.addEventListener("beforeunload", () => {

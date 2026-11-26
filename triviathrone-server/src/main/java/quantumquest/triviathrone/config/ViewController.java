@@ -18,6 +18,16 @@ public class ViewController {
      */
     @GetMapping("/")
     public String root() {
+        return "forward:/login.html";
+    }
+
+    /**
+     * Returns the dashboard view.
+     *
+     * @return the dashboard view name
+     */
+    @GetMapping("/dashboard")
+    public String dashboard() {
         return "forward:/index.html";
     }
 
@@ -68,6 +78,6 @@ public class ViewController {
      */
     @GetMapping("/account")
     public String account() {
-        return "redirect:/?page=account";
+        return "redirect:/dashboard?page=account";
     }
 }

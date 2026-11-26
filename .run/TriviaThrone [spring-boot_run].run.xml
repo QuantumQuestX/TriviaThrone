@@ -7,7 +7,9 @@
           <option name="delegateBuildToMaven" value="false" />
           <option name="environmentProperties">
             <map>
-              <entry key="AUTH_DEFAULT_ADMIN_PASSWORD" value="admin" />
+              <entry key="AUTH_INITIAL_ADMIN_USERNAME" value="localadmin" />
+              <entry key="AUTH_INITIAL_ADMIN_PASSWORD" value="StrongLocalPassword#123" />
+              <entry key="AUTH_REFRESH_COOKIE_SECURE" value="false" />
               <entry key="AUTH_JWT_SECRET" value="2tKRt4kkW4L6PB1EQFBXtfN/AcRpgkK3GJaVnZrJRVo=" />
             </map>
           </option>

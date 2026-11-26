@@ -18,7 +18,7 @@ async function loadUsers() {
         const response = await apiFetch("/api/admin/users");
 
         if (response.status === 403) {
-            window.location.replace("/");
+            window.location.replace("/dashboard");
 
             return;
         }

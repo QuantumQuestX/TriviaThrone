@@ -14,8 +14,8 @@ auth:
   token-validity-seconds: 900
   refresh-token-validity-seconds: 604800
   refresh-session-max-seconds: 2592000
-  # Enable when serving the application over HTTPS.
-  refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:false}
+  # Cookies require HTTPS by default; disable only for local HTTP development.
+  refresh-cookie-secure: ${AUTH_REFRESH_COOKIE_SECURE:true}
   initial-admin-username: ${AUTH_INITIAL_ADMIN_USERNAME:}
   initial-admin-password: ${AUTH_INITIAL_ADMIN_PASSWORD:}
 

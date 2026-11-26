@@ -8,6 +8,7 @@
           <option name="environmentProperties">
             <map>
               <entry key="AUTH_DEFAULT_ADMIN_PASSWORD" value="admin" />
+              <entry key="AUTH_JWT_SECRET" value="2tKRt4kkW4L6PB1EQFBXtfN/AcRpgkK3GJaVnZrJRVo=" />
             </map>
           </option>
           <option name="jreName" value="#USE_PROJECT_JDK" />

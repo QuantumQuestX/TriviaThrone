@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import quantumquest.triviathrone.auth.AuthProperties;
 import quantumquest.triviathrone.auth.JwtAuthFilter;
+import quantumquest.triviathrone.auth.RejectBasicAuthenticationFilter;
 
 /**
  * Configures stateless JWT authentication and HTTP authorization.
@@ -77,7 +78,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-                .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwt, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new RejectBasicAuthenticationFilter(), JwtAuthFilter.class);
         return http.build();
     }
 }

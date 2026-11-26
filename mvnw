@@ -193,10 +193,21 @@ esac
 
 if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
   verbose "Found wget ... using wget"
-  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+  if ! wget --tries=3 --timeout=30 --waitretry=2 \
+      ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} \
+      "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName"; then
+    verbose "wget failed; trying curl ..."
+    command -v curl >/dev/null || die "wget: Failed to fetch $distributionUrl"
+    curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 30 \
+      -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" \
+      || die "curl: Failed to fetch $distributionUrl"
+  fi
 elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
   verbose "Found curl ... using curl"
-  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} --fail --location \
+    --retry 3 --retry-delay 2 --connect-timeout 30 \
+    -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" \
+    || die "curl: Failed to fetch $distributionUrl"
 elif set_java_home; then
   verbose "Falling back to use Java to download"
   javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"

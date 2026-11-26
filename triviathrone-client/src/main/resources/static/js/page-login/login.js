@@ -1,4 +1,12 @@
-import { login } from "../root/auth.js";
+import { AuthenticationError, login, refreshAccessToken } from "../root/auth.js";
+
+refreshAccessToken()
+    .then(() => window.location.replace("/dashboard"))
+    .catch((error) => {
+        if (!(error instanceof AuthenticationError)) {
+            console.error("Could not check the existing session.", error);
+        }
+    });
 
 document.getElementById("login-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -12,7 +20,7 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
 
     try {
         await login(document.getElementById("username").value.trim(), document.getElementById("password").value);
-        window.location.replace("/");
+        window.location.replace("/dashboard");
     } catch (error) {
         errorMessage.textContent = error.message;
         submitButton.disabled = false;

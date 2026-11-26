@@ -58,6 +58,7 @@ public class SecurityConfig {
                     "/api/developers",
                     "/login",
                     "/login.html",
+                    "/dashboard",
                     "/index.html",
                     "/admin",
                     "/admin.html",

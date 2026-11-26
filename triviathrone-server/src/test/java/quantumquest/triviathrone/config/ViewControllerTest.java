@@ -22,6 +22,9 @@ class ViewControllerTest {
     void cleanPageRoutesForwardToStaticHtmlWithoutRedirecting() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/login.html"));
+        mockMvc.perform(get("/dashboard"))
+                .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/index.html"));
         mockMvc.perform(get("/admin"))
                 .andExpect(status().isOk())
@@ -37,6 +40,6 @@ class ViewControllerTest {
                 .andExpect(forwardedUrl("/game-creator.html"));
         mockMvc.perform(get("/account"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/?page=account"));
+                .andExpect(redirectedUrl("/dashboard?page=account"));
     }
 }

@@ -30,7 +30,7 @@ function createTopbar(page) {
     const brandLink = document.createElement("a");
 
     brandLink.className = "tt-brand site-header__brand";
-    brandLink.href = "/";
+    brandLink.href = "/dashboard";
     brandLink.textContent = "TriviaThrone";
 
     const version = document.createElement("span");

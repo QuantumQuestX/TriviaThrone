@@ -5,12 +5,12 @@
     <parent>
         <groupId>quantumquest.triviathrone</groupId>
         <artifactId>triviathrone-api</artifactId>
-        <version>2.3.7</version>
+        <version>2.3.8-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>io.github.quantumquestx</groupId>
     <artifactId>triviathrone-system-api</artifactId>
-    <version>2.3.7</version>
+    <version>2.3.8-SNAPSHOT</version>
     <name>TriviaThrone System API</name>
     <description>Public contracts for TriviaThrone system mods.</description>
     <url>https://github.com/QuantumQuestX/TriviaThrone</url>

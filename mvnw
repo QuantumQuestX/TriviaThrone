@@ -191,24 +191,46 @@ case "${MVNW_PASSWORD:+has-password}" in
 has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
 esac
 
-if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+downloadUrls="$distributionUrl"
+case "$distributionUrl" in
+https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/*)
+  distributionFile="${distributionUrl##*/}"
+  distributionVersion="${distributionFile#apache-maven-}"
+  distributionVersion="${distributionVersion%-bin.zip}"
+  downloadUrls="$downloadUrls
+https://archive.apache.org/dist/maven/maven-3/$distributionVersion/binaries/$distributionFile"
+  ;;
+esac
+
+downloaded=false
+while IFS= read -r downloadUrl; do
+  [ -n "$downloadUrl" ] || continue
+  rm -f -- "$TMP_DOWNLOAD_DIR/$distributionUrlName"
+  if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
   verbose "Found wget ... using wget"
   if ! wget --tries=3 --timeout=30 --waitretry=2 \
       ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} \
-      "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName"; then
-    verbose "wget failed; trying curl ..."
-    command -v curl >/dev/null || die "wget: Failed to fetch $distributionUrl"
-    curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 30 \
-      -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" \
-      || die "curl: Failed to fetch $distributionUrl"
+      "$downloadUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName"; then
+    downloaded=true
+    break
   fi
-elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+  elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
   verbose "Found curl ... using curl"
-  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} --fail --location \
+  if curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} --fail --location \
     --retry 3 --retry-delay 2 --connect-timeout 30 \
-    -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" \
-    || die "curl: Failed to fetch $distributionUrl"
-elif set_java_home; then
+    -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$downloadUrl"; then
+    downloaded=true
+    break
+  fi
+  else
+    break
+  fi
+  verbose "Download failed; trying next Maven distribution URL ..."
+done <<EOF
+$downloadUrls
+EOF
+
+if [ "$downloaded" = false ] && set_java_home; then
   verbose "Falling back to use Java to download"
   javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
   targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
@@ -226,11 +248,23 @@ elif set_java_home; then
 	  }
 	}
 	END
-  # For Cygwin/MinGW, switch paths to Windows format before running javac and java
   verbose " - Compiling Downloader.java ..."
   "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
-  verbose " - Running Downloader.java ..."
-  "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+  while IFS= read -r downloadUrl; do
+    [ -n "$downloadUrl" ] || continue
+    rm -f -- "$TMP_DOWNLOAD_DIR/$distributionUrlName"
+    verbose " - Running Downloader.java ..."
+    if "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$downloadUrl" "$(native_path "$targetZip")"; then
+      downloaded=true
+      break
+    fi
+  done <<EOF
+$downloadUrls
+EOF
+fi
+
+if [ "$downloaded" = false ]; then
+  die "Failed to fetch Maven distribution"
 fi
 
 # If specified, validate the SHA-256 sum of the Maven distribution zip file

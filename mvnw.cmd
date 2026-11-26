@@ -134,26 +134,41 @@ if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $downloadPath = "$TMP_DOWNLOAD_DIR/$distributionUrlName"
 $downloaded = $false
-for ($attempt = 1; $attempt -le 3 -and !$downloaded; $attempt++) {
-  try {
-    $webclient.DownloadFile($distributionUrl, $downloadPath) | Out-Null
-    $downloaded = $true
-  } catch {
-    if ($attempt -lt 3) {
-      Start-Sleep -Seconds 2
-    }
-  }
+$downloadUrls = @($distributionUrl)
+if ($distributionUrl -like "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/*") {
+  $distributionVersion = $distributionUrlName -replace '^apache-maven-','' -replace '-bin\.zip$',''
+  $downloadUrls += "https://archive.apache.org/dist/maven/maven-3/$distributionVersion/binaries/$distributionUrlName"
 }
-if (!$downloaded) {
-  Write-Verbose "WebClient failed; trying Invoke-WebRequest ..."
+foreach ($downloadUrl in $downloadUrls) {
   for ($attempt = 1; $attempt -le 3 -and !$downloaded; $attempt++) {
     try {
-      Invoke-WebRequest -Uri $distributionUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 30
+      $webclient.DownloadFile($downloadUrl, $downloadPath) | Out-Null
       $downloaded = $true
     } catch {
       if ($attempt -lt 3) {
         Start-Sleep -Seconds 2
       }
+    }
+  }
+  if ($downloaded) {
+    break
+  }
+}
+if (!$downloaded) {
+  Write-Verbose "WebClient failed; trying Invoke-WebRequest ..."
+  foreach ($downloadUrl in $downloadUrls) {
+    for ($attempt = 1; $attempt -le 3 -and !$downloaded; $attempt++) {
+      try {
+        Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath -UseBasicParsing -TimeoutSec 30
+        $downloaded = $true
+      } catch {
+        if ($attempt -lt 3) {
+          Start-Sleep -Seconds 2
+        }
+      }
+    }
+    if ($downloaded) {
+      break
     }
   }
 }

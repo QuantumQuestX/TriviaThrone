@@ -28,12 +28,17 @@ public record AuthProperties(
         String initialAdminPassword
 ) {
     /**
+     * Rejects the example signing key that was previously used as a configuration default.
+     */
+    private static final String EXAMPLE_JWT_SECRET = "CHANCE_THIS_SECRET_CHANGE_THIS_SECRET";
+
+    /**
      * Validates required signing material, token lifetimes, and optional initial-admin credentials.
      */
     public AuthProperties {
         String signingSecret = Objects.requireNonNull(jwtSecret, "jwtSecret");
-        if (signingSecret.isBlank()) {
-            throw new IllegalArgumentException("jwtSecret must not be blank");
+        if (signingSecret.isBlank() || EXAMPLE_JWT_SECRET.equals(signingSecret)) {
+            throw new IllegalArgumentException("jwtSecret must be configured with a private signing key");
         }
         if (tokenValiditySeconds <= 0 || refreshTokenValiditySeconds <= 0 || refreshSessionMaxSeconds <= 0) {
             throw new IllegalArgumentException("Token lifetimes must be positive");
